@@ -1,0 +1,70 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="BootAuth.uss" />
+    <ui:VisualElement name="screen" class="screen">
+
+        <ui:Label name="game-title" text="BLOCKFORGE" class="game-title" />
+
+        <ui:VisualElement name="auth-container" class="auth-container">
+
+            <!-- ================= PANNEAU CONNEXION ================= -->
+            <ui:VisualElement name="login-panel" class="panel">
+                <ui:Label text="CONNEXION" class="panel-title" />
+
+                <ui:TextField name="login-email" placeholder-text="Email" class="field" />
+
+                <ui:VisualElement class="password-row">
+                    <ui:TextField name="login-password" placeholder-text="Mot de passe" password="true" class="field password-field" />
+                    <ui:Button name="login-password-toggle" text="VOIR" class="eye-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="forgot-row">
+                    <ui:Button name="forgot-password" text="Mot de passe oublié ?" class="link-button" />
+                </ui:VisualElement>
+
+                <ui:Button name="login-button" text="SE CONNECTER" class="primary-button" />
+
+                <ui:VisualElement class="or-row">
+                    <ui:VisualElement class="or-line" />
+                    <ui:Label text="OU" class="or-label" />
+                    <ui:VisualElement class="or-line" />
+                </ui:VisualElement>
+
+                <ui:Button name="guest-button" text="CONTINUER EN INVITÉ" class="secondary-button" />
+
+                <ui:VisualElement class="register-hint">
+                    <ui:Label text="Pas encore de compte ?" class="hint-label" />
+                    <ui:Button name="goto-register" text="S&apos;inscrire" class="link-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- ================= PANNEAU INSCRIPTION ================= -->
+            <ui:VisualElement name="register-panel" class="panel">
+                <ui:Label text="INSCRIPTION" class="panel-title" />
+
+                <ui:TextField name="register-email" placeholder-text="Email" class="field" />
+                <ui:TextField name="register-username" placeholder-text="Pseudo" class="field" />
+
+                <ui:VisualElement class="password-row">
+                    <ui:TextField name="register-password" placeholder-text="Mot de passe" password="true" class="field password-field" />
+                    <ui:Button name="register-password-toggle" text="VOIR" class="eye-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="password-row">
+                    <ui:TextField name="register-password-confirm" placeholder-text="Confirmer le mot de passe" password="true" class="field password-field" />
+                    <ui:Button name="register-password-confirm-toggle" text="VOIR" class="eye-button" />
+                </ui:VisualElement>
+
+                <ui:Button name="register-button" text="CRÉER UN COMPTE" class="primary-button" />
+
+                <ui:VisualElement class="register-hint">
+                    <ui:Label text="En possession d&apos;un compte ?" class="hint-label" />
+                    <ui:Button name="goto-login" text="Se connecter" class="link-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <ui:Label name="status-label" text="" class="status-label" />
+
+    </ui:VisualElement>
+</ui:UXML>

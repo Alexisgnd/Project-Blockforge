@@ -1,0 +1,214 @@
+/* =========================================================
+   BOOT AUTH — Style sombre sci-fi (login / register)
+   ========================================================= */
+
+.screen {
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(9, 14, 22);
+}
+
+.game-title {
+    font-size: 42px;
+    letter-spacing: 12px;
+    color: rgb(220, 232, 245);
+    -unity-font-style: bold;
+    margin-bottom: 40px;
+}
+
+.auth-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* ------------------ Panneaux ------------------ */
+
+.panel {
+    width: 360px;
+    padding: 24px;
+    margin-left: 14px;
+    margin-right: 14px;
+    background-color: rgba(13, 21, 32, 0.92);
+    border-width: 1px;
+    border-color: rgb(42, 59, 82);
+    border-radius: 6px;
+}
+
+.panel-title {
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: rgb(220, 232, 245);
+    -unity-font-style: bold;
+    margin-bottom: 18px;
+}
+
+/* ------------------ Champs texte ------------------ */
+
+.field {
+    height: 42px;
+    margin-bottom: 12px;
+    flex-grow: 1;
+}
+
+.field > .unity-text-field__input {
+    background-color: rgb(16, 26, 40);
+    border-width: 1px;
+    border-color: rgb(42, 59, 82);
+    border-radius: 4px;
+    color: rgb(220, 232, 245);
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 14px;
+    --unity-cursor-color: rgb(90, 156, 220);
+}
+
+.field > .unity-text-field__input:focus {
+    border-color: rgb(59, 130, 246);
+}
+
+.field .unity-text-element--inner-input-field-component {
+    color: rgb(220, 232, 245);
+}
+
+/* ------------------ Ligne mot de passe + bouton oeil ------------------ */
+
+.password-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.password-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.eye-button {
+    height: 42px;
+    width: 58px;
+    margin-left: 6px;
+    margin-bottom: 12px;
+    background-color: rgb(16, 26, 40);
+    border-width: 1px;
+    border-color: rgb(42, 59, 82);
+    border-radius: 4px;
+    color: rgb(122, 143, 168);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.eye-button:hover {
+    color: rgb(220, 232, 245);
+    border-color: rgb(59, 130, 246);
+}
+
+/* ------------------ Boutons ------------------ */
+
+.primary-button {
+    height: 44px;
+    margin-top: 6px;
+    background-color: rgb(37, 99, 190);
+    border-width: 0;
+    border-radius: 4px;
+    color: rgb(235, 243, 252);
+    font-size: 14px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+}
+
+.primary-button:hover {
+    background-color: rgb(59, 130, 246);
+}
+
+.primary-button:active {
+    background-color: rgb(29, 78, 152);
+}
+
+.secondary-button {
+    height: 44px;
+    background-color: rgba(16, 26, 40, 0.6);
+    border-width: 1px;
+    border-color: rgb(72, 96, 128);
+    border-radius: 4px;
+    color: rgb(200, 214, 230);
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.secondary-button:hover {
+    border-color: rgb(59, 130, 246);
+    color: rgb(235, 243, 252);
+}
+
+.link-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+    color: rgb(90, 156, 220);
+    font-size: 12px;
+}
+
+.link-button:hover {
+    color: rgb(140, 190, 240);
+}
+
+/* ------------------ Divers ------------------ */
+
+.forgot-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.or-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.or-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: rgb(42, 59, 82);
+}
+
+.or-label {
+    margin-left: 10px;
+    margin-right: 10px;
+    color: rgb(122, 143, 168);
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+.register-hint {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.hint-label {
+    color: rgb(122, 143, 168);
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+/* ------------------ Label de statut ------------------ */
+
+.status-label {
+    margin-top: 24px;
+    min-height: 20px;
+    font-size: 13px;
+    color: rgb(122, 143, 168);
+}
+
+.status--error {
+    color: rgb(240, 100, 100);
+}
+
+.status--ok {
+    color: rgb(110, 200, 140);
+}
