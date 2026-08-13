@@ -207,7 +207,7 @@ public static class GarageUISetup
             new[] { ("AVANCER", "Z"), ("RECULER", "S"), ("GAUCHE", "Q"), ("DROITE", "D") },
             new[] { ("INVENTAIRE", "TAB"), ("AJOUTER", "CLIC G"), ("SUPPRIMER", "CLIC D"), ("PIVOTER", "MOLETTE") },
             new[] { ("MONTER", "ESPACE"), ("DESCENDRE", "CTRL") },
-            new[] { ("SAUVER & TESTER", "T"), ("RETOUR", "ESC") },
+            new[] { ("SAUVER & TESTER", "T"), ("RENOMMER", "R"), ("RETOUR", "ESC") },
         };
 
         var container = CreateUI(canvas, "ControlsPanel");

@@ -223,8 +223,8 @@ public class BootAuthController : MonoBehaviour
 
     private void OnGuestClicked()
     {
-        client.Logout();
-        LoadNextScene();
+        // La sauvegarde des robots exige un compte : pas d'acces invite pour l'instant
+        ShowError("Un compte est requis pour jouer (sauvegarde en ligne des robots).");
     }
 
     // =========================================================

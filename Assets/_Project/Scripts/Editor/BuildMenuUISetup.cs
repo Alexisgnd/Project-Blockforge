@@ -13,7 +13,6 @@ using UnityEngine.UI;
 public static class BuildMenuUISetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
-    private const string RobotDataDir = "Assets/_Project/Data/Robots";
 
     private static readonly Color ScreenBg = new(0.016f, 0.035f, 0.065f, 0.985f);
     private static readonly Color CardBg = new(0.06f, 0.10f, 0.16f, 0.95f);
@@ -52,13 +51,8 @@ public static class BuildMenuUISetup
         StretchFull(screen);
         screen.offsetMax = new Vector2(0, -80); // sous la top nav
 
+        // Les slots sont charges au runtime depuis PocketBase (collection "robots")
         var buildMenu = screen.gameObject.AddComponent<BuildMenuController>();
-        buildMenu.slots = new[]
-        {
-            AssetDatabase.LoadAssetAtPath<RobotPreset>($"{RobotDataDir}/Robot_Scout.asset"),
-            AssetDatabase.LoadAssetAtPath<RobotPreset>($"{RobotDataDir}/Robot_Falcon.asset"),
-            null, // slot libre
-        };
 
         // ---------- Entete ----------
         var titleBar = CreatePanel(screen, "TitleAccent", Accent);

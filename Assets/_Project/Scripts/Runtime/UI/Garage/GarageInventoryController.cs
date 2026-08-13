@@ -73,6 +73,10 @@ public class GarageInventoryController : MonoBehaviour
 
     private void Awake()
     {
+        // Scene reservee aux joueurs connectes
+        if (!AuthGuard.EnsureAuthenticated())
+            return;
+
         sheetHeight = sheet.sizeDelta.y;
         if (liftWhileOpen != null)
             liftBasePos = liftWhileOpen.anchoredPosition;

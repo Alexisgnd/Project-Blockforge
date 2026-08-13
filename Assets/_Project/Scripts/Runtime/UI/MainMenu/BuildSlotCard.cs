@@ -10,6 +10,18 @@ using UnityEngine.UI;
 // ou slot vide (+ CREER).
 // =========================================================
 
+// Donnees d'affichage d'un slot (remplies depuis PocketBase)
+public struct BuildSlotData
+{
+    public bool occupied;
+    public string robotName;
+    public string tierLabel;
+    public int health;
+    public int speedKmh;
+    public int energy;
+    public float massT;
+}
+
 public class BuildSlotCard : MonoBehaviour
 {
     private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
@@ -36,7 +48,7 @@ public class BuildSlotCard : MonoBehaviour
     private Action<int> onModify;
     private Action<int> onCreate;
 
-    public void Bind(int index, RobotPreset preset, Action<int> modifyCallback, Action<int> createCallback)
+    public void Bind(int index, BuildSlotData data, Action<int> modifyCallback, Action<int> createCallback)
     {
         slotIndex = index;
         onModify = modifyCallback;
@@ -44,18 +56,17 @@ public class BuildSlotCard : MonoBehaviour
 
         numberText.text = (index + 1).ToString();
 
-        bool hasRobot = preset != null;
-        filledGroup.SetActive(hasRobot);
-        emptyGroup.SetActive(!hasRobot);
+        filledGroup.SetActive(data.occupied);
+        emptyGroup.SetActive(!data.occupied);
 
-        if (hasRobot)
+        if (data.occupied)
         {
-            titleText.text = preset.robotName;
-            tierText.text = preset.tier;
-            healthValue.text = preset.health.ToString("N0", Fr);
-            speedValue.text = $"{preset.speedKmh.ToString("N0", Fr)} km/h";
-            energyValue.text = preset.energyPerSec.ToString("N0", Fr);
-            massValue.text = $"{(preset.weightKg / 1000f).ToString("0.#", Fr)} t";
+            titleText.text = data.robotName;
+            tierText.text = data.tierLabel;
+            healthValue.text = data.health.ToString("N0", Fr);
+            speedValue.text = $"{data.speedKmh.ToString("N0", Fr)} km/h";
+            energyValue.text = data.energy.ToString("N0", Fr);
+            massValue.text = $"{data.massT.ToString("0.#", Fr)} t";
         }
         else
         {

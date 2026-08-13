@@ -27,6 +27,17 @@ public class PocketBaseAuthResponse
     public PocketBaseUser record;
 }
 
+[Serializable]
+public class RobotRecord
+{
+    public string id;
+    public string owner;
+    public string name;
+    public int slot;
+    public RobotBlueprint data;
+    public RobotStats stats;
+}
+
 public class PocketBaseException : Exception
 {
     public long StatusCode { get; }
@@ -117,6 +128,57 @@ public class PocketBaseClient
     {
         Token = null;
         User = null;
+    }
+
+    // =========================================================
+    // ROBOTS (collection "robots")
+    // =========================================================
+
+    [Serializable]
+    private class RobotListResponse
+    {
+        public RobotRecord[] items;
+    }
+
+    [Serializable]
+    private class RobotWriteRequest
+    {
+        public string owner;
+        public string name;
+        public int slot;
+        public RobotBlueprint data;
+        public RobotStats stats;
+    }
+
+    public async Awaitable<RobotRecord[]> ListRobotsAsync()
+    {
+        string json = await SendAsync("GET", "/api/collections/robots/records?perPage=30&sort=slot", null, authorized: true);
+        return JsonUtility.FromJson<RobotListResponse>(json).items ?? Array.Empty<RobotRecord>();
+    }
+
+    // Cree le robot si recordId est vide, le met a jour sinon.
+    public async Awaitable<RobotRecord> SaveRobotAsync(string recordId, string name, int slot,
+                                                       RobotBlueprint blueprint, RobotStats stats)
+    {
+        string body = JsonUtility.ToJson(new RobotWriteRequest
+        {
+            owner = User?.id,
+            name = name,
+            slot = slot,
+            data = blueprint,
+            stats = stats,
+        });
+
+        string json = string.IsNullOrEmpty(recordId)
+            ? await SendAsync("POST", "/api/collections/robots/records", body, authorized: true)
+            : await SendAsync("PATCH", $"/api/collections/robots/records/{recordId}", body, authorized: true);
+
+        return JsonUtility.FromJson<RobotRecord>(json);
+    }
+
+    public async Awaitable DeleteRobotAsync(string recordId)
+    {
+        await SendAsync("DELETE", $"/api/collections/robots/records/{recordId}", null, authorized: true);
     }
 
     // Session en mémoire uniquement : le joueur se reconnecte à chaque lancement.

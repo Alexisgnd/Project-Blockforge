@@ -271,9 +271,140 @@ public static class GarageInventorySetup
                              "la rotation a la molette n'a pas pu etre cablee.");
         }
 
+        // ---------- Sauvegarde du robot (touche T) + popups ----------
+        var statsHud = Object.FindFirstObjectByType<GarageStatsHUD>();
+        if (statsHud != null)
+        {
+            if (!canvasGo.TryGetComponent<GarageSaveController>(out var saveController))
+                saveController = canvasGo.AddComponent<GarageSaveController>();
+            saveController.statsHud = statsHud;
+            saveController.inventory = inventory;
+            saveController.disableWhileOpen = inventory.disableWhileOpen;
+            BuildSavePopups(canvasGo.transform, saveController);
+            EditorUtility.SetDirty(canvasGo);
+        }
+        else
+        {
+            Debug.LogWarning("[GarageInventorySetup] GarageStatsHUD introuvable : la sauvegarde (T) " +
+                             "n'a pas pu etre cablee. Lance d'abord Setup Garage UI.");
+        }
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[GarageInventorySetup] Inventaire genere ({blocks.Length} blocs). TAB pour ouvrir/fermer.");
+    }
+
+    // =========================================================
+    // POPUPS SAUVEGARDE / QUITTER
+    // =========================================================
+
+    private static void BuildSavePopups(Transform canvas, GarageSaveController saveController)
+    {
+        foreach (var name in new[] { "NamePopup", "QuitPopup" })
+        {
+            var old = canvas.Find(name);
+            if (old != null)
+                Object.DestroyImmediate(old.gameObject);
+        }
+
+        // ---------- Popup "nom du robot" ----------
+        var nameOverlay = CreatePanel(canvas, "NamePopup", new Color(0f, 0f, 0f, 0.6f));
+        StretchFull(nameOverlay);
+
+        var namePanel = CreatePanel(nameOverlay, "Panel", new Color(0.05f, 0.08f, 0.13f, 0.98f));
+        SetAnchors(namePanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        namePanel.sizeDelta = new Vector2(480, 250);
+        namePanel.anchoredPosition = new Vector2(0, 20);
+
+        var nameTitle = CreateText(namePanel, "Title", "NOM DU ROBOT", 17, Accent, TextAlignmentOptions.Left, FontStyles.Bold);
+        SetAnchors(nameTitle, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        nameTitle.offsetMin = new Vector2(24, -56);
+        nameTitle.offsetMax = new Vector2(-24, -16);
+
+        var inputRect = CreatePanel(namePanel, "NameInput", FieldBg);
+        SetAnchors(inputRect, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        inputRect.offsetMin = new Vector2(24, -130);
+        inputRect.offsetMax = new Vector2(-24, -82);
+
+        var input = inputRect.gameObject.AddComponent<TMP_InputField>();
+        input.targetGraphic = inputRect.GetComponent<Image>();
+        var textArea = CreateUI(inputRect, "Text Area");
+        StretchFull(textArea);
+        textArea.offsetMin = new Vector2(14, 6);
+        textArea.offsetMax = new Vector2(-14, -6);
+        textArea.gameObject.AddComponent<RectMask2D>();
+        var placeholder = CreateText(textArea, "Placeholder", "Nom du robot...", 15, TextDim, TextAlignmentOptions.Left, FontStyles.Italic);
+        StretchFull(placeholder);
+        var inputText = CreateText(textArea, "Text", "", 15, TextMain, TextAlignmentOptions.Left, FontStyles.Normal);
+        StretchFull(inputText);
+        input.textViewport = textArea;
+        input.textComponent = inputText.GetComponent<TMP_Text>();
+        input.placeholder = placeholder.GetComponent<TMP_Text>();
+        input.characterLimit = 40;
+
+        var (nameCancel, _) = CreateButton(namePanel, "CancelButton", "ANNULER", 14, CardBg, TextMain);
+        var nameCancelRect = nameCancel.GetComponent<RectTransform>();
+        SetAnchors(nameCancelRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+        nameCancelRect.sizeDelta = new Vector2(200, 46);
+        nameCancelRect.anchoredPosition = new Vector2(-108, 22);
+
+        var (nameConfirm, _) = CreateButton(namePanel, "ConfirmButton", "SAUVEGARDER", 14, Accent, Color.white);
+        var nameConfirmRect = nameConfirm.GetComponent<RectTransform>();
+        SetAnchors(nameConfirmRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+        nameConfirmRect.sizeDelta = new Vector2(200, 46);
+        nameConfirmRect.anchoredPosition = new Vector2(108, 22);
+
+        nameOverlay.gameObject.SetActive(false);
+
+        // ---------- Popup "quitter sans sauvegarder" ----------
+        var quitOverlay = CreatePanel(canvas, "QuitPopup", new Color(0f, 0f, 0f, 0.6f));
+        StretchFull(quitOverlay);
+
+        var quitPanel = CreatePanel(quitOverlay, "Panel", new Color(0.05f, 0.08f, 0.13f, 0.98f));
+        SetAnchors(quitPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        quitPanel.sizeDelta = new Vector2(560, 250);
+        quitPanel.anchoredPosition = new Vector2(0, 20);
+
+        var quitTitle = CreateText(quitPanel, "Title", "QUITTER LE GARAGE ?", 17, Accent, TextAlignmentOptions.Left, FontStyles.Bold);
+        SetAnchors(quitTitle, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        quitTitle.offsetMin = new Vector2(24, -56);
+        quitTitle.offsetMax = new Vector2(-24, -16);
+
+        var quitBody = CreateText(quitPanel, "Body",
+            "Des modifications n'ont pas été sauvegardées.\nQuitter sans sauvegarder ?",
+            14.5f, TextDim, TextAlignmentOptions.Center, FontStyles.Normal);
+        SetAnchors(quitBody, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        quitBody.offsetMin = new Vector2(24, -140);
+        quitBody.offsetMax = new Vector2(-24, -64);
+
+        var (quitCancel, _) = CreateButton(quitPanel, "CancelButton", "ANNULER", 14, CardBg, TextMain);
+        var quitCancelRect = quitCancel.GetComponent<RectTransform>();
+        SetAnchors(quitCancelRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+        quitCancelRect.sizeDelta = new Vector2(230, 46);
+        quitCancelRect.anchoredPosition = new Vector2(-128, 22);
+
+        var (quitConfirm, _) = CreateButton(quitPanel, "ConfirmButton", "QUITTER SANS SAUVER", 14,
+                                            new Color(0.62f, 0.18f, 0.18f, 1f), Color.white);
+        var quitConfirmRect = quitConfirm.GetComponent<RectTransform>();
+        SetAnchors(quitConfirmRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+        quitConfirmRect.sizeDelta = new Vector2(230, 46);
+        quitConfirmRect.anchoredPosition = new Vector2(128, 22);
+
+        quitOverlay.gameObject.SetActive(false);
+
+        // ---------- Cablage ----------
+        saveController.namePopup = nameOverlay.gameObject;
+        saveController.nameInput = input;
+        saveController.nameCancelButton = nameCancel;
+        saveController.nameConfirmButton = nameConfirm;
+        saveController.quitPopup = quitOverlay.gameObject;
+        saveController.quitCancelButton = quitCancel;
+        saveController.quitConfirmButton = quitConfirm;
+
+        // Bouton EDIT du bandeau de slot (genere par GarageUISetup)
+        var editButton = canvas.Find("SlotBar/EditButton");
+        if (editButton != null)
+            saveController.editButton = editButton.GetComponent<Button>();
     }
 
     // =========================================================

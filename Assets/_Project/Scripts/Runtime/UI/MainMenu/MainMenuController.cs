@@ -39,6 +39,10 @@ public class MainMenuController : MonoBehaviour
 
     private void Awake()
     {
+        // Scene reservee aux joueurs connectes
+        if (!AuthGuard.EnsureAuthenticated())
+            return;
+
         if (navButtonsRoot == null)
         {
             var found = GameObject.Find("NavButtons");
