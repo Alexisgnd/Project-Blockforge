@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6e0803aededa1147834201a5add33a8, type: 3}
+  m_Name: Mode_Control
+  m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
+  title: CONTROL
+  tagline: "Contr\xF4lez et conservez les points strat\xE9giques pour gagner."
+  description: "Deux \xE9quipes s'affrontent pour prendre le contr\xF4le de points
+    strat\xE9giques r\xE9partis sur la carte. Plus votre \xE9quipe contr\xF4le de
+    points, plus l'ennemi perd des tickets. L'\xE9quipe qui r\xE9duit les tickets
+    adverses \xE0 z\xE9ro remporte la partie."
+  isCustom: 0
+  teamsLabel: 4v4
+  durationLabel: 10-15 min
+  ticketsLabel: 1 000
+  respawnLabel: Oui
+  teamSizeLabel: 4
+  objectivePrimary: "Contr\xF4lez plus de points que l'ennemi pour le priver de tickets."
+  objectiveSecondary: "D\xE9truisez les robots ennemis pour r\xE9duire leur force."
+  mapName: Outpost Valley
+  sceneName: Arena
+  icon: {fileID: 0}
+  coverImage: {fileID: 0}
+  mapImage: {fileID: 0}

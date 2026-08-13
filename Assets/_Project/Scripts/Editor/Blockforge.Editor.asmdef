@@ -2,7 +2,12 @@
     "name": "Blockforge.Editor",
     "rootNamespace": "Blockforge.Editor",
     "references": [
-        "Blockforge.Runtime"
+        "Blockforge.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.HighDefinition.Runtime",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

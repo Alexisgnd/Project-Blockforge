@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21025099c525e2445af0253e52889a6f, type: 3}
+  m_Name: Robot_Titan
+  m_EditorClassIdentifier: Blockforge.Runtime::RobotPreset
+  bayLabel: BAY 12
+  robotName: TITAN
+  tier: GUERRIER
+  capacity: 2100
+  offensivePower: 3600
+  health: 5200
+  speedKmh: 140
+  energyPerSec: 760
+  weightKg: 14300
+  blockCount: 218

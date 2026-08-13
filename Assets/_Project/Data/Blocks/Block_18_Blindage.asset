@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_18_Blindage
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: "BLINDAGE \xC9LECTROD\xC9POS\xC9"
+  description: "Plaque de blindage \xE0 haute r\xE9sistance."
+  category: 3
+  costCpu: 8
+  sizeLabel: 2x2x0,5
+  weightKg: 350
+  resistanceHp: 3000
+  icon: {fileID: 0}
+  previewPrefab: {fileID: 0}
