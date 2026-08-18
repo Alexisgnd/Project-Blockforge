@@ -31,6 +31,9 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/_Project/Scenes/Garage.unity
     m_guid: d755430bfe3235544a7eaea357bc300c
+  - m_enabled: 0
+    m_path: Assets/_Project/Scenes/Map_MARS.unity
+    m_guid: 8124e5870f4fd4c779e7a5f994e84ad1
   m_HasScriptingDefines: 0
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:

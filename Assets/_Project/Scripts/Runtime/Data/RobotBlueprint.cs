@@ -21,9 +21,10 @@ public class PlacedBlock
 [Serializable]
 public class RobotBlueprint
 {
-    // Dimensions de la grille de construction du garage
+    // Dimensions de la grille de construction du garage (v2 : 14x14)
     public const int GridWidth = 14;
-    public const int GridDepth = 12;
+    public const int GridDepth = 14;
+    public const int GridHeight = 50; // hauteur max en blocs
 
     public string name = "NOUVEAU ROBOT";
     public List<PlacedBlock> blocks = new();

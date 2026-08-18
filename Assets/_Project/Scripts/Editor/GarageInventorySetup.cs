@@ -289,9 +289,72 @@ public static class GarageInventorySetup
                              "n'a pas pu etre cablee. Lance d'abord Setup Garage UI.");
         }
 
+        // ---------- Systeme de pose de blocs ----------
+        var oldBuild = GameObject.Find("BuildSystem");
+        if (oldBuild != null)
+            Object.DestroyImmediate(oldBuild);
+
+        var buildGrid = GameObject.Find("buildGrid");
+        if (buildGrid != null)
+        {
+            var buildGo = new GameObject("BuildSystem");
+            var build = buildGo.AddComponent<GarageBuildController>();
+            build.gridRoot = buildGrid.transform;
+            build.inventory = inventory;
+            build.toolbar = canvasGo.transform.Find("Toolbar")?.GetComponent<GarageToolbar>();
+            build.statsHud = statsHud;
+
+            var cameraGo = GameObject.Find("Camera");
+            if (cameraGo != null)
+                build.viewCamera = cameraGo.GetComponent<Camera>();
+
+            if (supportPlate != null)
+                build.plierPreview = supportPlate.GetComponent<PlierBlockPreview>();
+
+            build.ghostValidMaterial = GetOrCreateGhostMaterial("GhostValid", new Color(0.25f, 0.85f, 1f, 0.4f));
+            build.ghostInvalidMaterial = GetOrCreateGhostMaterial("GhostInvalid", new Color(1f, 0.25f, 0.25f, 0.4f));
+        }
+        else
+        {
+            Debug.LogWarning("[GarageInventorySetup] 'buildGrid' introuvable : le systeme de pose " +
+                             "de blocs n'a pas pu etre cable.");
+        }
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[GarageInventorySetup] Inventaire genere ({blocks.Length} blocs). TAB pour ouvrir/fermer.");
+    }
+
+    // =========================================================
+    // MATERIAUX FANTOMES (HDRP Unlit transparent)
+    // =========================================================
+
+    private static Material GetOrCreateGhostMaterial(string name, Color color)
+    {
+        string dir = "Assets/_Project/Art/Garage";
+        EnsureFolder(dir);
+        string path = $"{dir}/{name}.mat";
+
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("HDRP/Unlit"));
+            AssetDatabase.CreateAsset(mat, path);
+        }
+
+        mat.SetFloat("_SurfaceType", 1f); // transparent
+        mat.SetColor("_UnlitColor", color);
+        try
+        {
+            UnityEngine.Rendering.HighDefinition.HDMaterial.ValidateMaterial(mat);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[GarageInventorySetup] Validation HDRP du materiau {name} : {e.Message}");
+        }
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+        return mat;
     }
 
     // =========================================================

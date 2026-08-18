@@ -3,7 +3,52 @@ guid: 17f1e72e44181cd4ab82fa5adcaec6a4
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Mars_Basin
+    second: {fileID: 2100000, guid: ea91bc8b99e272443b2e3ea7bf626720, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Mars_Rim
+    second: {fileID: 2100000, guid: 5a8d5807762a59f4b97ebd0666c33ee7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Mars_Road
+    second: {fileID: 2100000, guid: 1d0c61cf077c62740a7f0dbe2d6e5c92, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Mars_Rock
+    second: {fileID: 2100000, guid: 4c34b57c9df4cf243896e81ee2473a53, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Mars_Sand
+    second: {fileID: 2100000, guid: 1c02dbebf4163664f941c73ad0702840, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Objective_Amber
+    second: {fileID: 2100000, guid: af0551a9d0a70ed4a86fd5d510c5b56e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Objective_Concrete
+    second: {fileID: 2100000, guid: 5091e042e6786fe4a8b7d91501ba19e2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Objective_Gunmetal
+    second: {fileID: 2100000, guid: 29ba26f8ba6eb7e4ba6e30a9fe61c8c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MAT_CW_Steel
+    second: {fileID: 2100000, guid: ab7f8410c106e1a4e8359e8dc8c25b3b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
