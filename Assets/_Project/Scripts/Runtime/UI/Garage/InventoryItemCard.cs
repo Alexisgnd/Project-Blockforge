@@ -29,7 +29,12 @@ public class InventoryItemCard : MonoBehaviour
         nameText.text = def.blockName;
         costText.text = $"{def.costCpu} CPU";
         if (def.icon != null)
+        {
+            // Blanc : la couleur de fond de la case teinterait le sprite
             iconImage.sprite = def.icon;
+            iconImage.color = Color.white;
+            iconImage.preserveAspect = true;
+        }
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => onSelect?.Invoke(Definition));

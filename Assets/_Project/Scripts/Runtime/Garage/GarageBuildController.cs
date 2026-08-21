@@ -334,8 +334,14 @@ public class GarageBuildController : MonoBehaviour
         var material = valid ? ghostValidMaterial : ghostInvalidMaterial;
         if (material != null)
         {
+            // Remplace tous les sous-materiaux (les FBX d'armes en ont plusieurs)
             foreach (var renderer in ghost.GetComponentsInChildren<Renderer>())
-                renderer.sharedMaterial = material;
+            {
+                var materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                    materials[i] = material;
+                renderer.sharedMaterials = materials;
+            }
         }
     }
 
@@ -394,17 +400,21 @@ public class GarageBuildController : MonoBehaviour
 
     private void LoadBlueprint()
     {
+        // Purge les blocs qui n'existent plus dans l'inventaire (ex: anciennes
+        // armes remplacees par les lasers) : la prochaine sauvegarde nettoie
+        // le blueprint cote serveur.
+        int removed = RobotSession.Blueprint.blocks.RemoveAll(b => !defsById.ContainsKey(b.blockId));
+        if (removed > 0)
+        {
+            Debug.LogWarning($"[GarageBuild] {removed} bloc(s) inconnus retires du blueprint (blocs supprimes du jeu).");
+            RobotSession.Dirty = true;
+        }
+
         foreach (var placed in RobotSession.Blueprint.blocks)
         {
-            if (!defsById.TryGetValue(placed.blockId, out var def))
-            {
-                Debug.LogWarning($"[GarageBuild] Bloc inconnu dans le blueprint : {placed.blockId}");
-                continue;
-            }
-
             var cell = new Vector3Int(placed.x, placed.y, placed.z);
             if (IsCellFree(cell))
-                SpawnView(def, cell, placed.rotation);
+                SpawnView(defsById[placed.blockId], cell, placed.rotation);
         }
     }
 

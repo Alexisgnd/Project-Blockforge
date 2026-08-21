@@ -28,11 +28,7 @@ public static class BlockPreviewFactory
     public static GameObject CreateVisual(BlockDefinition def, float unitSize, out float halfHeight)
     {
         if (def.previewPrefab != null)
-        {
-            var instance = Object.Instantiate(def.previewPrefab);
-            halfHeight = unitSize * 0.5f;
-            return instance;
-        }
+            return CreatePrefabVisual(def, unitSize, out halfHeight);
 
         var (primitive, scale) = PickShape(def.blockName);
         var go = GameObject.CreatePrimitive(primitive);
@@ -49,6 +45,37 @@ public static class BlockPreviewFactory
             renderer.sharedMaterial = PlaceholderMaterial;
         renderer.material.color = CategoryColor(def.category);
         return go;
+    }
+
+    // Instancie le vrai modele (FBX) dans un conteneur dont le pivot est le
+    // centre de la cellule : le modele est mis a l'echelle uniforme pour tenir
+    // dans unitSize, centre horizontalement et pose au fond de la cellule
+    // (base a -unitSize/2), comme un bloc plein.
+    private static GameObject CreatePrefabVisual(BlockDefinition def, float unitSize, out float halfHeight)
+    {
+        var wrapper = new GameObject($"Visual_{def.name}");
+        var instance = Object.Instantiate(def.previewPrefab, wrapper.transform, false);
+        instance.transform.localPosition = Vector3.zero;
+        instance.transform.localRotation = Quaternion.identity;
+
+        var renderers = instance.GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
+        {
+            var bounds = renderers[0].bounds;
+            foreach (var r in renderers)
+                bounds.Encapsulate(r.bounds);
+
+            float maxDim = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
+            float scale = maxDim > 0.0001f ? unitSize / maxDim : 1f;
+            instance.transform.localScale = Vector3.one * scale;
+            instance.transform.localPosition = new Vector3(
+                -bounds.center.x * scale,
+                -unitSize * 0.5f - bounds.min.y * scale,
+                -bounds.center.z * scale);
+        }
+
+        halfHeight = unitSize * 0.5f;
+        return wrapper;
     }
 
     // Forme placeholder par nom de bloc (echelles en unites de unitSize)

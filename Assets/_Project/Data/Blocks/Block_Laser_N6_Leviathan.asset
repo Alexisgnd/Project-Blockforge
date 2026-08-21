@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_15_CanonElectrique
+  m_Name: Block_Laser_N6_Leviathan
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: "CANON \xC9LECTRIQUE"
-  description: "Arc \xE9lectrique qui se propage entre cibles."
+  blockName: LASER LEVIATHAN
+  description: "Batterie laser triple. L'arme ultime des ch\xE2ssis lourds."
   category: 2
-  costCpu: 22
-  sizeLabel: 3x1x1
-  weightKg: 340
-  resistanceHp: 650
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  costCpu: 38
+  sizeLabel: 1x1x1
+  weightKg: 480
+  resistanceHp: 1000
+  icon: {fileID: 21300000, guid: e32a08fcc7634254f867e2bb50a414a3, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 86a8a66fbe0bb5148b30d19635851978, type: 3}

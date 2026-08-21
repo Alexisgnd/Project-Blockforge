@@ -17,6 +17,8 @@ public static class GarageInventorySetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
     private const string BlockDataDir = "Assets/_Project/Data/Blocks";
+    private const string WeaponModelDir = "Assets/_Project/Art/Models/Blocks/Weapons";
+    private const string IconDir = "Assets/_Project/Art/Textures/Icons";
 
     private static readonly Color SheetBg = new(0.016f, 0.035f, 0.065f, 0.97f);
     private static readonly Color HeaderBg = new(0.03f, 0.05f, 0.09f, 1f);
@@ -548,7 +550,8 @@ public static class GarageInventorySetup
     // DONNEES : LES 20 BLOCS
     // =========================================================
 
-    private static BlockDefinition[] EnsureBlocks()
+    // Public : aussi appele par LaserWeaponBlockSetup (one-shot post-compilation)
+    public static BlockDefinition[] EnsureBlocks()
     {
         EnsureFolder(BlockDataDir);
 
@@ -570,11 +573,13 @@ public static class GarageInventorySetup
             ("Block_10_Helices", "HÉLICES", BlockCategory.Mouvement, 12, "2x1x2", 150, 450, "Portance verticale pour le vol stationnaire."),
             ("Block_11_Ailes", "AILES", BlockCategory.Mouvement, 10, "3x1x2", 130, 400, "Portance horizontale à grande vitesse."),
             ("Block_12_Propulseurs", "PROPULSEURS", BlockCategory.Mouvement, 16, "1x1x2", 260, 700, "Poussée directionnelle puissante. Consomme beaucoup."),
-            // ----- Armes offensives -----
-            ("Block_13_Laser", "LASER", BlockCategory.Armes, 14, "2x1x1", 180, 500, "Tir précis à dégâts continus."),
-            ("Block_14_LanceurPlasma", "LANCEUR DE PLASMA", BlockCategory.Armes, 18, "2x1x1", 260, 550, "Projectiles lents à zone d'impact."),
-            ("Block_15_CanonElectrique", "CANON ÉLECTRIQUE", BlockCategory.Armes, 22, "3x1x1", 340, 650, "Arc électrique qui se propage entre cibles."),
-            ("Block_16_LameTesla", "LAME DE TESLA", BlockCategory.Armes, 20, "2x1x1", 240, 900, "Lame de mêlée électrifiée. Dégâts au contact."),
+            // ----- Armes offensives : lasers N1 a N6 (FBX Art/Models/Blocks/Weapons) -----
+            ("Block_Laser_N1_Wasp", "LASER WASP", BlockCategory.Armes, 10, "1x1x1", 120, 400, "Tourelle laser légère à cadence élevée."),
+            ("Block_Laser_N2_Hornet", "LASER HORNET", BlockCategory.Armes, 14, "1x1x1", 160, 500, "Laser à double condensateur. Bon équilibre dégâts/poids."),
+            ("Block_Laser_N3_Blaster", "LASER BLASTER", BlockCategory.Armes, 18, "1x1x1", 220, 600, "Canon laser à faisceau concentré. Perce les blindages légers."),
+            ("Block_Laser_N4_Vaporizer", "LASER VAPORIZER", BlockCategory.Armes, 24, "1x1x1", 280, 700, "Émetteur haute énergie. Vaporise les surfaces exposées."),
+            ("Block_Laser_N5_Disintegrator", "LASER DISINTEGRATOR", BlockCategory.Armes, 30, "1x1x1", 360, 850, "Faisceau à désintégration soutenue. Dégâts continus massifs."),
+            ("Block_Laser_N6_Leviathan", "LASER LEVIATHAN", BlockCategory.Armes, 38, "1x1x1", 480, 1000, "Batterie laser triple. L'arme ultime des châssis lourds."),
             // ----- Materiaux defensifs -----
             ("Block_17_DistributeurNano", "DISTRIBUTEUR NANO", BlockCategory.Defense, 18, "2x2x1", 300, 800, "Répare progressivement les blocs proches."),
             ("Block_18_Blindage", "BLINDAGE ÉLECTRODÉPOSÉ", BlockCategory.Defense, 8, "2x2x0,5", 350, 3000, "Plaque de blindage à haute résistance."),
@@ -610,6 +615,16 @@ public static class GarageInventorySetup
             asset.resistanceHp = d.hp;
             asset.description = d.desc;
 
+            // Armes laser : vrai modele FBX + icone rendue depuis Blender
+            if (d.file.StartsWith("Block_Laser_"))
+            {
+                string fbxName = d.file.Substring("Block_".Length);
+                asset.previewPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{WeaponModelDir}/{fbxName}.fbx");
+                asset.icon = LoadWeaponIcon(fbxName);
+                if (asset.previewPrefab == null)
+                    Debug.LogWarning($"[GarageInventorySetup] FBX introuvable : {WeaponModelDir}/{fbxName}.fbx");
+            }
+
             if (isNew)
                 AssetDatabase.CreateAsset(asset, path);
             else
@@ -619,6 +634,26 @@ public static class GarageInventorySetup
 
         AssetDatabase.SaveAssets();
         return result.ToArray();
+    }
+
+    // Charge l'icone PNG d'une arme en Sprite (force l'import en Sprite au besoin)
+    private static Sprite LoadWeaponIcon(string fbxName)
+    {
+        string path = $"{IconDir}/Icon_{fbxName}.png";
+        if (AssetImporter.GetAtPath(path) is TextureImporter importer &&
+            importer.textureType != TextureImporterType.Sprite)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (sprite == null)
+            Debug.LogWarning($"[GarageInventorySetup] Icone introuvable : {path}");
+        return sprite;
     }
 
     // =========================================================

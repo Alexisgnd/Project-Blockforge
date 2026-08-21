@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_14_LanceurPlasma
+  m_Name: Block_Laser_N2_Hornet
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LANCEUR DE PLASMA
-  description: "Projectiles lents \xE0 zone d'impact."
+  blockName: LASER HORNET
+  description: "Laser \xE0 double condensateur. Bon \xE9quilibre d\xE9g\xE2ts/poids."
   category: 2
-  costCpu: 18
-  sizeLabel: 2x1x1
-  weightKg: 260
-  resistanceHp: 550
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  costCpu: 14
+  sizeLabel: 1x1x1
+  weightKg: 160
+  resistanceHp: 500
+  icon: {fileID: 21300000, guid: 8354d27a5c871a9418cdfc6dd7eb09b5, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: c0fb72e9e3423f34d930ebff9307339c, type: 3}
