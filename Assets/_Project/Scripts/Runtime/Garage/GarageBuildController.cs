@@ -71,6 +71,13 @@ public class GarageBuildController : MonoBehaviour
             Destroy(ghost);
     }
 
+    // Coupe par GarageToolSwitcher quand le spray est en main :
+    // le ghost ne doit pas rester affiche sur la grille.
+    private void OnDisable()
+    {
+        HideGhost();
+    }
+
     private void Update()
     {
         // Curseur libre = popup ou inventaire ouvert : pas de construction

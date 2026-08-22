@@ -106,6 +106,17 @@ public class PlierGarageController : MonoBehaviour
     }
 
 
+    private void OnEnable()
+    {
+        // L'outil revient en main (switch pince/spray) :
+        // repart d'un etat d'inertie propre pour eviter un
+        // long rattrapage avec des vitesses/offsets perimes.
+        positionVelocity = Vector3.zero;
+
+        currentLookOffset = Vector3.zero;
+    }
+
+
     private void LateUpdate()
     {
         if (playerController == null)
