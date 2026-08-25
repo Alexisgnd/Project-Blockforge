@@ -108,3 +108,6 @@ InitTestScene*.unity*
 
 #Ignore builds profiles
 /Builds-Profiles/
+
+# Identifiants d'auto-login dev (contient un mot de passe en clair — ne jamais commiter)
+/dev_autologin.json

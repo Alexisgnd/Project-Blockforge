@@ -83,6 +83,23 @@ public class PlierBlockPreview : MonoBehaviour
             Destroy(current);
     }
 
+    // L'apercu vit a la racine de la scene (pas parente a la plaque) :
+    // il suit l'activation de la pince a la main, sinon il resterait
+    // fige en l'air quand on passe au spray paint (GarageToolSwitcher).
+    // NB : ce composant est exclu de disableWhileOpen, donc ces
+    // callbacks ne se declenchent qu'au switch d'outil.
+    private void OnEnable()
+    {
+        if (current != null)
+            current.SetActive(true);
+    }
+
+    private void OnDisable()
+    {
+        if (current != null)
+            current.SetActive(false);
+    }
+
     private void LateUpdate()
     {
         if (current == null)
@@ -115,6 +132,11 @@ public class PlierBlockPreview : MonoBehaviour
 
         current = BlockPreviewFactory.CreateVisual(def, blockSize, out currentHalfHeight);
         current.name = "SelectedBlockPreview";
+
+        // Bloc choisi dans l'inventaire pendant que le spray est en main :
+        // l'apercu nait cache, il apparaitra au retour de la pince.
+        current.SetActive(isActiveAndEnabled);
+
         LateUpdate(); // positionne immediatement
     }
 }

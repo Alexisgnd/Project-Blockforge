@@ -67,6 +67,64 @@ public class BootAuthController : MonoBehaviour
         ShowLoginPanel();
     }
 
+    private void Start()
+    {
+#if UNITY_EDITOR
+        TryDevAutoLogin();
+#endif
+    }
+
+#if UNITY_EDITOR
+    // =========================================================
+    // AUTO-LOGIN DEV (editeur uniquement)
+    // Lit dev_autologin.json a la racine du projet (gitignore,
+    // jamais inclus dans un build) et lance la connexion.
+    // =========================================================
+
+    [System.Serializable]
+    private class DevAutoLoginConfig
+    {
+        public string email;
+        public string password;
+    }
+
+    private void TryDevAutoLogin()
+    {
+        string path = System.IO.Path.Combine(
+            System.IO.Directory.GetParent(Application.dataPath).FullName,
+            "dev_autologin.json");
+
+        if (!System.IO.File.Exists(path))
+            return;
+
+        DevAutoLoginConfig config;
+        try
+        {
+            config = JsonUtility.FromJson<DevAutoLoginConfig>(System.IO.File.ReadAllText(path));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[BootAuth] dev_autologin.json illisible : {e.Message}");
+            return;
+        }
+
+        if (config == null || string.IsNullOrEmpty(config.email))
+            return;
+
+        loginEmail.value = config.email;
+
+        if (string.IsNullOrEmpty(config.password))
+        {
+            ShowInfo("Auto-login dev : renseigne \"password\" dans dev_autologin.json.");
+            return;
+        }
+
+        loginPassword.value = config.password;
+        Debug.Log($"[BootAuth] Auto-login dev : {config.email}");
+        OnLoginClicked();
+    }
+#endif
+
     // =========================================================
     // BASCULE CONNEXION / INSCRIPTION
     // =========================================================

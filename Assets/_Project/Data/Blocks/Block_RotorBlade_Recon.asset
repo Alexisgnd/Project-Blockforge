@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_10_Helices
+  m_Name: Block_RotorBlade_Recon
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: "H\xC9LICES"
-  description: Portance verticale pour le vol stationnaire.
+  blockName: ROTOR RECON
+  description: "Rotor bipale l\xE9ger. Vol stationnaire agile et discret."
   category: 1
-  costCpu: 12
+  costCpu: 10
   sizeLabel: 2x1x2
-  weightKg: 150
-  resistanceHp: 450
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  weightKg: 120
+  resistanceHp: 350
+  icon: {fileID: 21300000, guid: 6903816adb2fe0d478da27694809c8f6, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: eafd09a19d0c8e04d92b5f7777542018, type: 3}

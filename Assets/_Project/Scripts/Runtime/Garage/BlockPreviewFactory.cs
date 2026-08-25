@@ -88,7 +88,7 @@ public static class BlockPreviewFactory
         if (n.Contains("chenille")) return (PrimitiveType.Cube, new Vector3(1.4f, 0.35f, 0.5f));
         if (n.Contains("patte")) return (PrimitiveType.Capsule, new Vector3(0.25f, 0.5f, 0.25f));
         if (n.Contains("survol")) return (PrimitiveType.Cube, new Vector3(1.1f, 0.12f, 0.6f));
-        if (n.Contains("hélice") || n.Contains("helice")) return (PrimitiveType.Cylinder, new Vector3(1.2f, 0.05f, 1.2f));
+        if (n.Contains("rotor")) return (PrimitiveType.Cylinder, new Vector3(1.2f, 0.05f, 1.2f));
         if (n.Contains("aile")) return (PrimitiveType.Cube, new Vector3(1.5f, 0.08f, 0.7f));
         if (n.Contains("propulseur")) return (PrimitiveType.Cylinder, new Vector3(0.35f, 0.45f, 0.35f));
         if (n.Contains("laser")) return (PrimitiveType.Cube, new Vector3(1.3f, 0.22f, 0.22f));

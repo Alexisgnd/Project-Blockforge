@@ -18,6 +18,7 @@ public static class GarageInventorySetup
     private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
     private const string BlockDataDir = "Assets/_Project/Data/Blocks";
     private const string WeaponModelDir = "Assets/_Project/Art/Models/Blocks/Weapons";
+    private const string MovementModelDir = "Assets/_Project/Art/Models/Blocks/Movement";
     private const string IconDir = "Assets/_Project/Art/Textures/Icons";
 
     private static readonly Color SheetBg = new(0.016f, 0.035f, 0.065f, 0.97f);
@@ -547,10 +548,11 @@ public static class GarageInventorySetup
     }
 
     // =========================================================
-    // DONNEES : LES 20 BLOCS
+    // DONNEES : LES BLOCS
     // =========================================================
 
-    // Public : aussi appele par LaserWeaponBlockSetup (one-shot post-compilation)
+    // Public : aussi appele par les one-shots post-compilation
+    // (LaserWeaponBlockSetup, RotorBladeBlockSetup)
     public static BlockDefinition[] EnsureBlocks()
     {
         EnsureFolder(BlockDataDir);
@@ -570,7 +572,10 @@ public static class GarageInventorySetup
             ("Block_07_Chenilles", "CHENILLES", BlockCategory.Mouvement, 10, "3x1x1", 400, 1500, "Traction lourde. Franchit tous les terrains."),
             ("Block_08_PattesInsecte", "PATTES D'INSECTE", BlockCategory.Mouvement, 12, "2x2x1", 220, 800, "Marche articulée. Escalade les pentes raides."),
             ("Block_09_LamesSurvol", "LAMES DE SURVOL", BlockCategory.Mouvement, 14, "2x1x2", 180, 500, "Sustentation basse altitude. Glisse rapide."),
-            ("Block_10_Helices", "HÉLICES", BlockCategory.Mouvement, 12, "2x1x2", 150, 450, "Portance verticale pour le vol stationnaire."),
+            // Rotors Recon/Invader/Assault (FBX Art/Models/Blocks/Movement) : remplacent l'ancien bloc HELICES
+            ("Block_RotorBlade_Recon", "ROTOR RECON", BlockCategory.Mouvement, 10, "2x1x2", 120, 350, "Rotor bipale léger. Vol stationnaire agile et discret."),
+            ("Block_RotorBlade_Invader", "ROTOR INVADER", BlockCategory.Mouvement, 14, "2x1x2", 170, 500, "Rotor tripale équilibré. Portance stable pour châssis moyens."),
+            ("Block_RotorBlade_Assault", "ROTOR ASSAULT", BlockCategory.Mouvement, 18, "2x1x2", 230, 650, "Rotor quadripale surpuissant. Soulève les châssis blindés."),
             ("Block_11_Ailes", "AILES", BlockCategory.Mouvement, 10, "3x1x2", 130, 400, "Portance horizontale à grande vitesse."),
             ("Block_12_Propulseurs", "PROPULSEURS", BlockCategory.Mouvement, 16, "1x1x2", 260, 700, "Poussée directionnelle puissante. Consomme beaucoup."),
             // ----- Armes offensives : lasers N1 a N6 (FBX Art/Models/Blocks/Weapons) -----
@@ -615,14 +620,17 @@ public static class GarageInventorySetup
             asset.resistanceHp = d.hp;
             asset.description = d.desc;
 
-            // Armes laser : vrai modele FBX + icone rendue depuis Blender
-            if (d.file.StartsWith("Block_Laser_"))
+            // Blocs a vrai modele FBX + icone rendue depuis Blender
+            string modelDir = d.file.StartsWith("Block_Laser_") ? WeaponModelDir
+                            : d.file.StartsWith("Block_RotorBlade_") ? MovementModelDir
+                            : null;
+            if (modelDir != null)
             {
                 string fbxName = d.file.Substring("Block_".Length);
-                asset.previewPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{WeaponModelDir}/{fbxName}.fbx");
-                asset.icon = LoadWeaponIcon(fbxName);
+                asset.previewPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{modelDir}/{fbxName}.fbx");
+                asset.icon = LoadBlockIcon(fbxName);
                 if (asset.previewPrefab == null)
-                    Debug.LogWarning($"[GarageInventorySetup] FBX introuvable : {WeaponModelDir}/{fbxName}.fbx");
+                    Debug.LogWarning($"[GarageInventorySetup] FBX introuvable : {modelDir}/{fbxName}.fbx");
             }
 
             if (isNew)
@@ -636,8 +644,8 @@ public static class GarageInventorySetup
         return result.ToArray();
     }
 
-    // Charge l'icone PNG d'une arme en Sprite (force l'import en Sprite au besoin)
-    private static Sprite LoadWeaponIcon(string fbxName)
+    // Charge l'icone PNG d'un bloc en Sprite (force l'import en Sprite au besoin)
+    private static Sprite LoadBlockIcon(string fbxName)
     {
         string path = $"{IconDir}/Icon_{fbxName}.png";
         if (AssetImporter.GetAtPath(path) is TextureImporter importer &&
