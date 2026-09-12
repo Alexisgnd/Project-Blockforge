@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Rudder_N3_Kestrel
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: RUDDER KESTREL
+  family: Ailerons
+  description: "Gouverne \xE0 charni\xE8re renforc\xE9e. Tient le cap sous le feu."
+  category: 1
+  costCpu: 10
+  sizeLabel: 1x3x1
+  weightKg: 90
+  resistanceHp: 420
+  icon: {fileID: 21300000, guid: faa08b528dafc9544b9cf48aa96809d5, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: a9f972e27fa76dc43bb0e910739d92b9, type: 3}

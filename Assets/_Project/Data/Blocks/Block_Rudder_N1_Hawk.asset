@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Rudder_N1_Hawk
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: RUDDER HAWK
+  family: Ailerons
+  description: "Aileron l\xE9ger de reconnaissance. Virages vifs \xE0 faible vitesse."
+  category: 1
+  costCpu: 6
+  sizeLabel: 1x2x1
+  weightKg: 60
+  resistanceHp: 300
+  icon: {fileID: 21300000, guid: db9d0df5c1ae2cf4f9f5f8542352d287, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 4b7e6ad58e3f00447be3557106040ba0, type: 3}

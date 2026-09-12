@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Rudder_N7_Bat
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: RUDDER BAT
+  family: Ailerons
+  description: "Aileron d'\xE9lite \xE0 double lame et liser\xE9 or. R\xE9serv\xE9
+    aux ch\xE2ssis massifs."
+  category: 1
+  costCpu: 24
+  sizeLabel: 1x4x1
+  weightKg: 190
+  resistanceHp: 760
+  icon: {fileID: 21300000, guid: 40d025cab3addd64f95eb18edc8c2067, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 2f3de484a6c85fb489b5ea15bad566b4, type: 3}
