@@ -7,103 +7,98 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: bubble
-    second: {fileID: 2100000, guid: cf285379e3b1b4442826d5c9d16bf4bf, type: 2}
+      name: Accent_Red
+    second: {fileID: 2100000, guid: 2c3b2da2cae49514c9d242f2ede7b9c8, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: cyan_glow
-    second: {fileID: 2100000, guid: 905ce27213680464eb029de680910744, type: 2}
+      name: Brushed_Aluminium
+    second: {fileID: 2100000, guid: 20e180ed0ce216e418d26a6f32749e68, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: dark_metal
-    second: {fileID: 2100000, guid: a85359112eac9d84e8d9752953be97df, type: 2}
+      name: Bubbles_Pearl
+    second: {fileID: 2100000, guid: 2a2ff9078e2ca4f4cada1a8eee3fcc7c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: glass
-    second: {fileID: 2100000, guid: 8505a8114cce10e4580bab7d447110c7, type: 2}
+      name: Ceramic_White
+    second: {fileID: 2100000, guid: edbab09de5391924c8e6f40fbc4bd71d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: grey_body
-    second: {fileID: 2100000, guid: 74744cbaf6a4bfb4fa1412b5c57c2420, type: 2}
+      name: Graphite
+    second: {fileID: 2100000, guid: 10125a038a8406340b130c15947ca204, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_0
+      name: Liquid_Red
+    second: {fileID: 2100000, guid: 1aff61dd0c3e1f04092f0f2548731a29, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Palette_00
     second: {fileID: 2100000, guid: 3688ac5980292894dbe9fcb1b58b2ac5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_1
+      name: Palette_01
     second: {fileID: 2100000, guid: a79e28557167662408af3e8abbb10644, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_10
-    second: {fileID: 2100000, guid: 3388c90ea6dc8ca4ab9f1f623db56f1f, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: hue_11
-    second: {fileID: 2100000, guid: 543d95290e1e4ac4b9b7e1a593cd070e, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: hue_2
+      name: Palette_02
     second: {fileID: 2100000, guid: ecc5633ca69b1274d91d7c79fce7a16a, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_3
+      name: Palette_03
     second: {fileID: 2100000, guid: 8150ed435f70f814ca1095ce1819d0ad, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_4
+      name: Palette_04
     second: {fileID: 2100000, guid: 06a87e114fb7ab84ba7e6fbb67a6b0f3, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_5
+      name: Palette_05
     second: {fileID: 2100000, guid: 805bdffe3e41e77499b5de63d8d81624, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_6
+      name: Palette_06
     second: {fileID: 2100000, guid: daaf800af55203d42a6ada0102c61292, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_7
+      name: Palette_07
     second: {fileID: 2100000, guid: e78d245fda7663d46bbb108672fa33ae, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_8
+      name: Palette_08
     second: {fileID: 2100000, guid: e191b98c9e2cebc4ba3dd9be0201adf5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: hue_9
+      name: Palette_09
     second: {fileID: 2100000, guid: c67a2051667fc664e973e6668689c601, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: paint_liquid
-    second: {fileID: 2100000, guid: 7f3cf21bc71027f4693a7952b0096d2d, type: 2}
+      name: Palette_10
+    second: {fileID: 2100000, guid: 3388c90ea6dc8ca4ab9f1f623db56f1f, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: steel
-    second: {fileID: 2100000, guid: 4daf023b17e6f2b4db5722184aa3d080, type: 2}
+      name: Palette_11
+    second: {fileID: 2100000, guid: 543d95290e1e4ac4b9b7e1a593cd070e, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: white_armor
-    second: {fileID: 2100000, guid: 1475849792965ca4e8b3734d37238474, type: 2}
+      name: Reservoir_Clear
+    second: {fileID: 2100000, guid: b2afc61ed566eee47a3dbbbdea5b4a27, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -136,7 +131,7 @@ ModelImporter:
       takeName: Scene
       internalID: -623603649343465320
       firstFrame: 1
-      lastFrame: 96
+      lastFrame: 121
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -144,7 +139,7 @@ ModelImporter:
       loop: 0
       hasAdditiveReferencePose: 0
       loopTime: 1
-      loopBlend: 1
+      loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0
@@ -159,7 +154,7 @@ ModelImporter:
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 1
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []

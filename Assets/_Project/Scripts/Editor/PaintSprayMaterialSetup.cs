@@ -57,35 +57,50 @@ public static class PaintSprayMaterialSetup
     }
 
     // Nom du materiau dans le FBX -> definition du materiau partage
+    // (valeurs du .blend PaintSpray v2 : smoothness = 1 - roughness Blender)
     private static readonly Dictionary<string, SprayMat> FbxMaterials = BuildMaterialTable();
+
+    // Materiaux de l'ancien spray (v1), supprimes s'ils existent encore
+    private static readonly string[] ObsoleteMaterialAssets =
+    {
+        "Spray_WhiteArmor", "Spray_Steel", "Spray_DarkMetal", "Spray_GreyBody",
+        "Spray_CyanGlow", "Spray_Glass", "Spray_Liquid", "Spray_Bubble",
+    };
+
+    // Noms des noeuds du FBX utilises par la molette de couleur
+    private const string WheelCenterNode = "Colour_Wheel";          // axe des 2 palettes
+    private const string NeedleNode = "Colour_Marker_Pivot";        // pivot des 2 marqueurs
+    private const string NeedleArrowNode = "Selected_Colour_Marker"; // marqueur : direction courante
+    private const string WedgeNodeFormat = "Colour_Swatch_1_{0:00}"; // 12 swatches d'une palette
+    private const string LiquidNode = "Paint_Liquid";               // liquide (shape key houle)
+    private const string BubbleNodeFormat = "Bubble_{0:00}";        // 14 bulles animees
 
     private static Dictionary<string, SprayMat> BuildMaterialTable()
     {
         var table = new Dictionary<string, SprayMat>
         {
-            { "white_armor",  new SprayMat { AssetName = "Spray_WhiteArmor", BaseColor = new Color(0.807f, 0.823f, 0.855f), Metallic = 0.15f, Smoothness = 0.55f, EmissiveColor = Color.black } },
-            { "steel",        new SprayMat { AssetName = "Spray_Steel",      BaseColor = new Color(0.323f, 0.366f, 0.418f), Metallic = 0.40f, Smoothness = 0.65f, EmissiveColor = Color.black } },
-            { "dark_metal",   new SprayMat { AssetName = "Spray_DarkMetal",  BaseColor = new Color(0.024f, 0.030f, 0.040f), Metallic = 0.30f, Smoothness = 0.40f, EmissiveColor = Color.black } },
-            { "grey_body",    new SprayMat { AssetName = "Spray_GreyBody",   BaseColor = new Color(0.423f, 0.456f, 0.503f), Metallic = 0.30f, Smoothness = 0.60f, EmissiveColor = Color.black } },
-            { "cyan_glow",    new SprayMat { AssetName = "Spray_CyanGlow",   BaseColor = new Color(0.050f, 0.645f, 1.000f), Metallic = 0.10f, Smoothness = 0.70f, EmissiveColor = new Color(0.003f, 0.044f, 0.084f) } },
-            { "glass",        new SprayMat { AssetName = "Spray_Glass",      BaseColor = new Color(0.738f, 0.815f, 0.863f, 0.28f), Metallic = 0f, Smoothness = 0.92f, EmissiveColor = Color.black, Transparent = true, SortPriority = 3, DoubleSided = true } },
-            { "paint_liquid", new SprayMat { AssetName = "Spray_Liquid",     BaseColor = new Color(0.745f, 0.238f, 0.027f, 0.75f), Metallic = 0f, Smoothness = 0.75f, EmissiveColor = new Color(0.042f, 0.012f, 0f), Transparent = true, SortPriority = 1 } },
-            { "bubble",       new SprayMat { AssetName = "Spray_Bubble",     BaseColor = new Color(1.000f, 0.694f, 0.352f, 0.85f), Metallic = 0f, Smoothness = 0.80f, EmissiveColor = new Color(0.069f, 0.023f, 0f), Transparent = true, SortPriority = 0 } },
+            { "Ceramic_White",     new SprayMat { AssetName = "Spray_CeramicWhite",     BaseColor = new Color(0.720f, 0.760f, 0.800f), Metallic = 0.30f, Smoothness = 0.65f, EmissiveColor = Color.black } },
+            { "Brushed_Aluminium", new SprayMat { AssetName = "Spray_BrushedAluminium", BaseColor = new Color(0.360f, 0.410f, 0.460f), Metallic = 0.80f, Smoothness = 0.75f, EmissiveColor = Color.black } },
+            { "Graphite",          new SprayMat { AssetName = "Spray_Graphite",         BaseColor = new Color(0.035f, 0.045f, 0.055f), Metallic = 0.50f, Smoothness = 0.65f, EmissiveColor = Color.black } },
+            { "Accent_Red",        new SprayMat { AssetName = "Spray_AccentRed",        BaseColor = new Color(0.650f, 0.035f, 0.020f), Metallic = 0.25f, Smoothness = 0.65f, EmissiveColor = Color.black } },
+            { "Reservoir_Clear",   new SprayMat { AssetName = "Spray_ReservoirClear",   BaseColor = new Color(0.650f, 0.850f, 0.950f, 0.14f), Metallic = 0f, Smoothness = 0.88f, EmissiveColor = Color.black, Transparent = true, SortPriority = 3, DoubleSided = true } },
+            { "Liquid_Red",        new SprayMat { AssetName = "Spray_LiquidRed",        BaseColor = new Color(0.800f, 0.035f, 0.025f, 0.62f), Metallic = 0.05f, Smoothness = 0.80f, EmissiveColor = Color.black, Transparent = true, SortPriority = 1 } },
+            { "Bubbles_Pearl",     new SprayMat { AssetName = "Spray_BubblesPearl",     BaseColor = new Color(1.000f, 0.480f, 0.320f), Metallic = 0.15f, Smoothness = 0.85f, EmissiveColor = Color.black } },
         };
 
-        // Les 12 teintes de la roue (memes valeurs que le .blend)
+        // Les 12 teintes des palettes (memes valeurs que le .blend)
         var hues = new[]
         {
-            new Color(0.925f, 0.075f, 0.075f), new Color(0.925f, 0.500f, 0.075f),
-            new Color(0.925f, 0.925f, 0.075f), new Color(0.500f, 0.925f, 0.075f),
-            new Color(0.075f, 0.925f, 0.075f), new Color(0.075f, 0.925f, 0.500f),
-            new Color(0.075f, 0.925f, 0.925f), new Color(0.075f, 0.500f, 0.925f),
-            new Color(0.075f, 0.075f, 0.925f), new Color(0.500f, 0.075f, 0.925f),
-            new Color(0.925f, 0.075f, 0.925f), new Color(0.925f, 0.075f, 0.500f),
+            new Color(0.850f, 0.127f, 0.127f), new Color(0.850f, 0.489f, 0.127f),
+            new Color(0.850f, 0.850f, 0.127f), new Color(0.489f, 0.850f, 0.127f),
+            new Color(0.127f, 0.850f, 0.127f), new Color(0.127f, 0.850f, 0.489f),
+            new Color(0.127f, 0.850f, 0.850f), new Color(0.127f, 0.489f, 0.850f),
+            new Color(0.127f, 0.127f, 0.850f), new Color(0.489f, 0.127f, 0.850f),
+            new Color(0.850f, 0.127f, 0.850f), new Color(0.850f, 0.127f, 0.489f),
         };
         for (int i = 0; i < hues.Length; i++)
         {
-            table[$"hue_{i}"] = new SprayMat
+            table[$"Palette_{i:00}"] = new SprayMat
             {
                 AssetName = $"Spray_Hue_{i:00}",
                 BaseColor = hues[i],
@@ -173,6 +188,13 @@ public static class PaintSprayMaterialSetup
             result[fbxName] = mat;
         }
 
+        foreach (var obsolete in ObsoleteMaterialAssets)
+        {
+            var path = $"{MaterialDir}/{obsolete}.mat";
+            if (AssetDatabase.LoadAssetAtPath<Material>(path) != null && AssetDatabase.DeleteAsset(path))
+                Debug.Log($"[PaintSprayMaterialSetup] Materiau de l'ancien spray supprime : {path}");
+        }
+
         AssetDatabase.SaveAssets();
         return result;
     }
@@ -194,6 +216,12 @@ public static class PaintSprayMaterialSetup
             return;
         }
 
+        // Remaps de l'ancien spray (noms de materiaux disparus du FBX) : purges
+        foreach (var (identifier, _) in importer.GetExternalObjectMap())
+        {
+            if (identifier.type == typeof(Material) && !materials.ContainsKey(identifier.name))
+                importer.RemoveRemap(identifier);
+        }
         foreach (var (matName, mat) in materials)
             importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), matName), mat);
 
@@ -202,10 +230,10 @@ public static class PaintSprayMaterialSetup
         importer.animationType = ModelImporterAnimationType.Generic;
         importer.importAnimation = true;
 
-        // Clip "Scene" (nom de la scene Blender) -> "PaintSpray_Bubbles", en boucle
-        var clips = importer.clipAnimations is { Length: > 0 }
-            ? importer.clipAnimations
-            : importer.defaultClipAnimations;
+        // Clip "Scene" (nom de la scene Blender) -> "PaintSpray_Bubbles", en boucle.
+        // Toujours reconstruit depuis les clips par defaut : la plage de frames
+        // suit celle du FBX (v1 : 96 frames @ 24 fps, v2 : 121 frames @ 30 fps).
+        var clips = importer.defaultClipAnimations;
         for (int i = 0; i < clips.Length; i++)
         {
             clips[i].name = i == 0 ? ClipName : $"{ClipName}_{i}";
@@ -219,10 +247,10 @@ public static class PaintSprayMaterialSetup
         importer.SaveAndReimport();
     }
 
-    // Le FBX bake des courbes statiques pour TOUS les noeuds (58 objets).
-    // Jouees telles quelles, elles ecraseraient chaque frame l'aiguille de
-    // la molette et la racine (inertie). On ne garde que ce qui bouge
-    // vraiment : les bulles et les blendshapes de la houle du liquide.
+    // Le FBX bake des courbes statiques pour TOUS les noeuds (90 objets).
+    // Jouees telles quelles, elles ecraseraient chaque frame le pivot des
+    // marqueurs de couleur et la racine (inertie). On ne garde que ce qui
+    // bouge vraiment : les bulles et le blendshape de la houle du liquide.
     private static AnimationClip BuildFilteredClip()
     {
         var source = AssetDatabase.LoadAllAssetRepresentationsAtPath(FbxPath)
@@ -250,7 +278,7 @@ public static class PaintSprayMaterialSetup
         int kept = 0;
         foreach (var binding in AnimationUtility.GetCurveBindings(source))
         {
-            bool isBubble = binding.path.Contains("bubble_");
+            bool isBubble = binding.path.IndexOf("bubble_", System.StringComparison.OrdinalIgnoreCase) >= 0;
             bool isBlendShape = binding.propertyName.StartsWith("blendShape.");
             if (!isBubble && !isBlendShape)
                 continue;
@@ -430,26 +458,29 @@ public static class PaintSprayMaterialSetup
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
         // ---------- Molette de couleur ----------
+        // Les deux palettes (gauche/droite) partagent l'axe Colour_Wheel ; les
+        // deux marqueurs sont sous le meme pivot, donc une seule palette
+        // suffit pour l'ordre angulaire et la couleur.
         var wheel = GetOrAdd<PaintSprayColorWheel>(wrapper);
-        wheel.wheelCenter = FindDeep(modelTr, "color_wheel");
-        wheel.needle = FindDeep(modelTr, "needle");
-        wheel.needleArrow = FindDeep(modelTr, "needle_arrow");
+        wheel.wheelCenter = FindDeep(modelTr, WheelCenterNode);
+        wheel.needle = FindDeep(modelTr, NeedleNode);
+        wheel.needleArrow = FindDeep(modelTr, NeedleArrowNode);
 
         var wedges = new List<Transform>();
         for (int i = 0; i < 12; i++)
         {
-            var wedge = FindDeep(modelTr, $"wedge_{i}");
+            var wedge = FindDeep(modelTr, string.Format(WedgeNodeFormat, i));
             if (wedge != null)
                 wedges.Add(wedge);
         }
         wheel.wedges = wedges.ToArray();
 
-        wheel.liquidRenderer = FindDeep(modelTr, "can_liquid")?.GetComponent<Renderer>();
-        wheel.surfaceRenderer = FindDeep(modelTr, "liquid_surface")?.GetComponent<Renderer>();
+        wheel.liquidRenderer = FindDeep(modelTr, LiquidNode)?.GetComponent<Renderer>();
+        wheel.surfaceRenderer = null; // v2 : la houle est un blendshape du liquide lui-meme
         var bubbles = new List<Renderer>();
         for (int i = 0; i < 16; i++)
         {
-            var bubble = FindDeep(modelTr, $"bubble_{i}");
+            var bubble = FindDeep(modelTr, string.Format(BubbleNodeFormat, i));
             if (bubble == null)
                 break;
             var r = bubble.GetComponent<Renderer>();
@@ -458,6 +489,15 @@ public static class PaintSprayMaterialSetup
         }
         wheel.bubbleRenderers = bubbles.ToArray();
         wheel.inventory = inventory;
+
+        if (wheel.wheelCenter == null || wheel.needle == null || wheel.needleArrow == null ||
+            wedges.Count != 12 || wheel.liquidRenderer == null || bubbles.Count == 0)
+        {
+            Debug.LogWarning("[PaintSprayMaterialSetup] Noeuds du spray introuvables dans le FBX " +
+                             $"(wheel={wheel.wheelCenter != null}, pivot={wheel.needle != null}, " +
+                             $"marker={wheel.needleArrow != null}, swatches={wedges.Count}, " +
+                             $"liquid={wheel.liquidRenderer != null}, bubbles={bubbles.Count}).");
+        }
 
         // ---------- Switch pince/spray (1 = pince, 2 = spray) ----------
         // L'hote du switch doit rester actif quel que soit l'outil :
