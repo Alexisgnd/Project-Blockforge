@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_08_PattesInsecte
+  m_Name: Block_InsectLeg_N1_Walker
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PATTES D'INSECTE
-  description: "Marche articul\xE9e. Escalade les pentes raides."
+  blockName: INSECT LEG WALKER
+  family: Pattes d'insecte
+  description: "Patte articul\xE9e l\xE9g\xE8re. Escalade souple et silencieuse."
   category: 1
-  costCpu: 12
+  costCpu: 10
   sizeLabel: 2x2x1
-  weightKg: 220
-  resistanceHp: 800
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  weightKg: 190
+  resistanceHp: 700
+  icon: {fileID: 21300000, guid: 3a4425cddda7d3545b5816566f8b9bd4, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 4715e2be6eff0804293050cd7f435bdd, type: 3}
