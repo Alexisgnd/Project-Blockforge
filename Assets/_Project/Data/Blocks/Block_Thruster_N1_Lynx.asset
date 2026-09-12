@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_12_Propulseurs
+  m_Name: Block_Thruster_N1_Lynx
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PROPULSEURS
-  description: "Pouss\xE9e directionnelle puissante. Consomme beaucoup."
+  blockName: THRUSTER LYNX
+  family: Propulseurs
+  description: "Propulseur d'appoint. Pouss\xE9e courte, consommation faible."
   category: 1
-  costCpu: 16
+  costCpu: 9
   sizeLabel: 1x1x2
-  weightKg: 260
-  resistanceHp: 700
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  weightKg: 150
+  resistanceHp: 420
+  icon: {fileID: 21300000, guid: b3add77438074284e9f612465fc3189d, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: f1635533d8eaae74d8c5a9d87c063b01, type: 3}

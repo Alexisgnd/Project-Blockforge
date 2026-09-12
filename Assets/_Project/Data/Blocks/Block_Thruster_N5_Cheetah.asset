@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Thruster_N5_Cheetah
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: THRUSTER CHEETAH
+  family: Propulseurs
+  description: "Pouss\xE9e maximale. Projette les ch\xE2ssis les plus lourds."
+  category: 1
+  costCpu: 26
+  sizeLabel: 1x1x3
+  weightKg: 370
+  resistanceHp: 760
+  icon: {fileID: 21300000, guid: ff80f26f3f6ace6438ec625133f318d1, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 8a0eec0e4af7de54b837bd6aca1fbe3a, type: 3}
