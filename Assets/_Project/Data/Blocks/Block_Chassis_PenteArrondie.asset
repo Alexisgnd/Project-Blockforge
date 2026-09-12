@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_01_Cube
+  m_Name: Block_Chassis_PenteArrondie
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: CUBE
-  family: Cube
-  description: "Bloc de base. Solide et \xE9quilibr\xE9."
+  blockName: PENTE ARRONDIE
+  family: Pente
+  description: "Pente \xE0 profil courbe pour carrosseries lisses."
   category: 0
   costCpu: 1
   sizeLabel: 1x1x1
-  weightKg: 80
-  resistanceHp: 1000
-  icon: {fileID: 21300000, guid: c6b5f42d02671434fae102fd2b0a1eee, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: b86785e68f42b86459d9c1a56378931d, type: 3}
+  weightKg: 72
+  resistanceHp: 870
+  icon: {fileID: 21300000, guid: 50310ee656b85764c8cec8adc12b9b06, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 6467cfbc38ad7dc4d85e2f4980d2c592, type: 3}

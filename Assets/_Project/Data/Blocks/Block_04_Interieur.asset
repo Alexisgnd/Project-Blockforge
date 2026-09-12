@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_04_Interieur
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: "INT\xC9RIEUR"
-  description: "Bloc creux l\xE9ger pour les structures internes."
+  blockName: "COIN INT\xC9RIEUR"
+  family: "Coin int\xE9rieur"
+  description: Angle rentrant pour raccorder deux pentes.
   category: 0
   costCpu: 1
   sizeLabel: 1x1x1
-  weightKg: 45
-  resistanceHp: 600
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  weightKg: 75
+  resistanceHp: 900
+  icon: {fileID: 21300000, guid: c4a8bb476cda77441bc06adcb0631d14, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 91197441ba700cf4ba84f94ee787fdee, type: 3}

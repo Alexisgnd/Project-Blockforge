@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_05_Tige
+  m_Name: Block_Rod_Arc
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TIGE
-  description: "Tige fine pour cadres et extensions l\xE9g\xE8res."
+  blockName: TIGE ARC
+  family: Tige
+  description: "Barre courb\xE9e pour arceaux et carrosseries arrondies."
   category: 0
-  costCpu: 1
-  sizeLabel: 1x1x4
-  weightKg: 30
-  resistanceHp: 400
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  costCpu: 2
+  sizeLabel: 2x1x2
+  weightKg: 35
+  resistanceHp: 420
+  icon: {fileID: 21300000, guid: 7234e4179138ad94db21c84528bcb446, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 9eb5e382ea24fd042ba8a1340dae14cc, type: 3}

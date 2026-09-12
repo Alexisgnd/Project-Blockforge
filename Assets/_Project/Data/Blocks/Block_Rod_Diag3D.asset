@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_01_Cube
+  m_Name: Block_Rod_Diag3D
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: CUBE
-  family: Cube
-  description: "Bloc de base. Solide et \xE9quilibr\xE9."
+  blockName: TIGE DIAGONALE 3D
+  family: Tige
+  description: "Barre en biais reliant deux cases d\xE9cal\xE9es dans l'espace."
   category: 0
-  costCpu: 1
-  sizeLabel: 1x1x1
-  weightKg: 80
-  resistanceHp: 1000
-  icon: {fileID: 21300000, guid: c6b5f42d02671434fae102fd2b0a1eee, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: b86785e68f42b86459d9c1a56378931d, type: 3}
+  costCpu: 2
+  sizeLabel: 2x2x2
+  weightKg: 34
+  resistanceHp: 410
+  icon: {fileID: 21300000, guid: 9403c31d9f009be44aeee6680f0135fd, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: fc70a122932beeb4988c5b27525c4e7d, type: 3}

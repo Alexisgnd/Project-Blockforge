@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Block_03_Coin
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: COIN
+  family: Coin
   description: Angle de finition pour carrosserie.
   category: 0
   costCpu: 1
   sizeLabel: 1x1x1
   weightKg: 55
   resistanceHp: 700
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4049d76c62b4a1f4295503e93eba7f9a, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 1597f24d733f1f148ad0bc72edace6e2, type: 3}

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Block_02_Pente
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: PENTE
+  family: Pente
   description: "Surface inclin\xE9e pour d\xE9vier les tirs."
   category: 0
   costCpu: 1
   sizeLabel: 1x1x1
   weightKg: 70
   resistanceHp: 850
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 019b8ccb9616f234cb224946bb6b8aba, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 8369a0b5eaa35e54d9b108a2a1f64872, type: 3}

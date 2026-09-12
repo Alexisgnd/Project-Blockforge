@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_01_Cube
+  m_Name: Block_Chassis_CoinArrondi
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: CUBE
-  family: Cube
-  description: "Bloc de base. Solide et \xE9quilibr\xE9."
+  blockName: COIN ARRONDI
+  family: Coin
+  description: "Coin bomb\xE9 pour arrondir les angles ext\xE9rieurs."
   category: 0
   costCpu: 1
   sizeLabel: 1x1x1
-  weightKg: 80
-  resistanceHp: 1000
-  icon: {fileID: 21300000, guid: c6b5f42d02671434fae102fd2b0a1eee, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: b86785e68f42b86459d9c1a56378931d, type: 3}
+  weightKg: 60
+  resistanceHp: 740
+  icon: {fileID: 21300000, guid: c178d9ef9ee19c945835b9f40805fa69, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 91410add1d66949498c9dcc28a65ec18, type: 3}
