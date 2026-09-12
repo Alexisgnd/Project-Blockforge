@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_17_DistributeurNano
+  m_Name: Block_Rail_N2_Penetrator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: DISTRIBUTEUR NANO
-  description: "R\xE9pare progressivement les blocs proches."
-  category: 3
-  costCpu: 18
-  sizeLabel: 2x2x1
-  weightKg: 300
-  resistanceHp: 800
+  blockName: RAIL PENETRATOR
+  family: "Canon \xE9lectrique"
+  description: "Rail \xE0 double bobine. Perforation nette \xE0 longue port\xE9e."
+  category: 2
+  costCpu: 22
+  sizeLabel: 1x1x3
+  weightKg: 280
+  resistanceHp: 550
   icon: {fileID: 0}
   previewPrefab: {fileID: 0}

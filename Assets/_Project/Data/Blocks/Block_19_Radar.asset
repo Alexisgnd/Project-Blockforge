@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_19_Radar
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: RADAR
+  family: Radar
   description: "R\xE9v\xE8le les ennemis proches sur la minicarte."
   category: 4
   costCpu: 18

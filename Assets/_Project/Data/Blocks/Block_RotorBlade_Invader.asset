@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_RotorBlade_Invader
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: ROTOR INVADER
+  family: "H\xE9lices"
   description: "Rotor tripale \xE9quilibr\xE9. Portance stable pour ch\xE2ssis moyens."
   category: 1
   costCpu: 14

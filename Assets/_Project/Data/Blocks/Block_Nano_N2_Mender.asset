@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_09_LamesSurvol
+  m_Name: Block_Nano_N2_Mender
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LAMES DE SURVOL
-  description: Sustentation basse altitude. Glisse rapide.
-  category: 1
-  costCpu: 14
-  sizeLabel: 2x1x2
-  weightKg: 180
-  resistanceHp: 500
+  blockName: NANO MENDER
+  family: Distributeur nano / Healer
+  description: "R\xE9pare progressivement les blocs proches."
+  category: 3
+  costCpu: 18
+  sizeLabel: 2x2x1
+  weightKg: 300
+  resistanceHp: 800
   icon: {fileID: 0}
   previewPrefab: {fileID: 0}

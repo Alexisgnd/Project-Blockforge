@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_RotorBlade_Assault
+  m_Name: Block_Tesla_N2_Ripper
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ROTOR ASSAULT
-  family: "H\xE9lices"
-  description: "Rotor quadripale surpuissant. Soul\xE8ve les ch\xE2ssis blind\xE9s."
-  category: 1
-  costCpu: 18
+  blockName: TESLA RIPPER
+  family: Lame de Tesla
+  description: "Double lame \xE0 arc \xE9lectrique. D\xE9chire les blindages au corps
+    \xE0 corps."
+  category: 2
+  costCpu: 19
   sizeLabel: 2x1x2
-  weightKg: 230
+  weightKg: 210
   resistanceHp: 650
-  icon: {fileID: 21300000, guid: 6cdcc6d4f4e62ca4ba3465b8329a3273, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: 1c7d02775ba251f4dba06cb6d76af095, type: 3}
+  icon: {fileID: 0}
+  previewPrefab: {fileID: 0}

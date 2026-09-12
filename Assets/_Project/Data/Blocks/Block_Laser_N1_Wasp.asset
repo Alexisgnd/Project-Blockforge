@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_Laser_N1_Wasp
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: LASER WASP
+  family: Laser
   description: "Tourelle laser l\xE9g\xE8re \xE0 cadence \xE9lev\xE9e."
   category: 2
   costCpu: 10

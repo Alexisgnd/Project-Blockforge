@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_RotorBlade_Recon
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: ROTOR RECON
+  family: "H\xE9lices"
   description: "Rotor bipale l\xE9ger. Vol stationnaire agile et discret."
   category: 1
   costCpu: 10

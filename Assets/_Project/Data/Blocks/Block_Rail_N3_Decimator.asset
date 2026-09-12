@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_Laser_N4_Vaporizer
+  m_Name: Block_Rail_N3_Decimator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LASER VAPORIZER
-  family: Laser
-  description: "\xC9metteur haute \xE9nergie. Vaporise les surfaces expos\xE9es."
+  blockName: RAIL DECIMATOR
+  family: "Canon \xE9lectrique"
+  description: "Canon \xE9lectrique lourd. Transperce plusieurs blocs align\xE9s."
   category: 2
-  costCpu: 24
-  sizeLabel: 1x1x1
-  weightKg: 280
-  resistanceHp: 700
-  icon: {fileID: 21300000, guid: 747bd13bba5243847accd96db0e5d7df, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: 5216256f39a763c4e883f0623362f7ac, type: 3}
+  costCpu: 30
+  sizeLabel: 2x1x4
+  weightKg: 380
+  resistanceHp: 680
+  icon: {fileID: 0}
+  previewPrefab: {fileID: 0}

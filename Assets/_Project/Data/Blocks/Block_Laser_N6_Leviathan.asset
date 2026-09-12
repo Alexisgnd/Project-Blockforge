@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_Laser_N6_Leviathan
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: LASER LEVIATHAN
+  family: Laser
   description: "Batterie laser triple. L'arme ultime des ch\xE2ssis lourds."
   category: 2
   costCpu: 38

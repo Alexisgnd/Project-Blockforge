@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_11_Ailes
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: AILES
+  family: Ailes
   description: "Portance horizontale \xE0 grande vitesse."
   category: 1
   costCpu: 10

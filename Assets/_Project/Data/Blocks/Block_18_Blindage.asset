@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_18_Blindage
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: "BLINDAGE \xC9LECTROD\xC9POS\xC9"
+  family: "Blindage \xE9lectrod\xE9pos\xE9"
   description: "Plaque de blindage \xE0 haute r\xE9sistance."
   category: 3
   costCpu: 8

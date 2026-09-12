@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_Laser_N2_Hornet
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: LASER HORNET
+  family: Laser
   description: "Laser \xE0 double condensateur. Bon \xE9quilibre d\xE9g\xE2ts/poids."
   category: 2
   costCpu: 14

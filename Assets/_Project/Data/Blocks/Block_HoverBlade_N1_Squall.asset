@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
-  m_Name: Block_RotorBlade_Assault
+  m_Name: Block_HoverBlade_N1_Squall
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ROTOR ASSAULT
-  family: "H\xE9lices"
-  description: "Rotor quadripale surpuissant. Soul\xE8ve les ch\xE2ssis blind\xE9s."
+  blockName: HOVER BLADE SQUALL
+  family: Lames de survol
+  description: Sustentation basse altitude. Glisse rapide et nerveuse.
   category: 1
-  costCpu: 18
+  costCpu: 8
   sizeLabel: 2x1x2
-  weightKg: 230
-  resistanceHp: 650
-  icon: {fileID: 21300000, guid: 6cdcc6d4f4e62ca4ba3465b8329a3273, type: 3}
-  previewPrefab: {fileID: 919132149155446097, guid: 1c7d02775ba251f4dba06cb6d76af095, type: 3}
+  weightKg: 130
+  resistanceHp: 380
+  icon: {fileID: 0}
+  previewPrefab: {fileID: 0}

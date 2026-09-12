@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_Laser_N3_Blaster
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: LASER BLASTER
+  family: Laser
   description: "Canon laser \xE0 faisceau concentr\xE9. Perce les blindages l\xE9gers."
   category: 2
   costCpu: 18

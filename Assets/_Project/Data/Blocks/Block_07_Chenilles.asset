@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_07_Chenilles
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: CHENILLES
+  family: Chenilles
   description: Traction lourde. Franchit tous les terrains.
   category: 1
   costCpu: 10

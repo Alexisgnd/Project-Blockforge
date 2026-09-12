@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Block_Laser_N5_Disintegrator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: LASER DISINTEGRATOR
+  family: Laser
   description: "Faisceau \xE0 d\xE9sint\xE9gration soutenue. D\xE9g\xE2ts continus
     massifs."
   category: 2
