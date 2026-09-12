@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Block_20_DisqueBouclier
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
   blockName: DISQUE DE BOUCLIER
+  family: Disque de bouclier
   description: "Projette une barri\xE8re \xE9nerg\xE9tique directionnelle."
   category: 4
   costCpu: 26
   sizeLabel: 2x2x1
   weightKg: 280
   resistanceHp: 2500
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5d475ba8e0979e3438f04664bb352b09, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: a7a3f1a7837c24045bf156ad7775dfc1, type: 3}
