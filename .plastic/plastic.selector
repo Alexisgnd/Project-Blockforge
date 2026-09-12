@@ -1,4 +1,0 @@
-repository "Project-Blockforge/Project-Blockforge@9071472032833@cloud"
-  path "/"
-    br "/main"
-    co "/main"

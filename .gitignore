@@ -111,3 +111,9 @@ InitTestScene*.unity*
 
 # Identifiants d'auto-login dev (contient un mot de passe en clair — ne jamais commiter)
 /dev_autologin.json
+# Unity Version Control / Plastic SCM : métadonnées locales du workspace (le dépôt de référence est GitHub)
+/.plastic/
+/ignore.conf
+
+# Captures du profiler
+/ProfilerCaptures/
