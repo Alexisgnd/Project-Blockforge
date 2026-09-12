@@ -21,6 +21,8 @@ public class BlockDefinition : ScriptableObject
 
     [Header("Identite")]
     public string blockName = "CUBE";
+    [Tooltip("Famille de blocs (ex : Roues, Laser, Lames de survol). Sert au regroupement et a la recherche.")]
+    public string family = "";
     [TextArea] public string description = "Bloc de base. Solide et équilibré.";
     public BlockCategory category = BlockCategory.Chassis;
 

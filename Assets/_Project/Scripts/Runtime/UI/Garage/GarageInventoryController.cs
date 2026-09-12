@@ -207,7 +207,10 @@ public class GarageInventoryController : MonoBehaviour
         foreach (var card in cards)
         {
             bool categoryOk = currentCategory < 0 || (int)card.Definition.category == currentCategory;
-            bool searchOk = search.Length == 0 || card.Definition.blockName.ToUpperInvariant().Contains(search);
+            // La recherche porte sur le nom ET la famille ("roues", "laser", "plasma"...)
+            bool searchOk = search.Length == 0
+                            || card.Definition.blockName.ToUpperInvariant().Contains(search)
+                            || card.Definition.family.ToUpperInvariant().Contains(search);
             card.gameObject.SetActive(categoryOk && searchOk);
         }
     }
