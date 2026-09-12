@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Wheel_N1_Scout
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: WHEEL SCOUT
+  family: Roues
+  description: "Roue l\xE9g\xE8re de reconnaissance. Vitesse maximale, adh\xE9rence
+    minimale."
+  category: 1
+  costCpu: 4
+  sizeLabel: 1x1x1
+  weightKg: 90
+  resistanceHp: 450
+  icon: {fileID: 21300000, guid: 503d67a3d92764d48a752b468803bfad, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: c9f38d3845c9d434d8c11858ee6895ee, type: 3}
