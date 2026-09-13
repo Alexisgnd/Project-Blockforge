@@ -656,13 +656,13 @@ public static class GarageInventorySetup
             ("Block_Laser_N4_Vaporizer", "LASER VAPORIZER", "Laser", BlockCategory.Armes, 24, "1x1x1", 280, 700, "Laser_N4_Vaporizer", "Émetteur haute énergie. Vaporise les surfaces exposées."),
             ("Block_Laser_N5_Disintegrator", "LASER DISINTEGRATOR", "Laser", BlockCategory.Armes, 30, "1x1x1", 360, 850, "Laser_N5_Disintegrator", "Faisceau à désintégration soutenue. Dégâts continus massifs."),
             ("Block_Laser_N6_Leviathan", "LASER LEVIATHAN", "Laser", BlockCategory.Armes, 38, "1x1x1", 480, 1000, "Laser_N6_Leviathan", "Batterie laser triple. L'arme ultime des châssis lourds."),
-            // ----- Armes offensives : lanceurs de plasma (Pulser -> Goliathon) -----
-            ("Block_Plasma_N1_Pulser", "PLASMA PULSER", "Lanceur de plasma", BlockCategory.Armes, 12, "1x1x1", 150, 420, "", "Lanceur de plasma compact. Salves rapides à courte portée."),
-            ("Block_Plasma_N2_Disruptor", "PLASMA DISRUPTOR", "Lanceur de plasma", BlockCategory.Armes, 17, "1x1x1", 200, 520, "", "Charge plasmique instable. Déséquilibre les châssis touchés."),
-            ("Block_Plasma_N3_Bombarder", "PLASMA BOMBARDER", "Lanceur de plasma", BlockCategory.Armes, 22, "2x1x2", 270, 640, "", "Tir en cloche à zone d'impact large. Idéal contre les groupes."),
-            ("Block_Plasma_N4_Ravager", "PLASMA RAVAGER", "Lanceur de plasma", BlockCategory.Armes, 28, "2x1x2", 350, 760, "", "Projectiles surchauffés. Fait fondre les blindages moyens."),
-            ("Block_Plasma_N5_Devastator", "PLASMA DEVASTATOR", "Lanceur de plasma", BlockCategory.Armes, 35, "2x2x2", 450, 900, "", "Mortier plasma lourd. Dégâts de zone dévastateurs."),
-            ("Block_Plasma_N6_Goliathon", "PLASMA GOLIATHON", "Lanceur de plasma", BlockCategory.Armes, 44, "3x2x2", 580, 1100, "", "Batterie plasma de siège. Pulvérise tout ce qui reste debout."),
+            // ----- Armes offensives : lanceurs de plasma (Pulser -> Goliathon ; FBX Art/Models/Blocks/Weapons, canon vers l'avant, source Tools/Blender/PlasmaWeapons.blend, pack GLB du 14/09/2026) -----
+            ("Block_Plasma_N1_Pulser", "PLASMA PULSER", "Lanceur de plasma", BlockCategory.Armes, 12, "1x1x1", 150, 420, "Plasma_N1_Pulser", "Lanceur de plasma compact. Salves rapides à courte portée."),
+            ("Block_Plasma_N2_Disruptor", "PLASMA DISRUPTOR", "Lanceur de plasma", BlockCategory.Armes, 17, "1x1x1", 200, 520, "Plasma_N2_Disruptor", "Charge plasmique instable. Déséquilibre les châssis touchés."),
+            ("Block_Plasma_N3_Bombarder", "PLASMA BOMBARDER", "Lanceur de plasma", BlockCategory.Armes, 22, "2x1x2", 270, 640, "Plasma_N3_Bombarder", "Tir en cloche à zone d'impact large. Idéal contre les groupes."),
+            ("Block_Plasma_N4_Ravager", "PLASMA RAVAGER", "Lanceur de plasma", BlockCategory.Armes, 28, "2x1x2", 350, 760, "Plasma_N4_Ravager", "Projectiles surchauffés. Fait fondre les blindages moyens."),
+            ("Block_Plasma_N5_Devastator", "PLASMA DEVASTATOR", "Lanceur de plasma", BlockCategory.Armes, 35, "2x2x2", 450, 900, "Plasma_N5_Devastator", "Mortier plasma lourd. Dégâts de zone dévastateurs."),
+            ("Block_Plasma_N6_Goliathon", "PLASMA GOLIATHON", "Lanceur de plasma", BlockCategory.Armes, 44, "3x2x2", 580, 1100, "Plasma_N6_Goliathon", "Batterie plasma de siège. Pulvérise tout ce qui reste debout."),
             // ----- Armes offensives : canons electriques (Piercer -> Erazer) -----
             ("Block_Rail_N1_Piercer", "RAIL PIERCER", "Canon électrique", BlockCategory.Armes, 16, "1x1x3", 210, 450, "", "Canon à rail léger. Traverse les blocs fins d'un seul tir."),
             ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "1x1x3", 280, 550, "", "Rail à double bobine. Perforation nette à longue portée."),

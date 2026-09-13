@@ -39,7 +39,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 | Garage : grille 14×14, pince de pose, inventaire par catégorie et famille, recherche | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
-| Catalogue de blocs avec vrais modèles 3D | 57 blocs modélisés, 19 placeholders (voir le catalogue) |
+| Catalogue de blocs avec vrais modèles 3D | 63 blocs modélisés, 13 placeholders (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
 | Combat, physique des véhicules, multijoueur | pas commencé |
 
@@ -135,7 +135,7 @@ resynchronisent avec les assets.
 | Mouvement | Ailerons — Hawk → Bat | 7 | ✅ |
 | Mouvement | Propulseurs — Lynx → Cheetah | 5 | ✅ |
 | Armes | Lasers — Wasp → Leviathan | 6 | ✅ |
-| Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | placeholder |
+| Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | ✅ |
 | Armes | Canons électriques (rail) — Piercer → Erazer | 4 | placeholder |
 | Armes | Lames de Tesla — Slicer → Nova | 3 | placeholder |
 | Défense | Distributeurs nano — Blinder → Constructor | 3 | placeholder |
@@ -229,7 +229,7 @@ Règles communes :
 C'est le besoin numéro un du projet. Par ordre de priorité :
 
 1. Modéliser une famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
-   plasma, canons électriques, Tesla, nano, blindage, radar, ailes.
+   canons électriques, Tesla, nano, blindage, radar, ailes.
 2. Améliorer les blocs existants (topologie, détails, textures).
 3. Décors : garage, hangar, carte Mars.
 
