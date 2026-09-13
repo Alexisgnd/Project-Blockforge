@@ -621,13 +621,13 @@ public static class GarageInventorySetup
             // ----- Mouvement : pattes d'insecte (FBX Art/Models/Blocks/Movement, source Tools/Blender/InsectLegs.blend) -----
             ("Block_InsectLeg_N1_Walker", "INSECT LEG WALKER", "Pattes d'insecte", BlockCategory.Mouvement, 10, "2x2x1", 190, 700, "InsectLeg_Walker", "Patte articulée légère. Escalade souple et silencieuse."),
             ("Block_InsectLeg_N2_Soldier", "INSECT LEG SOLDIER", "Pattes d'insecte", BlockCategory.Mouvement, 15, "2x2x2", 280, 1000, "InsectLeg_Soldier", "Patte de combat renforcée. Stabilise les châssis lourds en pente."),
-            // ----- Mouvement : lames de survol (Squall -> Hurricane) -----
-            ("Block_HoverBlade_N1_Squall", "HOVER BLADE SQUALL", "Lames de survol", BlockCategory.Mouvement, 8, "2x1x2", 130, 380, "", "Sustentation basse altitude. Glisse rapide et nerveuse."),
-            ("Block_HoverBlade_N2_Thunder", "HOVER BLADE THUNDER", "Lames de survol", BlockCategory.Mouvement, 11, "2x1x2", 160, 450, "", "Lame de survol équilibrée. Portance stable à vitesse moyenne."),
-            ("Block_HoverBlade_N3_Storm", "HOVER BLADE STORM", "Lames de survol", BlockCategory.Mouvement, 14, "2x1x2", 190, 520, "", "Lame renforcée. Supporte les châssis intermédiaires."),
-            ("Block_HoverBlade_N4_Tempest", "HOVER BLADE TEMPEST", "Lames de survol", BlockCategory.Mouvement, 18, "2x1x2", 230, 600, "", "Double flux de sustentation. Bonne tenue sous le feu."),
-            ("Block_HoverBlade_N5_Tornado", "HOVER BLADE TORNADO", "Lames de survol", BlockCategory.Mouvement, 22, "3x1x3", 280, 680, "", "Turbine de survol large. Soulève les carrosseries lourdes."),
-            ("Block_HoverBlade_N6_Hurricane", "HOVER BLADE HURRICANE", "Lames de survol", BlockCategory.Mouvement, 27, "3x1x3", 340, 780, "", "Sustentation maximale. Réservée aux châssis les plus massifs."),
+            // ----- Mouvement : lames de survol (Squall -> Hurricane ; FBX Art/Models/Blocks/Movement, attache vers l'arriere, source Tools/Blender/HoverBlades.blend, pack GLB du 14/09/2026) -----
+            ("Block_HoverBlade_N1_Squall", "HOVER BLADE SQUALL", "Lames de survol", BlockCategory.Mouvement, 8, "2x1x2", 130, 380, "HoverBlade_N1_Squall", "Sustentation basse altitude. Glisse rapide et nerveuse."),
+            ("Block_HoverBlade_N2_Thunder", "HOVER BLADE THUNDER", "Lames de survol", BlockCategory.Mouvement, 11, "2x1x2", 160, 450, "HoverBlade_N2_Thunder", "Lame de survol équilibrée. Portance stable à vitesse moyenne."),
+            ("Block_HoverBlade_N3_Storm", "HOVER BLADE STORM", "Lames de survol", BlockCategory.Mouvement, 14, "2x1x2", 190, 520, "HoverBlade_N3_Storm", "Lame renforcée. Supporte les châssis intermédiaires."),
+            ("Block_HoverBlade_N4_Tempest", "HOVER BLADE TEMPEST", "Lames de survol", BlockCategory.Mouvement, 18, "2x1x2", 230, 600, "HoverBlade_N4_Tempest", "Double flux de sustentation. Bonne tenue sous le feu."),
+            ("Block_HoverBlade_N5_Tornado", "HOVER BLADE TORNADO", "Lames de survol", BlockCategory.Mouvement, 22, "3x1x3", 280, 680, "HoverBlade_N5_Tornado", "Turbine de survol large. Soulève les carrosseries lourdes."),
+            ("Block_HoverBlade_N6_Hurricane", "HOVER BLADE HURRICANE", "Lames de survol", BlockCategory.Mouvement, 27, "3x1x3", 340, 780, "HoverBlade_N6_Hurricane", "Sustentation maximale. Réservée aux châssis les plus massifs."),
             // ----- Mouvement : helices (FBX Art/Models/Blocks/Movement) -----
             ("Block_RotorBlade_Recon", "ROTOR RECON", "Hélices", BlockCategory.Mouvement, 10, "2x1x2", 120, 350, "RotorBlade_Recon", "Rotor bipale léger. Vol stationnaire agile et discret."),
             ("Block_RotorBlade_Invader", "ROTOR INVADER", "Hélices", BlockCategory.Mouvement, 14, "2x1x2", 170, 500, "RotorBlade_Invader", "Rotor tripale équilibré. Portance stable pour châssis moyens."),
