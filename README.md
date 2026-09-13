@@ -127,7 +127,7 @@ resynchronisent avec les assets.
 | Châssis | Pièces pleines (cube, pentes, coins, cône, pyramide…) | 12 | ✅ |
 | Châssis | Tiges (courte, longue, arc, diagonales 2D/3D) | 5 | ✅ |
 | Mouvement | Roues — Scout → Monster | 6 | ✅ |
-| Mouvement | Chenilles | 1 | placeholder |
+| Mouvement | Chenilles — Bison → Mammoth (animées) | 4 | ✅ |
 | Mouvement | Pattes d'insecte — Walker, Soldier | 2 | ✅ |
 | Mouvement | Lames de survol — Squall → Hurricane | 6 | placeholder |
 | Mouvement | Hélices (rotors) — Recon, Invader, Assault | 3 | ✅ |
@@ -168,6 +168,12 @@ Chaque famille de blocs suit le même chemin, entièrement automatisé côté Un
    couleur / metallic / smoothness, et remappe les matériaux des FBX dessus.
 5. **Catalogue** : `<Famille>BlockSetup.cs` relie FBX + icône aux assets
    `BlockDefinition` et met à jour la scène Garage.
+6. **Blocs animés** (chenilles) : l'armature et ses clips sont exportés dans le FBX
+   (une take par piste NLA, ici `Roll_Forward` / `Roll_Reverse`, 16 s @ 60 fps en
+   boucle exacte). Le `MaterialSetup` passe le rig en Generic et coche Loop Time ;
+   le `BlockSetup` crée un `AnimatorController` (`Art/Animations/<Nom>.controller`,
+   états Idle / avant / arrière pilotés par le float `Roll`) et un prefab variant
+   `Art/Prefabs/Blocks/<Nom>.prefab` qui remplace le FBX brut comme prefab d'aperçu.
 
 Conventions à respecter (ouvrir `Tools/Blender/Chassis.blend` ou `Wheels.blend`
 comme référence) :
@@ -223,8 +229,7 @@ Règles communes :
 C'est le besoin numéro un du projet. Par ordre de priorité :
 
 1. Modéliser une famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
-   lames de survol, plasma, canons électriques, Tesla, nano, blindage, radar,
-   chenilles, ailes.
+   lames de survol, plasma, canons électriques, Tesla, nano, blindage, radar, ailes.
 2. Améliorer les blocs existants (topologie, détails, textures).
 3. Décors : garage, hangar, carte Mars.
 

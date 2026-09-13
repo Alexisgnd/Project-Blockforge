@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_TankTrack_N2_Rhino
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: TANK TRACK RHINO
+  family: Chenilles
+  description: "Chenille blind\xE9e \xE0 maillons larges. Encaisse les chocs frontaux."
+  category: 1
+  costCpu: 14
+  sizeLabel: 2x1x3
+  weightKg: 520
+  resistanceHp: 1900
+  icon: {fileID: 21300000, guid: 76caa17f27a183a45b3ba2a4165014de, type: 3}
+  previewPrefab: {fileID: 1117569102346976509, guid: 588bdc0680547fe4ea76921453221a54, type: 3}

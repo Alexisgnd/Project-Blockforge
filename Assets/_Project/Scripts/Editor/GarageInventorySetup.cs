@@ -23,6 +23,7 @@ public static class GarageInventorySetup
     private const string DefenseModelDir = "Assets/_Project/Art/Models/Blocks/Defense";
     private const string SpecialModelDir = "Assets/_Project/Art/Models/Blocks/Special";
     private const string IconDir = "Assets/_Project/Art/Textures/Icons";
+    private const string BlockPrefabDir = "Assets/_Project/Art/Prefabs/Blocks";
 
     private static readonly Color SheetBg = new(0.016f, 0.035f, 0.065f, 0.97f);
     private static readonly Color HeaderBg = new(0.03f, 0.05f, 0.09f, 1f);
@@ -612,8 +613,11 @@ public static class GarageInventorySetup
             ("Block_Wheel_N4_Stormer", "WHEEL STORMER", "Roues", BlockCategory.Mouvement, 11, "2x1x2", 230, 950, "Wheel_Stormer", "Roue de course renforcée. Accélération brutale sur terrain dur."),
             ("Block_Wheel_N5_Geoterrain", "WHEEL GEOTERRAIN", "Roues", BlockCategory.Mouvement, 14, "2x1x2", 310, 1200, "Wheel_Geoterrain", "Roue tout-terrain à flancs épais. Absorbe les reliefs."),
             ("Block_Wheel_N6_Monster", "WHEEL MONSTER", "Roues", BlockCategory.Mouvement, 18, "3x1x3", 420, 1500, "Wheel_Monster", "Roue géante. Écrase les obstacles mais alourdit le châssis."),
-            // ----- Mouvement : chenilles -----
-            ("Block_07_Chenilles", "CHENILLES", "Chenilles", BlockCategory.Mouvement, 10, "3x1x1", 400, 1500, "", "Traction lourde. Franchit tous les terrains."),
+            // ----- Mouvement : chenilles (Bison -> Mammoth ; FBX animes Art/Models/Blocks/Movement + prefab Art/Prefabs/Blocks, source Tools/Blender/TankTracks.blend) -----
+            ("Block_TankTrack_N1_Bison", "TANK TRACK BISON", "Chenilles", BlockCategory.Mouvement, 10, "1x1x3", 400, 1500, "TankTrack_N1_Bison", "Chenille compacte à trois galets. Traction fiable sur tous les terrains."),
+            ("Block_TankTrack_N2_Rhino", "TANK TRACK RHINO", "Chenilles", BlockCategory.Mouvement, 14, "2x1x3", 520, 1900, "TankTrack_N2_Rhino", "Chenille blindée à maillons larges. Encaisse les chocs frontaux."),
+            ("Block_TankTrack_N3_Elephant", "TANK TRACK ELEPHANT", "Chenilles", BlockCategory.Mouvement, 19, "2x1x3", 680, 2400, "TankTrack_N3_Elephant", "Chenille longue à quatre galets. Stabilise les châssis lourds."),
+            ("Block_TankTrack_N4_Mammoth", "TANK TRACK MAMMOTH", "Chenilles", BlockCategory.Mouvement, 25, "2x2x4", 900, 3000, "TankTrack_N4_Mammoth", "Chenille de siège à cinq galets. Écrase tout sur son passage."),
             // ----- Mouvement : pattes d'insecte (FBX Art/Models/Blocks/Movement, source Tools/Blender/InsectLegs.blend) -----
             ("Block_InsectLeg_N1_Walker", "INSECT LEG WALKER", "Pattes d'insecte", BlockCategory.Mouvement, 10, "2x2x1", 190, 700, "InsectLeg_Walker", "Patte articulée légère. Escalade souple et silencieuse."),
             ("Block_InsectLeg_N2_Soldier", "INSECT LEG SOLDIER", "Pattes d'insecte", BlockCategory.Mouvement, 15, "2x2x2", 280, 1000, "InsectLeg_Soldier", "Patte de combat renforcée. Stabilise les châssis lourds en pente."),
@@ -715,8 +719,13 @@ public static class GarageInventorySetup
             // ni a leur icone ni a leur previewPrefab existants.
             if (!string.IsNullOrEmpty(d.art))
             {
+                // Blocs animes (chenilles) : un prefab variant du FBX avec l'Animator
+                // cable existe dans Art/Prefabs/Blocks et prime sur le FBX brut.
                 string modelDir = ModelDirFor(d.cat);
-                asset.previewPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{modelDir}/{d.art}.fbx");
+                var variant = AssetDatabase.LoadAssetAtPath<GameObject>($"{BlockPrefabDir}/{d.art}.prefab");
+                asset.previewPrefab = variant != null
+                    ? variant
+                    : AssetDatabase.LoadAssetAtPath<GameObject>($"{modelDir}/{d.art}.fbx");
                 asset.icon = LoadBlockIcon(d.art);
                 if (asset.previewPrefab == null)
                     Debug.LogWarning($"[GarageInventorySetup] FBX introuvable : {modelDir}/{d.art}.fbx");

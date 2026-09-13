@@ -90,9 +90,12 @@ Tous les outils suivent le même pattern « one-shot » :
 - Code : C# global (pas de namespace imposé), commentaires en français, en-tête
   `// ====` décrivant le rôle de chaque script.
 - Blocs : `Block_<Famille>_N<tier>_<Nom>.asset` (`Block_Rudder_N3_Kestrel`) ;
-  les blocs historiques gardent leur numéro (`Block_01_Cube`, `Block_07_Chenilles`).
+  les blocs historiques gardent leur numéro (`Block_01_Cube`, `Block_11_Ailes`).
 - Modèles : `<Famille>_<Nom>.fbx` dans `Art/Models/Blocks/<Catégorie>/` ;
   icônes `Icon_<Nom>.png` (512×512) dans `Art/Textures/Icons/`.
 - Matériaux : `<Famille>_<Matériau>.mat` (`Wheel_Rubber`, `Shield_CyanChannel`)
   dans `Art/Materials/Blocks/`, `Spray_*` dans `Art/Materials/Garage/`.
+- Blocs animés : `Art/Animations/<Nom>.controller` + prefab variant du FBX
+  `Art/Prefabs/Blocks/<Nom>.prefab` (Animator câblé), pris comme `previewPrefab`
+  à la place du FBX quand il existe.
 - Sources Blender : `Tools/Blender/<Famille>.blend`, une collection par bloc.
