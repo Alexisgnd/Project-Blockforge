@@ -677,8 +677,15 @@ public static class GarageInventorySetup
             ("Block_Nano_N1_Blinder", "NANO BLINDER", "Distributeur nano / Healer", BlockCategory.Defense, 14, "1x1x1", 180, 550, "", "Nuage de nanites aveuglant. Brouille les capteurs adverses."),
             ("Block_Nano_N2_Mender", "NANO MENDER", "Distributeur nano / Healer", BlockCategory.Defense, 18, "2x2x1", 300, 800, "", "Répare progressivement les blocs proches."),
             ("Block_Nano_N3_Constructor", "NANO CONSTRUCTOR", "Distributeur nano / Healer", BlockCategory.Defense, 24, "2x2x1", 380, 950, "", "Reconstruit les blocs détruits en pleine bataille."),
-            // ----- Materiaux defensifs : blindage -----
-            ("Block_18_Blindage", "BLINDAGE ÉLECTRODÉPOSÉ", "Blindage électrodéposé", BlockCategory.Defense, 8, "2x2x0,5", 350, 3000, "", "Plaque de blindage à haute résistance."),
+            // ----- Materiaux defensifs : electroplates (T2 -> T9 ; FBX Art/Models/Blocks/Defense, face protectrice vers l'avant, pivot sur la fixation arriere, source Tools/Blender/Electroplates.blend, pack GLB du 15/09/2026) -----
+            ("Block_Electroplate_T2", "ELECTROPLATE T2", "Blindage électrodéposé", BlockCategory.Defense, 4, "1x2x1", 120, 900, "Electroplate_T2", "Plaque ogivale légère. Première protection électrodéposée."),
+            ("Block_Electroplate_T3", "ELECTROPLATE T3", "Blindage électrodéposé", BlockCategory.Defense, 6, "1x2x1", 160, 1300, "Electroplate_T3", "Plaque à épaulement. Couvre un flanc de châssis léger."),
+            ("Block_Electroplate_T4", "ELECTROPLATE T4", "Blindage électrodéposé", BlockCategory.Defense, 8, "1x3x1", 200, 1700, "Electroplate_T4", "Lame étroite et haute. Protège les mâts et les tourelles."),
+            ("Block_Electroplate_T5", "ELECTROPLATE T5", "Blindage électrodéposé", BlockCategory.Defense, 10, "1x3x1", 250, 2200, "Electroplate_T5", "Aile biseautée à séparateur. Dévie les tirs obliques."),
+            ("Block_Electroplate_T6", "ELECTROPLATE T6", "Blindage électrodéposé", BlockCategory.Defense, 13, "2x3x1", 310, 2800, "Electroplate_T6", "Plaque coudée à double face. Enveloppe un angle de carrosserie."),
+            ("Block_Electroplate_T7", "ELECTROPLATE T7", "Blindage électrodéposé", BlockCategory.Defense, 16, "2x3x1", 380, 3500, "Electroplate_T7", "Grand panneau renforcé. Blindage principal des châssis moyens."),
+            ("Block_Electroplate_T8", "ELECTROPLATE T8", "Blindage électrodéposé", BlockCategory.Defense, 20, "2x3x1", 460, 4300, "Electroplate_T8", "Plaque à décrochement. Absorbe les impacts lourds."),
+            ("Block_Electroplate_T9", "ELECTROPLATE T9", "Blindage électrodéposé", BlockCategory.Defense, 24, "3x4x1", 550, 5200, "Electroplate_T9", "Aile delta suspendue. Le blindage ultime des châssis massifs."),
 
             // ----- Equipements speciaux (FBX Art/Models/Blocks/Special) -----
             ("Block_19_Radar", "RADAR", "Radar", BlockCategory.Special, 18, "1x1x2", 140, 400, "", "Révèle les ennemis proches sur la minicarte."),

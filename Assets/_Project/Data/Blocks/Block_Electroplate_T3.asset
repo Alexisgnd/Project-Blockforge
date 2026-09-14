@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
+  m_Name: Block_Electroplate_T3
+  m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
+  blockName: ELECTROPLATE T3
+  family: "Blindage \xE9lectrod\xE9pos\xE9"
+  description: "Plaque \xE0 \xE9paulement. Couvre un flanc de ch\xE2ssis l\xE9ger."
+  category: 3
+  costCpu: 6
+  sizeLabel: 1x2x1
+  weightKg: 160
+  resistanceHp: 1300
+  icon: {fileID: 21300000, guid: 8bb6a7dd8696d3d4c832956096195d90, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: 2c8447261d1471545bf49dfe24704bf0, type: 3}
