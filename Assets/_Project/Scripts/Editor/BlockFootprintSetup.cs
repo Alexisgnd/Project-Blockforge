@@ -61,7 +61,7 @@ public static class BlockFootprintSetup
     // boite d'empreinte attendue.
     // =====================================================
 
-    private const string ReportMarker = "Library/BlockforgeBlockBoundsReport-v3.done";
+    private const string ReportMarker = "Library/BlockforgeBlockBoundsReport-v4.done";
     private const string ReportPath = "Library/BlockBoundsReport.txt";
 
     // Noeuds dont la position aide a verifier le cote des faces d'ancrage
@@ -131,6 +131,31 @@ public static class BlockFootprintSetup
             Vector3 boxMin = (Vector3)BlockFootprint.MinOffset(def) - Vector3.one * 0.5f;
             Vector3 boxMax = boxMin + BlockFootprint.Size(def);
 
+            // Rotations 1..3 : le visuel tourne avec son conteneur, les cases
+            // occupees (BlockFootprint.Cells) doivent toujours le contenir.
+            var rotIssues = new System.Text.StringBuilder();
+            for (int r = 1; r < 4 && !def.nativeScale; r++)
+            {
+                var rotated = BlockPreviewFactory.CreateVisual(def, 1f, out _);
+                rotated.transform.rotation = BlockFootprint.Rotation(r);
+                GarageInventorySetup.TryGetExactBounds(rotated, out var rb);
+                Object.DestroyImmediate(rotated);
+
+                var cells = BlockFootprint.Cells(def, Vector3Int.zero, r);
+                Vector3Int cmin = cells[0], cmax = cells[0];
+                foreach (var c in cells)
+                {
+                    cmin = Vector3Int.Min(cmin, c);
+                    cmax = Vector3Int.Max(cmax, c);
+                }
+                Vector3 bmin = (Vector3)cmin - Vector3.one * 0.5f;
+                Vector3 bmax = (Vector3)cmax + Vector3.one * 0.5f;
+                bool rotInside = rb.min.x >= bmin.x - 1e-3f && rb.min.y >= bmin.y - 1e-3f && rb.min.z >= bmin.z - 1e-3f
+                              && rb.max.x <= bmax.x + 1e-3f && rb.max.y <= bmax.y + 1e-3f && rb.max.z <= bmax.z + 1e-3f;
+                if (!rotInside || cells.Length != BlockFootprint.Size(def).x * BlockFootprint.Size(def).y * BlockFootprint.Size(def).z)
+                    rotIssues.Append($" rot{r}: visuel [{F(rb.min)}..{F(rb.max)}] hors cases [{F(bmin)}..{F(bmax)}]");
+            }
+
             bool inside = vb.min.x >= boxMin.x - 1e-3f && vb.min.y >= boxMin.y - 1e-3f && vb.min.z >= boxMin.z - 1e-3f
                        && vb.max.x <= boxMax.x + 1e-3f && vb.max.y <= boxMax.y + 1e-3f && vb.max.z <= boxMax.z + 1e-3f;
 
@@ -146,13 +171,13 @@ public static class BlockFootprintSetup
 
             string status;
             if (def.nativeScale && !inside) { status = "DEBORD"; overhangs++; }
-            else if (!inside || !faceOk) { status = "ERREUR"; errors++; }
+            else if (!inside || !faceOk || rotIssues.Length > 0) { status = "ERREUR"; errors++; }
             else status = "OK";
 
             sb.AppendLine($"{status,-6} {def.name,-36} {def.SizeLabel,-6} {def.anchor,-6} " +
                           $"brut min{F(rawBounds.min)} max{F(rawBounds.max)} | " +
                           $"boite [{F(boxMin)}..{F(boxMax)}] visuel [{F(vb.min)}..{F(vb.max)}] " +
-                          $"ecart face {faceGap:0.000} bas {bottom:0.00}");
+                          $"ecart face {faceGap:0.000} bas {bottom:0.00}{rotIssues}");
             if (landmarks.Length > 0)
                 sb.AppendLine($"       reperes :{landmarks}");
         }

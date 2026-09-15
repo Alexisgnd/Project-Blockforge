@@ -4,10 +4,14 @@ using UnityEngine.InputSystem;
 
 // =========================================================
 // SYSTEME DE POSE DE BLOCS SUR LA GRILLE (14x14, hauteur 50)
-// - Ghost transparent sur la cellule visee (vert = ok, rouge = invalide)
+// - Ghost transparent sur la case visee (vert = ok, rouge = invalide)
+// - Un bloc occupe toutes les cases de sa boite d'empreinte
+//   (BlockFootprint), tournee par le yaw autour de la case visee ;
+//   seule la case visee + la rotation sont sauvegardees (PlacedBlock)
 // - Clic gauche : poser / clic droit : retirer
 // - Molette : rotation du bloc par pas de 90 degres
-// - Recharge le blueprint existant, met a jour stats et Dirty
+// - Recharge le blueprint existant (purge les blocs qui ne tiennent
+//   plus), met a jour stats et Dirty
 // La grille est mesuree depuis les renderers de "buildGrid".
 // =========================================================
 
@@ -32,9 +36,11 @@ public class GarageBuildController : MonoBehaviour
     private float topY;
     private float cellX, cellZ, cellY;
 
-    private readonly Dictionary<Vector3Int, PlacedBlockView> occupied = new();
+    private readonly Dictionary<Vector3Int, PlacedBlockView> occupied = new(); // une entree par case occupee
+    private readonly HashSet<PlacedBlockView> placedViews = new();             // une entree par bloc
     private readonly Dictionary<string, BlockDefinition> defsById = new();
     private readonly RaycastHit[] hitBuffer = new RaycastHit[32];
+    private readonly List<Vector3Int> cellBuffer = new();
 
     private Transform robotRoot;
     private GameObject ghost;
@@ -120,7 +126,7 @@ public class GarageBuildController : MonoBehaviour
             return;
         }
 
-        bool valid = IsCellFree(placeCell) && CapacityAllows(def);
+        bool valid = CanPlace(def, placeCell, rotationIndex) && CapacityAllows(def);
         ShowGhost(def, placeCell, valid);
 
         if (valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
@@ -229,12 +235,32 @@ public class GarageBuildController : MonoBehaviour
             gridMin.z + (cell.z + 0.5f) * cellZ);
     }
 
+    private Vector3Int WorldToCell(Vector3 point)
+    {
+        return new Vector3Int(
+            Mathf.FloorToInt((point.x - gridMin.x) / cellX),
+            Mathf.FloorToInt((point.y - topY) / cellY),
+            Mathf.FloorToInt((point.z - gridMin.z) / cellZ));
+    }
+
     private bool IsCellFree(Vector3Int cell)
     {
         return cell.x >= 0 && cell.x < RobotBlueprint.GridWidth
             && cell.z >= 0 && cell.z < RobotBlueprint.GridDepth
             && cell.y >= 0 && cell.y < RobotBlueprint.GridHeight
             && !occupied.ContainsKey(cell);
+    }
+
+    // Toutes les cases de la boite d'empreinte (tournee) sont dans la grille et libres
+    private bool CanPlace(BlockDefinition def, Vector3Int anchorCell, int rotation)
+    {
+        BlockFootprint.GetCells(def, anchorCell, rotation, cellBuffer);
+        foreach (var c in cellBuffer)
+        {
+            if (!IsCellFree(c))
+                return false;
+        }
+        return true;
     }
 
     private bool CapacityAllows(BlockDefinition def)
@@ -258,6 +284,7 @@ public class GarageBuildController : MonoBehaviour
         float blockDist = float.MaxValue;
         PlacedBlockView view = null;
         Vector3 normal = Vector3.up;
+        Vector3 hitPoint = Vector3.zero;
         for (int i = 0; i < count; i++)
         {
             var candidate = hitBuffer[i].collider.GetComponentInParent<PlacedBlockView>();
@@ -266,6 +293,7 @@ public class GarageBuildController : MonoBehaviour
             blockDist = hitBuffer[i].distance;
             view = candidate;
             normal = hitBuffer[i].normal;
+            hitPoint = hitBuffer[i].point;
         }
 
         // Plan de la grille
@@ -274,20 +302,20 @@ public class GarageBuildController : MonoBehaviour
 
         if (view != null && (!planeHit || blockDist <= planeDist))
         {
+            // Un bloc multi-cases n'a qu'une case d'ancrage : la case touchee
+            // se lit au point d'impact (rentre d'un peu dans la face visee).
             hoverBlock = view;
-            cell = view.cell + NormalToDelta(normal);
+            Vector3Int hitCell = WorldToCell(hitPoint - normal * (cellY * 0.05f));
+            cell = hitCell + NormalToDelta(normal);
             return true;
         }
 
         if (planeHit)
         {
-            Vector3 point = ray.GetPoint(planeDist);
-            int cx = Mathf.FloorToInt((point.x - gridMin.x) / cellX);
-            int cz = Mathf.FloorToInt((point.z - gridMin.z) / cellZ);
-            if (cx < 0 || cx >= RobotBlueprint.GridWidth || cz < 0 || cz >= RobotBlueprint.GridDepth)
-                return false;
-            cell = new Vector3Int(cx, 0, cz);
-            return true;
+            cell = WorldToCell(ray.GetPoint(planeDist));
+            cell.y = 0;
+            return cell.x >= 0 && cell.x < RobotBlueprint.GridWidth
+                && cell.z >= 0 && cell.z < RobotBlueprint.GridDepth;
         }
 
         return false;
@@ -336,7 +364,7 @@ public class GarageBuildController : MonoBehaviour
         }
 
         ghost.SetActive(true);
-        ghost.transform.SetPositionAndRotation(CellToWorld(cell), Quaternion.Euler(0f, rotationIndex * 90f, 0f));
+        ghost.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(rotationIndex));
 
         var material = valid ? ghostValidMaterial : ghostInvalidMaterial;
         if (material != null)
@@ -379,7 +407,9 @@ public class GarageBuildController : MonoBehaviour
 
     private void RemoveBlock(PlacedBlockView view)
     {
-        occupied.Remove(view.cell);
+        foreach (var c in view.cells)
+            occupied.Remove(c);
+        placedViews.Remove(view);
         RobotSession.Blueprint.blocks.RemoveAll(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
         Destroy(view.gameObject);
         RobotSession.Dirty = true;
@@ -390,19 +420,28 @@ public class GarageBuildController : MonoBehaviour
     {
         var root = new GameObject($"Block_{cell.x}_{cell.y}_{cell.z}");
         root.transform.SetParent(robotRoot, false);
-        root.transform.SetPositionAndRotation(CellToWorld(cell), Quaternion.Euler(0f, rotation * 90f, 0f));
+        root.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(rotation));
 
+        // Collider a la taille de la boite d'empreinte, dans le repere local de la
+        // racine (il tourne avec elle) : la case visee est a l'origine.
+        var size = BlockFootprint.Size(def);
+        var min = BlockFootprint.MinOffset(def);
         var collider = root.AddComponent<BoxCollider>();
-        collider.size = new Vector3(cellX * 0.98f, cellY * 0.98f, cellZ * 0.98f);
+        collider.center = new Vector3(min.x + (size.x - 1) * 0.5f, min.y + (size.y - 1) * 0.5f, min.z + (size.z - 1) * 0.5f) * cellY;
+        collider.size = (Vector3)size * (cellY * 0.98f);
 
         var view = root.AddComponent<PlacedBlockView>();
         view.cell = cell;
+        view.rotation = rotation;
         view.definition = def;
+        view.cells = BlockFootprint.Cells(def, cell, rotation);
 
         var visual = BlockPreviewFactory.CreateVisual(def, cellY, out _);
         visual.transform.SetParent(root.transform, false);
 
-        occupied[cell] = view;
+        foreach (var c in view.cells)
+            occupied[c] = view;
+        placedViews.Add(view);
     }
 
     private void LoadBlueprint()
@@ -417,11 +456,26 @@ public class GarageBuildController : MonoBehaviour
             RobotSession.Dirty = true;
         }
 
+        // Pose dans l'ordre de sauvegarde ; un bloc qui ne tient plus (hors
+        // grille ou chevauchement, ex. empreintes agrandies depuis la sauvegarde)
+        // est purge de la meme facon.
+        var purged = new List<PlacedBlock>();
         foreach (var placed in RobotSession.Blueprint.blocks)
         {
             var cell = new Vector3Int(placed.x, placed.y, placed.z);
-            if (IsCellFree(cell))
-                SpawnView(defsById[placed.blockId], cell, placed.rotation);
+            var def = defsById[placed.blockId];
+            if (CanPlace(def, cell, placed.rotation))
+                SpawnView(def, cell, placed.rotation);
+            else
+                purged.Add(placed);
+        }
+
+        if (purged.Count > 0)
+        {
+            RobotSession.Blueprint.blocks.RemoveAll(purged.Contains);
+            Debug.LogWarning($"[GarageBuild] {purged.Count} bloc(s) retires du blueprint : leur empreinte chevauche " +
+                             "un autre bloc ou sort de la grille.");
+            RobotSession.Dirty = true;
         }
     }
 
@@ -434,11 +488,11 @@ public class GarageBuildController : MonoBehaviour
         totalCpu = 0;
         int totalHp = 0;
         int totalKg = 0;
-        foreach (var pair in occupied)
+        foreach (var view in placedViews)
         {
-            totalCpu += pair.Value.definition.costCpu;
-            totalHp += pair.Value.definition.resistanceHp;
-            totalKg += pair.Value.definition.weightKg;
+            totalCpu += view.definition.costCpu;
+            totalHp += view.definition.resistanceHp;
+            totalKg += view.definition.weightKg;
         }
 
         if (statsHud != null)
