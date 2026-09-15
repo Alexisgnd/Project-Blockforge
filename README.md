@@ -39,7 +39,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 | Garage : grille 14×14, pince de pose, inventaire par catégorie et famille, recherche | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
-| Catalogue de blocs avec vrais modèles 3D | 71 blocs modélisés, 12 placeholders (voir le catalogue) |
+| Catalogue de blocs avec vrais modèles 3D | 77 blocs modélisés, 6 placeholders (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
 | Combat, physique des véhicules, multijoueur | pas commencé |
 
