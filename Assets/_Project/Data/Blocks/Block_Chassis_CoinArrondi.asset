@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Coin bomb\xE9 pour arrondir les angles ext\xE9rieurs."
   category: 0
   costCpu: 1
-  sizeLabel: 1x1x1
   weightKg: 60
   resistanceHp: 740
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: c178d9ef9ee19c945835b9f40805fa69, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 91410add1d66949498c9dcc28a65ec18, type: 3}

@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Propulseur d'appoint. Pouss\xE9e courte, consommation faible."
   category: 1
   costCpu: 9
-  sizeLabel: 1x1x2
   weightKg: 150
   resistanceHp: 420
+  footprint: {x: 2, y: 2, z: 2}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: b3add77438074284e9f612465fc3189d, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: f1635533d8eaae74d8c5a9d87c063b01, type: 3}

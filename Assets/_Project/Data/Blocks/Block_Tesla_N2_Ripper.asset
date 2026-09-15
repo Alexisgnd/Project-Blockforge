@@ -18,8 +18,10 @@ MonoBehaviour:
     \xE0 corps."
   category: 2
   costCpu: 19
-  sizeLabel: 2x1x2
   weightKg: 210
   resistanceHp: 650
+  footprint: {x: 1, y: 2, z: 4}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: b117c670fe11f4243adebdca8a541cb3, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 6701ad65201b7204cba30b9c39c83d4b, type: 3}

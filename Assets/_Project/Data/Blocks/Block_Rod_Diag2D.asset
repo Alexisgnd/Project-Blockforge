@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Barre en biais reliant deux cases d\xE9cal\xE9es sur un m\xEAme plan."
   category: 0
   costCpu: 2
-  sizeLabel: 2x1x2
   weightKg: 30
   resistanceHp: 380
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 1
   icon: {fileID: 21300000, guid: f339c7fa577b32e4f85964d12b0e87bc, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 126a7518e99ef1f46a5782cd0d06473e, type: 3}

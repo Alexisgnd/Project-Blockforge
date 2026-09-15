@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Gouverne \xE0 charni\xE8re renforc\xE9e. Tient le cap sous le feu."
   category: 1
   costCpu: 10
-  sizeLabel: 1x3x1
   weightKg: 90
   resistanceHp: 420
+  footprint: {x: 2, y: 3, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: faa08b528dafc9544b9cf48aa96809d5, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: a9f972e27fa76dc43bb0e910739d92b9, type: 3}

@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Patte articul\xE9e l\xE9g\xE8re. Escalade souple et silencieuse."
   category: 1
   costCpu: 10
-  sizeLabel: 2x2x1
   weightKg: 190
   resistanceHp: 700
+  footprint: {x: 1, y: 2, z: 1}
+  anchor: 2
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 3a4425cddda7d3545b5816566f8b9bd4, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 4715e2be6eff0804293050cd7f435bdd, type: 3}

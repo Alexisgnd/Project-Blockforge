@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Pointe \xE0 quatre pans pour pics et d\xE9flecteurs."
   category: 0
   costCpu: 1
-  sizeLabel: 1x1x1
   weightKg: 40
   resistanceHp: 560
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 371de02d1b4cd0545856185ef57fc3e9, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: f20904985381b164f801ce0abaabaa14, type: 3}

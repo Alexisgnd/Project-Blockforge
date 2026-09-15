@@ -18,8 +18,10 @@ MonoBehaviour:
     aux ch\xE2ssis massifs."
   category: 1
   costCpu: 24
-  sizeLabel: 1x4x1
   weightKg: 190
   resistanceHp: 760
+  footprint: {x: 2, y: 4, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 40d025cab3addd64f95eb18edc8c2067, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 2f3de484a6c85fb489b5ea15bad566b4, type: 3}

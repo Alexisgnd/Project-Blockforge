@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Aile biseaut\xE9e \xE0 s\xE9parateur. D\xE9vie les tirs obliques."
   category: 3
   costCpu: 10
-  sizeLabel: 1x3x1
   weightKg: 250
   resistanceHp: 2200
+  footprint: {x: 2, y: 3, z: 1}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: fc730cdcb61f6544d9ba3276d8690c28, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: c670794505f72874d9224834f6d1f2b3, type: 3}

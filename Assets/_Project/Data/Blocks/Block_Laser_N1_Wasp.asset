@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Tourelle laser l\xE9g\xE8re \xE0 cadence \xE9lev\xE9e."
   category: 2
   costCpu: 10
-  sizeLabel: 1x1x1
   weightKg: 120
   resistanceHp: 400
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: d6b9dec96acec8141845ceb11d25dbd1, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 4a473472f55cc5743ba320ed9700bf36, type: 3}

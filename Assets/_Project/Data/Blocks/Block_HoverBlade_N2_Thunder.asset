@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Lame de survol \xE9quilibr\xE9e. Portance stable \xE0 vitesse moyenne."
   category: 1
   costCpu: 11
-  sizeLabel: 2x1x2
   weightKg: 160
   resistanceHp: 450
+  footprint: {x: 2, y: 1, z: 2}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 9fffb1c0abacb2440bc79f5217080d29, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 581b89b164f28e944bb64a14beee5ce6, type: 3}

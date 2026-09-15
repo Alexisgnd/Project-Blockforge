@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Propulseur lourd \xE0 postcombustion. Consomme beaucoup."
   category: 1
   costCpu: 21
-  sizeLabel: 1x1x3
   weightKg: 300
   resistanceHp: 670
+  footprint: {x: 2, y: 2, z: 3}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 0ebfc89f48b282442b7a989fb690fc4b, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 0678732cba92c7f448d23d123c535f96, type: 3}

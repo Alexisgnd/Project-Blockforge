@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Laser \xE0 double condensateur. Bon \xE9quilibre d\xE9g\xE2ts/poids."
   category: 2
   costCpu: 14
-  sizeLabel: 1x1x1
   weightKg: 160
   resistanceHp: 500
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 8354d27a5c871a9418cdfc6dd7eb09b5, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: c0fb72e9e3423f34d930ebff9307339c, type: 3}

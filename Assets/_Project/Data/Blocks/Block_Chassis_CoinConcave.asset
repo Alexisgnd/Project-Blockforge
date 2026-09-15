@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Coin \xE9vid\xE9, ultra l\xE9ger, pour les finitions fines."
   category: 0
   costCpu: 1
-  sizeLabel: 1x1x1
   weightKg: 35
   resistanceHp: 480
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 9f7ab4d968f9fd843b8ece5d28fb310a, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 7d5dba843ba9c3d4da50061264d0bf67, type: 3}

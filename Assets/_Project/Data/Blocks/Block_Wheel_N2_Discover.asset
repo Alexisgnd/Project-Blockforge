@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Roue polyvalente. Bon compromis vitesse / adh\xE9rence."
   category: 1
   costCpu: 6
-  sizeLabel: 1x1x1
   weightKg: 120
   resistanceHp: 600
+  footprint: {x: 1, y: 2, z: 2}
+  anchor: 1
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 647218ea50b46b143bebf280f4b6fbf5, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 7edf301bc1ff4f34f976e11d53e98679, type: 3}

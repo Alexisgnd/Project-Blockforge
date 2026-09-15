@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Plaque coud\xE9e \xE0 double face. Enveloppe un angle de carrosserie."
   category: 3
   costCpu: 13
-  sizeLabel: 2x3x1
   weightKg: 310
   resistanceHp: 2800
+  footprint: {x: 2, y: 3, z: 1}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 9e4187b03e39f19459ea0e5abc5eca3f, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: cf48d48492a99d248a44d41dfda58e21, type: 3}

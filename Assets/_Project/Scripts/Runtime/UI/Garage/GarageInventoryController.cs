@@ -233,7 +233,7 @@ public class GarageInventoryController : MonoBehaviour
         detailName.text = def.blockName;
         detailDescription.text = def.description;
         detailType.text = def.CategoryLabel;
-        detailSize.text = def.sizeLabel;
+        detailSize.text = def.SizeLabel;
         detailWeight.text = $"{def.weightKg.ToString("N0", Fr)} kg";
         detailResistance.text = $"{def.resistanceHp.ToString("N0", Fr)} HP";
         detailCost.text = $"{def.costCpu} CPU";

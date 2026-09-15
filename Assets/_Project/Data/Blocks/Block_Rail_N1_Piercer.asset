@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Canon \xE0 rail l\xE9ger. Traverse les blocs fins d'un seul tir."
   category: 2
   costCpu: 16
-  sizeLabel: 1x1x3
   weightKg: 210
   resistanceHp: 450
+  footprint: {x: 2, y: 2, z: 4}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 82e45d2b217c404459513e1870c0787c, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: ff0b08029d8362943b89e827d7d9101d, type: 3}

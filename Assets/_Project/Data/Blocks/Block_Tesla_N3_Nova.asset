@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Lame \xE0 d\xE9charge en \xE9toile. Frappe tous les blocs adjacents."
   category: 2
   costCpu: 28
-  sizeLabel: 2x1x2
   weightKg: 300
   resistanceHp: 820
+  footprint: {x: 1, y: 3, z: 5}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 1a652a6c1947ebe4faaa4560cdebe9ad, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: b0b51932f1cc8524e8293af4ec65d2af, type: 3}

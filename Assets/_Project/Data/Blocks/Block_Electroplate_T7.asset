@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Grand panneau renforc\xE9. Blindage principal des ch\xE2ssis moyens."
   category: 3
   costCpu: 16
-  sizeLabel: 2x3x1
   weightKg: 380
   resistanceHp: 3500
+  footprint: {x: 2, y: 4, z: 1}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 63d1ecfc8054f5a45a9b265fb6dc23b0, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: ca96c4bbdc906a649a5c3623d05613b0, type: 3}

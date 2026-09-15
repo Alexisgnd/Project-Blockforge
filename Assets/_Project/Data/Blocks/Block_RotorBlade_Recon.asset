@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Rotor bipale l\xE9ger. Vol stationnaire agile et discret."
   category: 1
   costCpu: 10
-  sizeLabel: 2x1x2
   weightKg: 120
   resistanceHp: 350
+  footprint: {x: 3, y: 1, z: 3}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 6903816adb2fe0d478da27694809c8f6, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: eafd09a19d0c8e04d92b5f7777542018, type: 3}

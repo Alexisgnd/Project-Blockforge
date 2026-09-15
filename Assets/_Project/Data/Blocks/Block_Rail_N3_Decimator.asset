@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Canon \xE9lectrique lourd. Transperce plusieurs blocs align\xE9s."
   category: 2
   costCpu: 30
-  sizeLabel: 2x1x4
   weightKg: 380
   resistanceHp: 680
+  footprint: {x: 2, y: 3, z: 5}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: c8f016e98eb0b83429a962e3ab67151b, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 1517aad6b92acc84ea7d02e2460b0941, type: 3}

@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Chenille de si\xE8ge \xE0 cinq galets. \xC9crase tout sur son passage."
   category: 1
   costCpu: 25
-  sizeLabel: 2x2x4
   weightKg: 900
   resistanceHp: 3000
+  footprint: {x: 2, y: 2, z: 4}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: da9ed338e6913b54180e5f22a7492140, type: 3}
   previewPrefab: {fileID: 7340271639758131431, guid: c6839e48ba4bc734989db62ff110f762, type: 3}

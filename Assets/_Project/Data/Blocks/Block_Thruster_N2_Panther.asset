@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Pouss\xE9e directionnelle \xE9quilibr\xE9e. Bon rapport poids / puissance."
   category: 1
   costCpu: 12
-  sizeLabel: 1x1x2
   weightKg: 190
   resistanceHp: 500
+  footprint: {x: 2, y: 2, z: 2}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: ea12a28afbc6f3c4891b027486b6e3bb, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: fec53fa66ac1ccd47819c7618e1b44fd, type: 3}

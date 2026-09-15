@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Plaque ogivale l\xE9g\xE8re. Premi\xE8re protection \xE9lectrod\xE9pos\xE9e."
   category: 3
   costCpu: 4
-  sizeLabel: 1x2x1
   weightKg: 120
   resistanceHp: 900
+  footprint: {x: 1, y: 2, z: 1}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 1982e3a53f9ec6c4387cd906ae92a12e, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 43de41d1da97c8c40b6892a7289a25b2, type: 3}

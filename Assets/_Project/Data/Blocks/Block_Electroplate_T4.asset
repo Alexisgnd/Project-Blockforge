@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Lame \xE9troite et haute. Prot\xE8ge les m\xE2ts et les tourelles."
   category: 3
   costCpu: 8
-  sizeLabel: 1x3x1
   weightKg: 200
   resistanceHp: 1700
+  footprint: {x: 1, y: 3, z: 1}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 2cd8ae87117a1054a8c5a60d143a5a1b, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 1b2fe3d083495d443b796af45bd1c899, type: 3}

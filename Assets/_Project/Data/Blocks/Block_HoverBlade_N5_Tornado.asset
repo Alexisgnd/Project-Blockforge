@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Turbine de survol large. Soul\xE8ve les carrosseries lourdes."
   category: 1
   costCpu: 22
-  sizeLabel: 3x1x3
   weightKg: 280
   resistanceHp: 680
+  footprint: {x: 3, y: 1, z: 3}
+  anchor: 3
+  nativeScale: 0
   icon: {fileID: 21300000, guid: f458295f03f799346bef1936f44e3582, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 17d25d0e604217144ac774157795da5b, type: 3}

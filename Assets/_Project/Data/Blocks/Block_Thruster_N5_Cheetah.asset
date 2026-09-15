@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Pouss\xE9e maximale. Projette les ch\xE2ssis les plus lourds."
   category: 1
   costCpu: 26
-  sizeLabel: 1x1x3
   weightKg: 370
   resistanceHp: 760
+  footprint: {x: 2, y: 2, z: 3}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: ff80f26f3f6ace6438ec625133f318d1, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 8a0eec0e4af7de54b837bd6aca1fbe3a, type: 3}

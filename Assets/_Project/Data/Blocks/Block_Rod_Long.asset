@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Barre longue pour bras et perches d\xE9port\xE9es."
   category: 0
   costCpu: 1
-  sizeLabel: 1x1x2
   weightKg: 32
   resistanceHp: 400
+  footprint: {x: 1, y: 2, z: 1}
+  anchor: 0
+  nativeScale: 1
   icon: {fileID: 21300000, guid: c390dcb0e287ff54daafbd29bd3907d0, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 4518e67df3e8a3e49989e2f7095efa2d, type: 3}

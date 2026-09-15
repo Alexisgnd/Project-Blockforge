@@ -18,8 +18,10 @@ MonoBehaviour:
     moyens."
   category: 1
   costCpu: 13
-  sizeLabel: 1x3x1
   weightKg: 110
   resistanceHp: 500
+  footprint: {x: 2, y: 3, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: a16619a2bf380254781db34e516f92da, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: e86b42d0b89c6a441b7ad3d4af8c0109, type: 3}

@@ -17,8 +17,10 @@ MonoBehaviour:
   description: "Tir en cloche \xE0 zone d'impact large. Id\xE9al contre les groupes."
   category: 2
   costCpu: 22
-  sizeLabel: 2x1x2
   weightKg: 270
   resistanceHp: 640
+  footprint: {x: 2, y: 2, z: 3}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 2473b50a885b9434590e332b356a3d3b, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: a0774beefd6f24f4ea12b8dc1e4dc35f, type: 3}

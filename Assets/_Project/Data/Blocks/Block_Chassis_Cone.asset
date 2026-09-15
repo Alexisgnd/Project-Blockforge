@@ -17,8 +17,10 @@ MonoBehaviour:
   description: Pointe conique pour nez et pare-chocs.
   category: 0
   costCpu: 1
-  sizeLabel: 1x1x1
   weightKg: 45
   resistanceHp: 600
+  footprint: {x: 1, y: 1, z: 1}
+  anchor: 0
+  nativeScale: 0
   icon: {fileID: 21300000, guid: 2229f441c3ac3d443a207a334e2f6ebe, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: bd9cc9b89bcdd8e4db4f370f64901f84, type: 3}

@@ -579,11 +579,19 @@ public static class GarageInventorySetup
         EnsureFolder(BlockDataDir);
 
         // Liste canonique : le setup resynchronise les assets sur cette liste
-        // (noms, familles, categories, stats) et supprime les blocs qui n'y sont plus.
+        // (noms, familles, categories, stats, empreintes) et supprime les blocs
+        // qui n'y sont plus.
+        // "footprint" = empreinte en cases "LxHxP" (largeur X, hauteur Y, profondeur Z)
+        // validee le 15/09/2026 a partir des dimensions reelles des FBX (tache 05 :
+        // le modele est ajuste dans cette boite par BlockPreviewFactory, sauf
+        // echelle native). Mesuree au repos pour les blocs animes : le radar
+        // deplie et les lames de Tesla en action deborderont, c'est accepte.
+        // L'ancrage (face plaquee sur la boite) est deduit de la famille par
+        // AnchorFor ; les tiges gardent leur echelle native.
         // "art" = nom de base du FBX et de l'icone (Icon_<art>.png) quand le modele
         // existe ; laisser "" tant que l'asset 3D n'est pas produit (placeholder).
         var defs = new (string file, string name, string family, BlockCategory cat,
-                        int cpu, string size, int kg, int hp, string art, string desc)[]
+                        int cpu, string footprint, int kg, int hp, string art, string desc)[]
         {
             // ----- Chassis : 17 blocs (FBX Art/Models/Blocks/Chassis, pack GLB du 08/09/2026) -----
             // Pieces pleines (1 case) : armure blanche texturee
@@ -601,95 +609,95 @@ public static class GarageInventorySetup
             ("Block_Chassis_Pyramide", "PYRAMIDE", "Pyramide", BlockCategory.Chassis, 1, "1x1x1", 40, 560, "Chassis_Pyramide", "Pointe à quatre pans pour pics et déflecteurs."),
             // Tiges metalliques (platines aux extremites, metal brosse)
             ("Block_Rod_Court", "TIGE COURTE", "Tige", BlockCategory.Chassis, 1, "1x1x1", 18, 260, "Rod_Court", "Barre courte pour relier deux points rapprochés."),
-            ("Block_Rod_Long", "TIGE LONGUE", "Tige", BlockCategory.Chassis, 1, "1x1x2", 32, 400, "Rod_Long", "Barre longue pour bras et perches déportées."),
-            ("Block_Rod_Arc", "TIGE ARC", "Tige", BlockCategory.Chassis, 2, "2x1x2", 35, 420, "Rod_Arc", "Barre courbée pour arceaux et carrosseries arrondies."),
-            ("Block_Rod_Diag2D", "TIGE DIAGONALE 2D", "Tige", BlockCategory.Chassis, 2, "2x1x2", 30, 380, "Rod_Diag2D", "Barre en biais reliant deux cases décalées sur un même plan."),
-            ("Block_Rod_Diag3D", "TIGE DIAGONALE 3D", "Tige", BlockCategory.Chassis, 2, "2x2x2", 34, 410, "Rod_Diag3D", "Barre en biais reliant deux cases décalées dans l'espace."),
+            ("Block_Rod_Long", "TIGE LONGUE", "Tige", BlockCategory.Chassis, 1, "1x2x1", 32, 400, "Rod_Long", "Barre longue pour bras et perches déportées."),
+            ("Block_Rod_Arc", "TIGE ARC", "Tige", BlockCategory.Chassis, 2, "1x1x1", 35, 420, "Rod_Arc", "Barre courbée pour arceaux et carrosseries arrondies."),
+            ("Block_Rod_Diag2D", "TIGE DIAGONALE 2D", "Tige", BlockCategory.Chassis, 2, "1x1x1", 30, 380, "Rod_Diag2D", "Barre en biais reliant deux cases décalées sur un même plan."),
+            ("Block_Rod_Diag3D", "TIGE DIAGONALE 3D", "Tige", BlockCategory.Chassis, 2, "1x1x1", 34, 410, "Rod_Diag3D", "Barre en biais reliant deux cases décalées dans l'espace."),
 
             // ----- Mouvement : roues (Scout -> Monster ; FBX Art/Models/Blocks/Movement) -----
-            ("Block_Wheel_N1_Scout", "WHEEL SCOUT", "Roues", BlockCategory.Mouvement, 4, "1x1x1", 90, 450, "Wheel_Scout", "Roue légère de reconnaissance. Vitesse maximale, adhérence minimale."),
-            ("Block_Wheel_N2_Discover", "WHEEL DISCOVER", "Roues", BlockCategory.Mouvement, 6, "1x1x1", 120, 600, "Wheel_Discover", "Roue polyvalente. Bon compromis vitesse / adhérence."),
-            ("Block_Wheel_N3_Pathfinder", "WHEEL PATHFINDER", "Roues", BlockCategory.Mouvement, 8, "2x1x2", 170, 780, "Wheel_Pathfinder", "Roue tout-chemin à crampons moyens. Franchit les débris."),
-            ("Block_Wheel_N4_Stormer", "WHEEL STORMER", "Roues", BlockCategory.Mouvement, 11, "2x1x2", 230, 950, "Wheel_Stormer", "Roue de course renforcée. Accélération brutale sur terrain dur."),
-            ("Block_Wheel_N5_Geoterrain", "WHEEL GEOTERRAIN", "Roues", BlockCategory.Mouvement, 14, "2x1x2", 310, 1200, "Wheel_Geoterrain", "Roue tout-terrain à flancs épais. Absorbe les reliefs."),
-            ("Block_Wheel_N6_Monster", "WHEEL MONSTER", "Roues", BlockCategory.Mouvement, 18, "3x1x3", 420, 1500, "Wheel_Monster", "Roue géante. Écrase les obstacles mais alourdit le châssis."),
+            ("Block_Wheel_N1_Scout", "WHEEL SCOUT", "Roues", BlockCategory.Mouvement, 4, "1x2x2", 90, 450, "Wheel_Scout", "Roue légère de reconnaissance. Vitesse maximale, adhérence minimale."),
+            ("Block_Wheel_N2_Discover", "WHEEL DISCOVER", "Roues", BlockCategory.Mouvement, 6, "1x2x2", 120, 600, "Wheel_Discover", "Roue polyvalente. Bon compromis vitesse / adhérence."),
+            ("Block_Wheel_N3_Pathfinder", "WHEEL PATHFINDER", "Roues", BlockCategory.Mouvement, 8, "2x2x2", 170, 780, "Wheel_Pathfinder", "Roue tout-chemin à crampons moyens. Franchit les débris."),
+            ("Block_Wheel_N4_Stormer", "WHEEL STORMER", "Roues", BlockCategory.Mouvement, 11, "2x3x3", 230, 950, "Wheel_Stormer", "Roue de course renforcée. Accélération brutale sur terrain dur."),
+            ("Block_Wheel_N5_Geoterrain", "WHEEL GEOTERRAIN", "Roues", BlockCategory.Mouvement, 14, "2x3x3", 310, 1200, "Wheel_Geoterrain", "Roue tout-terrain à flancs épais. Absorbe les reliefs."),
+            ("Block_Wheel_N6_Monster", "WHEEL MONSTER", "Roues", BlockCategory.Mouvement, 18, "2x3x3", 420, 1500, "Wheel_Monster", "Roue géante. Écrase les obstacles mais alourdit le châssis."),
             // ----- Mouvement : chenilles (Bison -> Mammoth ; FBX animes Art/Models/Blocks/Movement + prefab Art/Prefabs/Blocks, source Tools/Blender/TankTracks.blend) -----
             ("Block_TankTrack_N1_Bison", "TANK TRACK BISON", "Chenilles", BlockCategory.Mouvement, 10, "1x1x3", 400, 1500, "TankTrack_N1_Bison", "Chenille compacte à trois galets. Traction fiable sur tous les terrains."),
-            ("Block_TankTrack_N2_Rhino", "TANK TRACK RHINO", "Chenilles", BlockCategory.Mouvement, 14, "2x1x3", 520, 1900, "TankTrack_N2_Rhino", "Chenille blindée à maillons larges. Encaisse les chocs frontaux."),
-            ("Block_TankTrack_N3_Elephant", "TANK TRACK ELEPHANT", "Chenilles", BlockCategory.Mouvement, 19, "2x1x3", 680, 2400, "TankTrack_N3_Elephant", "Chenille longue à quatre galets. Stabilise les châssis lourds."),
+            ("Block_TankTrack_N2_Rhino", "TANK TRACK RHINO", "Chenilles", BlockCategory.Mouvement, 14, "2x2x3", 520, 1900, "TankTrack_N2_Rhino", "Chenille blindée à maillons larges. Encaisse les chocs frontaux."),
+            ("Block_TankTrack_N3_Elephant", "TANK TRACK ELEPHANT", "Chenilles", BlockCategory.Mouvement, 19, "2x2x3", 680, 2400, "TankTrack_N3_Elephant", "Chenille longue à quatre galets. Stabilise les châssis lourds."),
             ("Block_TankTrack_N4_Mammoth", "TANK TRACK MAMMOTH", "Chenilles", BlockCategory.Mouvement, 25, "2x2x4", 900, 3000, "TankTrack_N4_Mammoth", "Chenille de siège à cinq galets. Écrase tout sur son passage."),
             // ----- Mouvement : pattes d'insecte (FBX Art/Models/Blocks/Movement, source Tools/Blender/InsectLegs.blend) -----
-            ("Block_InsectLeg_N1_Walker", "INSECT LEG WALKER", "Pattes d'insecte", BlockCategory.Mouvement, 10, "2x2x1", 190, 700, "InsectLeg_Walker", "Patte articulée légère. Escalade souple et silencieuse."),
-            ("Block_InsectLeg_N2_Soldier", "INSECT LEG SOLDIER", "Pattes d'insecte", BlockCategory.Mouvement, 15, "2x2x2", 280, 1000, "InsectLeg_Soldier", "Patte de combat renforcée. Stabilise les châssis lourds en pente."),
+            ("Block_InsectLeg_N1_Walker", "INSECT LEG WALKER", "Pattes d'insecte", BlockCategory.Mouvement, 10, "1x2x1", 190, 700, "InsectLeg_Walker", "Patte articulée légère. Escalade souple et silencieuse."),
+            ("Block_InsectLeg_N2_Soldier", "INSECT LEG SOLDIER", "Pattes d'insecte", BlockCategory.Mouvement, 15, "2x2x1", 280, 1000, "InsectLeg_Soldier", "Patte de combat renforcée. Stabilise les châssis lourds en pente."),
             // ----- Mouvement : lames de survol (Squall -> Hurricane ; FBX Art/Models/Blocks/Movement, attache vers l'arriere, source Tools/Blender/HoverBlades.blend, pack GLB du 14/09/2026) -----
             ("Block_HoverBlade_N1_Squall", "HOVER BLADE SQUALL", "Lames de survol", BlockCategory.Mouvement, 8, "2x1x2", 130, 380, "HoverBlade_N1_Squall", "Sustentation basse altitude. Glisse rapide et nerveuse."),
             ("Block_HoverBlade_N2_Thunder", "HOVER BLADE THUNDER", "Lames de survol", BlockCategory.Mouvement, 11, "2x1x2", 160, 450, "HoverBlade_N2_Thunder", "Lame de survol équilibrée. Portance stable à vitesse moyenne."),
             ("Block_HoverBlade_N3_Storm", "HOVER BLADE STORM", "Lames de survol", BlockCategory.Mouvement, 14, "2x1x2", 190, 520, "HoverBlade_N3_Storm", "Lame renforcée. Supporte les châssis intermédiaires."),
-            ("Block_HoverBlade_N4_Tempest", "HOVER BLADE TEMPEST", "Lames de survol", BlockCategory.Mouvement, 18, "2x1x2", 230, 600, "HoverBlade_N4_Tempest", "Double flux de sustentation. Bonne tenue sous le feu."),
+            ("Block_HoverBlade_N4_Tempest", "HOVER BLADE TEMPEST", "Lames de survol", BlockCategory.Mouvement, 18, "3x1x3", 230, 600, "HoverBlade_N4_Tempest", "Double flux de sustentation. Bonne tenue sous le feu."),
             ("Block_HoverBlade_N5_Tornado", "HOVER BLADE TORNADO", "Lames de survol", BlockCategory.Mouvement, 22, "3x1x3", 280, 680, "HoverBlade_N5_Tornado", "Turbine de survol large. Soulève les carrosseries lourdes."),
             ("Block_HoverBlade_N6_Hurricane", "HOVER BLADE HURRICANE", "Lames de survol", BlockCategory.Mouvement, 27, "3x1x3", 340, 780, "HoverBlade_N6_Hurricane", "Sustentation maximale. Réservée aux châssis les plus massifs."),
             // ----- Mouvement : helices (FBX Art/Models/Blocks/Movement) -----
-            ("Block_RotorBlade_Recon", "ROTOR RECON", "Hélices", BlockCategory.Mouvement, 10, "2x1x2", 120, 350, "RotorBlade_Recon", "Rotor bipale léger. Vol stationnaire agile et discret."),
-            ("Block_RotorBlade_Invader", "ROTOR INVADER", "Hélices", BlockCategory.Mouvement, 14, "2x1x2", 170, 500, "RotorBlade_Invader", "Rotor tripale équilibré. Portance stable pour châssis moyens."),
-            ("Block_RotorBlade_Assault", "ROTOR ASSAULT", "Hélices", BlockCategory.Mouvement, 18, "2x1x2", 230, 650, "RotorBlade_Assault", "Rotor quadripale surpuissant. Soulève les châssis blindés."),
+            ("Block_RotorBlade_Recon", "ROTOR RECON", "Hélices", BlockCategory.Mouvement, 10, "3x1x3", 120, 350, "RotorBlade_Recon", "Rotor bipale léger. Vol stationnaire agile et discret."),
+            ("Block_RotorBlade_Invader", "ROTOR INVADER", "Hélices", BlockCategory.Mouvement, 14, "3x1x3", 170, 500, "RotorBlade_Invader", "Rotor tripale équilibré. Portance stable pour châssis moyens."),
+            ("Block_RotorBlade_Assault", "ROTOR ASSAULT", "Hélices", BlockCategory.Mouvement, 18, "3x1x3", 230, 650, "RotorBlade_Assault", "Rotor quadripale surpuissant. Soulève les châssis blindés."),
             // ----- Mouvement : ailerons (Hawk -> Bat ; FBX Art/Models/Blocks/Movement, source Tools/Blender/Rudders.blend, pack GLB du 11/09/2026) -----
             ("Block_Rudder_N1_Hawk", "RUDDER HAWK", "Ailerons", BlockCategory.Mouvement, 6, "1x2x1", 60, 300, "Rudder_N1_Hawk", "Aileron léger de reconnaissance. Virages vifs à faible vitesse."),
-            ("Block_Rudder_N2_Falcon", "RUDDER FALCON", "Ailerons", BlockCategory.Mouvement, 8, "1x3x1", 75, 360, "Rudder_N2_Falcon", "Dérive polyvalente à rail titane. Bon compromis stabilité / réactivité."),
-            ("Block_Rudder_N3_Kestrel", "RUDDER KESTREL", "Ailerons", BlockCategory.Mouvement, 10, "1x3x1", 90, 420, "Rudder_N3_Kestrel", "Gouverne à charnière renforcée. Tient le cap sous le feu."),
-            ("Block_Rudder_N4_Eagle", "RUDDER EAGLE", "Ailerons", BlockCategory.Mouvement, 13, "1x3x1", 110, 500, "Rudder_N4_Eagle", "Aileron blindé à longeron relevé. Stabilise les châssis moyens."),
-            ("Block_Rudder_N5_VampireBat", "RUDDER VAMPIRE BAT", "Ailerons", BlockCategory.Mouvement, 16, "1x3x1", 135, 580, "Rudder_N5_VampireBat", "Dérive composite à lame graphite. Corrige les trajectoires des châssis lourds."),
-            ("Block_Rudder_N6_Albatross", "RUDDER ALBATROSS", "Ailerons", BlockCategory.Mouvement, 20, "1x3x1", 160, 660, "Rudder_N6_Albatross", "Grande dérive à pointe dorée. Contrôle précis à haute vitesse."),
-            ("Block_Rudder_N7_Bat", "RUDDER BAT", "Ailerons", BlockCategory.Mouvement, 24, "1x4x1", 190, 760, "Rudder_N7_Bat", "Aileron d'élite à double lame et liseré or. Réservé aux châssis massifs."),
+            ("Block_Rudder_N2_Falcon", "RUDDER FALCON", "Ailerons", BlockCategory.Mouvement, 8, "2x3x1", 75, 360, "Rudder_N2_Falcon", "Dérive polyvalente à rail titane. Bon compromis stabilité / réactivité."),
+            ("Block_Rudder_N3_Kestrel", "RUDDER KESTREL", "Ailerons", BlockCategory.Mouvement, 10, "2x3x1", 90, 420, "Rudder_N3_Kestrel", "Gouverne à charnière renforcée. Tient le cap sous le feu."),
+            ("Block_Rudder_N4_Eagle", "RUDDER EAGLE", "Ailerons", BlockCategory.Mouvement, 13, "2x3x1", 110, 500, "Rudder_N4_Eagle", "Aileron blindé à longeron relevé. Stabilise les châssis moyens."),
+            ("Block_Rudder_N5_VampireBat", "RUDDER VAMPIRE BAT", "Ailerons", BlockCategory.Mouvement, 16, "2x3x1", 135, 580, "Rudder_N5_VampireBat", "Dérive composite à lame graphite. Corrige les trajectoires des châssis lourds."),
+            ("Block_Rudder_N6_Albatross", "RUDDER ALBATROSS", "Ailerons", BlockCategory.Mouvement, 20, "2x4x1", 160, 660, "Rudder_N6_Albatross", "Grande dérive à pointe dorée. Contrôle précis à haute vitesse."),
+            ("Block_Rudder_N7_Bat", "RUDDER BAT", "Ailerons", BlockCategory.Mouvement, 24, "2x4x1", 190, 760, "Rudder_N7_Bat", "Aileron d'élite à double lame et liseré or. Réservé aux châssis massifs."),
             // ----- Mouvement : propulseurs (Lynx -> Cheetah ; FBX Art/Models/Blocks/Movement, tuyere vers l'arriere) -----
-            ("Block_Thruster_N1_Lynx", "THRUSTER LYNX", "Propulseurs", BlockCategory.Mouvement, 9, "1x1x2", 150, 420, "Thruster_N1_Lynx", "Propulseur d'appoint. Poussée courte, consommation faible."),
-            ("Block_Thruster_N2_Panther", "THRUSTER PANTHER", "Propulseurs", BlockCategory.Mouvement, 12, "1x1x2", 190, 500, "Thruster_N2_Panther", "Poussée directionnelle équilibrée. Bon rapport poids / puissance."),
-            ("Block_Thruster_N3_Leopard", "THRUSTER LEOPARD", "Propulseurs", BlockCategory.Mouvement, 16, "1x1x2", 240, 580, "Thruster_N3_Leopard", "Tuyère renforcée. Accélération soutenue en ligne droite."),
-            ("Block_Thruster_N4_Puma", "THRUSTER PUMA", "Propulseurs", BlockCategory.Mouvement, 21, "1x1x3", 300, 670, "Thruster_N4_Puma", "Propulseur lourd à postcombustion. Consomme beaucoup."),
-            ("Block_Thruster_N5_Cheetah", "THRUSTER CHEETAH", "Propulseurs", BlockCategory.Mouvement, 26, "1x1x3", 370, 760, "Thruster_N5_Cheetah", "Poussée maximale. Projette les châssis les plus lourds."),
+            ("Block_Thruster_N1_Lynx", "THRUSTER LYNX", "Propulseurs", BlockCategory.Mouvement, 9, "2x2x2", 150, 420, "Thruster_N1_Lynx", "Propulseur d'appoint. Poussée courte, consommation faible."),
+            ("Block_Thruster_N2_Panther", "THRUSTER PANTHER", "Propulseurs", BlockCategory.Mouvement, 12, "2x2x2", 190, 500, "Thruster_N2_Panther", "Poussée directionnelle équilibrée. Bon rapport poids / puissance."),
+            ("Block_Thruster_N3_Leopard", "THRUSTER LEOPARD", "Propulseurs", BlockCategory.Mouvement, 16, "2x2x3", 240, 580, "Thruster_N3_Leopard", "Tuyère renforcée. Accélération soutenue en ligne droite."),
+            ("Block_Thruster_N4_Puma", "THRUSTER PUMA", "Propulseurs", BlockCategory.Mouvement, 21, "2x2x3", 300, 670, "Thruster_N4_Puma", "Propulseur lourd à postcombustion. Consomme beaucoup."),
+            ("Block_Thruster_N5_Cheetah", "THRUSTER CHEETAH", "Propulseurs", BlockCategory.Mouvement, 26, "2x2x3", 370, 760, "Thruster_N5_Cheetah", "Poussée maximale. Projette les châssis les plus lourds."),
 
             // ----- Armes offensives : lasers N1 a N6 (FBX Art/Models/Blocks/Weapons) -----
             ("Block_Laser_N1_Wasp", "LASER WASP", "Laser", BlockCategory.Armes, 10, "1x1x1", 120, 400, "Laser_N1_Wasp", "Tourelle laser légère à cadence élevée."),
             ("Block_Laser_N2_Hornet", "LASER HORNET", "Laser", BlockCategory.Armes, 14, "1x1x1", 160, 500, "Laser_N2_Hornet", "Laser à double condensateur. Bon équilibre dégâts/poids."),
-            ("Block_Laser_N3_Blaster", "LASER BLASTER", "Laser", BlockCategory.Armes, 18, "1x1x1", 220, 600, "Laser_N3_Blaster", "Canon laser à faisceau concentré. Perce les blindages légers."),
-            ("Block_Laser_N4_Vaporizer", "LASER VAPORIZER", "Laser", BlockCategory.Armes, 24, "1x1x1", 280, 700, "Laser_N4_Vaporizer", "Émetteur haute énergie. Vaporise les surfaces exposées."),
-            ("Block_Laser_N5_Disintegrator", "LASER DISINTEGRATOR", "Laser", BlockCategory.Armes, 30, "1x1x1", 360, 850, "Laser_N5_Disintegrator", "Faisceau à désintégration soutenue. Dégâts continus massifs."),
-            ("Block_Laser_N6_Leviathan", "LASER LEVIATHAN", "Laser", BlockCategory.Armes, 38, "1x1x1", 480, 1000, "Laser_N6_Leviathan", "Batterie laser triple. L'arme ultime des châssis lourds."),
+            ("Block_Laser_N3_Blaster", "LASER BLASTER", "Laser", BlockCategory.Armes, 18, "1x1x2", 220, 600, "Laser_N3_Blaster", "Canon laser à faisceau concentré. Perce les blindages légers."),
+            ("Block_Laser_N4_Vaporizer", "LASER VAPORIZER", "Laser", BlockCategory.Armes, 24, "1x1x2", 280, 700, "Laser_N4_Vaporizer", "Émetteur haute énergie. Vaporise les surfaces exposées."),
+            ("Block_Laser_N5_Disintegrator", "LASER DISINTEGRATOR", "Laser", BlockCategory.Armes, 30, "2x2x3", 360, 850, "Laser_N5_Disintegrator", "Faisceau à désintégration soutenue. Dégâts continus massifs."),
+            ("Block_Laser_N6_Leviathan", "LASER LEVIATHAN", "Laser", BlockCategory.Armes, 38, "2x2x4", 480, 1000, "Laser_N6_Leviathan", "Batterie laser triple. L'arme ultime des châssis lourds."),
             // ----- Armes offensives : lanceurs de plasma (Pulser -> Goliathon ; FBX Art/Models/Blocks/Weapons, canon vers l'avant, source Tools/Blender/PlasmaWeapons.blend, pack GLB du 14/09/2026) -----
-            ("Block_Plasma_N1_Pulser", "PLASMA PULSER", "Lanceur de plasma", BlockCategory.Armes, 12, "1x1x1", 150, 420, "Plasma_N1_Pulser", "Lanceur de plasma compact. Salves rapides à courte portée."),
-            ("Block_Plasma_N2_Disruptor", "PLASMA DISRUPTOR", "Lanceur de plasma", BlockCategory.Armes, 17, "1x1x1", 200, 520, "Plasma_N2_Disruptor", "Charge plasmique instable. Déséquilibre les châssis touchés."),
-            ("Block_Plasma_N3_Bombarder", "PLASMA BOMBARDER", "Lanceur de plasma", BlockCategory.Armes, 22, "2x1x2", 270, 640, "Plasma_N3_Bombarder", "Tir en cloche à zone d'impact large. Idéal contre les groupes."),
-            ("Block_Plasma_N4_Ravager", "PLASMA RAVAGER", "Lanceur de plasma", BlockCategory.Armes, 28, "2x1x2", 350, 760, "Plasma_N4_Ravager", "Projectiles surchauffés. Fait fondre les blindages moyens."),
-            ("Block_Plasma_N5_Devastator", "PLASMA DEVASTATOR", "Lanceur de plasma", BlockCategory.Armes, 35, "2x2x2", 450, 900, "Plasma_N5_Devastator", "Mortier plasma lourd. Dégâts de zone dévastateurs."),
-            ("Block_Plasma_N6_Goliathon", "PLASMA GOLIATHON", "Lanceur de plasma", BlockCategory.Armes, 44, "3x2x2", 580, 1100, "Plasma_N6_Goliathon", "Batterie plasma de siège. Pulvérise tout ce qui reste debout."),
+            ("Block_Plasma_N1_Pulser", "PLASMA PULSER", "Lanceur de plasma", BlockCategory.Armes, 12, "1x2x2", 150, 420, "Plasma_N1_Pulser", "Lanceur de plasma compact. Salves rapides à courte portée."),
+            ("Block_Plasma_N2_Disruptor", "PLASMA DISRUPTOR", "Lanceur de plasma", BlockCategory.Armes, 17, "2x2x3", 200, 520, "Plasma_N2_Disruptor", "Charge plasmique instable. Déséquilibre les châssis touchés."),
+            ("Block_Plasma_N3_Bombarder", "PLASMA BOMBARDER", "Lanceur de plasma", BlockCategory.Armes, 22, "2x2x3", 270, 640, "Plasma_N3_Bombarder", "Tir en cloche à zone d'impact large. Idéal contre les groupes."),
+            ("Block_Plasma_N4_Ravager", "PLASMA RAVAGER", "Lanceur de plasma", BlockCategory.Armes, 28, "2x3x4", 350, 760, "Plasma_N4_Ravager", "Projectiles surchauffés. Fait fondre les blindages moyens."),
+            ("Block_Plasma_N5_Devastator", "PLASMA DEVASTATOR", "Lanceur de plasma", BlockCategory.Armes, 35, "2x3x4", 450, 900, "Plasma_N5_Devastator", "Mortier plasma lourd. Dégâts de zone dévastateurs."),
+            ("Block_Plasma_N6_Goliathon", "PLASMA GOLIATHON", "Lanceur de plasma", BlockCategory.Armes, 44, "3x3x4", 580, 1100, "Plasma_N6_Goliathon", "Batterie plasma de siège. Pulvérise tout ce qui reste debout."),
             // ----- Armes offensives : canons electriques (Piercer -> Erazer ; FBX Art/Models/Blocks/Weapons, canon vers l'avant, pied recentre, source Tools/Blender/RailCannons.blend, pack GLB du 15/09/2026) -----
-            ("Block_Rail_N1_Piercer", "RAIL PIERCER", "Canon électrique", BlockCategory.Armes, 16, "1x1x3", 210, 450, "Rail_N1_Piercer", "Canon à rail léger. Traverse les blocs fins d'un seul tir."),
-            ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "1x1x3", 280, 550, "Rail_N2_Penetrator", "Rail à double bobine. Perforation nette à longue portée."),
-            ("Block_Rail_N3_Decimator", "RAIL DECIMATOR", "Canon électrique", BlockCategory.Armes, 30, "2x1x4", 380, 680, "Rail_N3_Decimator", "Canon électrique lourd. Transperce plusieurs blocs alignés."),
-            ("Block_Rail_N4_Erazer", "RAIL ERAZER", "Canon électrique", BlockCategory.Armes, 40, "2x1x4", 500, 820, "Rail_N4_Erazer", "Rail de siège. Un tir, une ligne entière effacée."),
+            ("Block_Rail_N1_Piercer", "RAIL PIERCER", "Canon électrique", BlockCategory.Armes, 16, "2x2x4", 210, 450, "Rail_N1_Piercer", "Canon à rail léger. Traverse les blocs fins d'un seul tir."),
+            ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "2x2x5", 280, 550, "Rail_N2_Penetrator", "Rail à double bobine. Perforation nette à longue portée."),
+            ("Block_Rail_N3_Decimator", "RAIL DECIMATOR", "Canon électrique", BlockCategory.Armes, 30, "2x3x5", 380, 680, "Rail_N3_Decimator", "Canon électrique lourd. Transperce plusieurs blocs alignés."),
+            ("Block_Rail_N4_Erazer", "RAIL ERAZER", "Canon électrique", BlockCategory.Armes, 40, "2x3x6", 500, 820, "Rail_N4_Erazer", "Rail de siège. Un tir, une ligne entière effacée."),
             // ----- Armes offensives : lames de Tesla (Slicer -> Nova ; FBX Art/Models/Blocks/Weapons, semelle a plat, arc dans l'axe avant/arriere, source Tools/Blender/TeslaBlades.blend, pack GLB du 15/09/2026) -----
-            ("Block_Tesla_N1_Slicer", "TESLA SLICER", "Lame de Tesla", BlockCategory.Armes, 12, "1x1x2", 140, 500, "Tesla_N1_Slicer", "Lame électrifiée courte. Tranche au contact."),
-            ("Block_Tesla_N2_Ripper", "TESLA RIPPER", "Lame de Tesla", BlockCategory.Armes, 19, "2x1x2", 210, 650, "Tesla_N2_Ripper", "Double lame à arc électrique. Déchire les blindages au corps à corps."),
-            ("Block_Tesla_N3_Nova", "TESLA NOVA", "Lame de Tesla", BlockCategory.Armes, 28, "2x1x2", 300, 820, "Tesla_N3_Nova", "Lame à décharge en étoile. Frappe tous les blocs adjacents."),
+            ("Block_Tesla_N1_Slicer", "TESLA SLICER", "Lame de Tesla", BlockCategory.Armes, 12, "1x2x4", 140, 500, "Tesla_N1_Slicer", "Lame électrifiée courte. Tranche au contact."),
+            ("Block_Tesla_N2_Ripper", "TESLA RIPPER", "Lame de Tesla", BlockCategory.Armes, 19, "1x2x4", 210, 650, "Tesla_N2_Ripper", "Double lame à arc électrique. Déchire les blindages au corps à corps."),
+            ("Block_Tesla_N3_Nova", "TESLA NOVA", "Lame de Tesla", BlockCategory.Armes, 28, "1x3x5", 300, 820, "Tesla_N3_Nova", "Lame à décharge en étoile. Frappe tous les blocs adjacents."),
 
             // ----- Materiaux defensifs : distributeurs nano (Blinder -> Constructor ; FBX Art/Models/Blocks/Defense, emetteur vers l'avant, empties Turret/Mount conserves, source Tools/Blender/NanoDisruptors.blend, pack GLB du 15/09/2026) -----
-            ("Block_Nano_N1_Blinder", "NANO BLINDER", "Distributeur nano / Healer", BlockCategory.Defense, 14, "1x1x1", 180, 550, "Nano_N1_Blinder", "Nuage de nanites aveuglant. Brouille les capteurs adverses."),
-            ("Block_Nano_N2_Mender", "NANO MENDER", "Distributeur nano / Healer", BlockCategory.Defense, 18, "2x2x1", 300, 800, "Nano_N2_Mender", "Répare progressivement les blocs proches."),
-            ("Block_Nano_N3_Constructor", "NANO CONSTRUCTOR", "Distributeur nano / Healer", BlockCategory.Defense, 24, "2x2x1", 380, 950, "Nano_N3_Constructor", "Reconstruit les blocs détruits en pleine bataille."),
+            ("Block_Nano_N1_Blinder", "NANO BLINDER", "Distributeur nano / Healer", BlockCategory.Defense, 14, "1x2x2", 180, 550, "Nano_N1_Blinder", "Nuage de nanites aveuglant. Brouille les capteurs adverses."),
+            ("Block_Nano_N2_Mender", "NANO MENDER", "Distributeur nano / Healer", BlockCategory.Defense, 18, "1x2x3", 300, 800, "Nano_N2_Mender", "Répare progressivement les blocs proches."),
+            ("Block_Nano_N3_Constructor", "NANO CONSTRUCTOR", "Distributeur nano / Healer", BlockCategory.Defense, 24, "1x2x3", 380, 950, "Nano_N3_Constructor", "Reconstruit les blocs détruits en pleine bataille."),
             // ----- Materiaux defensifs : electroplates (T2 -> T9 ; FBX Art/Models/Blocks/Defense, face protectrice vers l'avant, pivot sur la fixation arriere, source Tools/Blender/Electroplates.blend, pack GLB du 15/09/2026) -----
             ("Block_Electroplate_T2", "ELECTROPLATE T2", "Blindage électrodéposé", BlockCategory.Defense, 4, "1x2x1", 120, 900, "Electroplate_T2", "Plaque ogivale légère. Première protection électrodéposée."),
-            ("Block_Electroplate_T3", "ELECTROPLATE T3", "Blindage électrodéposé", BlockCategory.Defense, 6, "1x2x1", 160, 1300, "Electroplate_T3", "Plaque à épaulement. Couvre un flanc de châssis léger."),
+            ("Block_Electroplate_T3", "ELECTROPLATE T3", "Blindage électrodéposé", BlockCategory.Defense, 6, "2x3x1", 160, 1300, "Electroplate_T3", "Plaque à épaulement. Couvre un flanc de châssis léger."),
             ("Block_Electroplate_T4", "ELECTROPLATE T4", "Blindage électrodéposé", BlockCategory.Defense, 8, "1x3x1", 200, 1700, "Electroplate_T4", "Lame étroite et haute. Protège les mâts et les tourelles."),
-            ("Block_Electroplate_T5", "ELECTROPLATE T5", "Blindage électrodéposé", BlockCategory.Defense, 10, "1x3x1", 250, 2200, "Electroplate_T5", "Aile biseautée à séparateur. Dévie les tirs obliques."),
+            ("Block_Electroplate_T5", "ELECTROPLATE T5", "Blindage électrodéposé", BlockCategory.Defense, 10, "2x3x1", 250, 2200, "Electroplate_T5", "Aile biseautée à séparateur. Dévie les tirs obliques."),
             ("Block_Electroplate_T6", "ELECTROPLATE T6", "Blindage électrodéposé", BlockCategory.Defense, 13, "2x3x1", 310, 2800, "Electroplate_T6", "Plaque coudée à double face. Enveloppe un angle de carrosserie."),
-            ("Block_Electroplate_T7", "ELECTROPLATE T7", "Blindage électrodéposé", BlockCategory.Defense, 16, "2x3x1", 380, 3500, "Electroplate_T7", "Grand panneau renforcé. Blindage principal des châssis moyens."),
-            ("Block_Electroplate_T8", "ELECTROPLATE T8", "Blindage électrodéposé", BlockCategory.Defense, 20, "2x3x1", 460, 4300, "Electroplate_T8", "Plaque à décrochement. Absorbe les impacts lourds."),
+            ("Block_Electroplate_T7", "ELECTROPLATE T7", "Blindage électrodéposé", BlockCategory.Defense, 16, "2x4x1", 380, 3500, "Electroplate_T7", "Grand panneau renforcé. Blindage principal des châssis moyens."),
+            ("Block_Electroplate_T8", "ELECTROPLATE T8", "Blindage électrodéposé", BlockCategory.Defense, 20, "2x4x1", 460, 4300, "Electroplate_T8", "Plaque à décrochement. Absorbe les impacts lourds."),
             ("Block_Electroplate_T9", "ELECTROPLATE T9", "Blindage électrodéposé", BlockCategory.Defense, 24, "3x4x1", 550, 5200, "Electroplate_T9", "Aile delta suspendue. Le blindage ultime des châssis massifs."),
 
             // ----- Equipements speciaux (FBX Art/Models/Blocks/Special) -----
             // Radar : panneaux repliables (FBX anime Art/Models/Blocks/Special/Radar.fbx + prefab variant Art/Prefabs/Blocks/Radar.prefab, source Tools/Blender/Radar.blend, GLB "Radar_Module_Folding_v3" du 15/09/2026)
-            ("Block_19_Radar", "RADAR", "Radar", BlockCategory.Special, 18, "1x1x2", 140, 400, "Radar", "Révèle les ennemis proches sur la minicarte."),
+            ("Block_19_Radar", "RADAR", "Radar", BlockCategory.Special, 18, "1x2x2", 140, 400, "Radar", "Révèle les ennemis proches sur la minicarte."),
             // Disque de bouclier : emetteur vers l'avant, bloc de fixation a l'arriere (source Tools/Blender/ShieldDisk.blend)
-            ("Block_20_DisqueBouclier", "DISQUE DE BOUCLIER", "Disque de bouclier", BlockCategory.Special, 26, "2x2x1", 280, 2500, "ShieldDisk", "Projette une barrière énergétique directionnelle."),
+            ("Block_20_DisqueBouclier", "DISQUE DE BOUCLIER", "Disque de bouclier", BlockCategory.Special, 26, "2x2x2", 280, 2500, "ShieldDisk", "Projette une barrière énergétique directionnelle."),
         };
 
         // Supprime les assets qui ne sont plus dans la liste
@@ -715,10 +723,12 @@ public static class GarageInventorySetup
             asset.family = d.family;
             asset.category = d.cat;
             asset.costCpu = d.cpu;
-            asset.sizeLabel = d.size;
             asset.weightKg = d.kg;
             asset.resistanceHp = d.hp;
             asset.description = d.desc;
+            asset.footprint = ParseFootprint(d.footprint);
+            asset.anchor = AnchorFor(d.file);
+            asset.nativeScale = d.file.StartsWith("Block_Rod_");
 
             // Blocs a vrai modele FBX + icone rendue depuis Blender.
             // Les blocs sans "art" gardent le placeholder : on ne touche
@@ -746,6 +756,32 @@ public static class GarageInventorySetup
 
         AssetDatabase.SaveAssets();
         return result.ToArray();
+    }
+
+    // "LxHxP" -> empreinte en cases (largeur X, hauteur Y, profondeur Z)
+    private static Vector3Int ParseFootprint(string footprint)
+    {
+        var parts = footprint.Split('x');
+        if (parts.Length != 3
+            || !int.TryParse(parts[0], out int x) || !int.TryParse(parts[1], out int y) || !int.TryParse(parts[2], out int z)
+            || x < 1 || y < 1 || z < 1)
+        {
+            throw new System.ArgumentException($"[GarageInventorySetup] Empreinte invalide : \"{footprint}\" (attendu LxHxP).");
+        }
+        return new Vector3Int(x, y, z);
+    }
+
+    // Face d'ancrage par famille : roues plaquees par le moyeu (+X), pattes
+    // par la plaque de hanche (-X), plaques / lames de survol / disque de
+    // bouclier par leur fixation arriere (-Z) ; tout le reste est pose sur sa base.
+    private static BlockAnchor AnchorFor(string file)
+    {
+        if (file.StartsWith("Block_Wheel_")) return BlockAnchor.Right;
+        if (file.StartsWith("Block_InsectLeg_")) return BlockAnchor.Left;
+        if (file.StartsWith("Block_HoverBlade_") || file.StartsWith("Block_Electroplate_")
+            || file == "Block_20_DisqueBouclier")
+            return BlockAnchor.Back;
+        return BlockAnchor.Bottom;
     }
 
     // Dossier FBX correspondant a une categorie de bloc
