@@ -688,7 +688,8 @@ public static class GarageInventorySetup
             ("Block_Electroplate_T9", "ELECTROPLATE T9", "Blindage électrodéposé", BlockCategory.Defense, 24, "3x4x1", 550, 5200, "Electroplate_T9", "Aile delta suspendue. Le blindage ultime des châssis massifs."),
 
             // ----- Equipements speciaux (FBX Art/Models/Blocks/Special) -----
-            ("Block_19_Radar", "RADAR", "Radar", BlockCategory.Special, 18, "1x1x2", 140, 400, "", "Révèle les ennemis proches sur la minicarte."),
+            // Radar : panneaux repliables (FBX anime Art/Models/Blocks/Special/Radar.fbx + prefab variant Art/Prefabs/Blocks/Radar.prefab, source Tools/Blender/Radar.blend, GLB "Radar_Module_Folding_v3" du 15/09/2026)
+            ("Block_19_Radar", "RADAR", "Radar", BlockCategory.Special, 18, "1x1x2", 140, 400, "Radar", "Révèle les ennemis proches sur la minicarte."),
             // Disque de bouclier : emetteur vers l'avant, bloc de fixation a l'arriere (source Tools/Blender/ShieldDisk.blend)
             ("Block_20_DisqueBouclier", "DISQUE DE BOUCLIER", "Disque de bouclier", BlockCategory.Special, 26, "2x2x1", 280, 2500, "ShieldDisk", "Projette une barrière énergétique directionnelle."),
         };

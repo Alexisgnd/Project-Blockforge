@@ -39,7 +39,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 | Garage : grille 14×14, pince de pose, inventaire par catégorie et famille, recherche | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
-| Catalogue de blocs avec vrais modèles 3D | 77 blocs modélisés, 6 placeholders (voir le catalogue) |
+| Catalogue de blocs avec vrais modèles 3D | 82 blocs modélisés, 1 placeholder (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
 | Combat, physique des véhicules, multijoueur | pas commencé |
 
@@ -140,7 +140,7 @@ resynchronisent avec les assets.
 | Armes | Lames de Tesla — Slicer → Nova | 3 | ✅ |
 | Défense | Distributeurs nano — Blinder → Constructor | 3 | ✅ |
 | Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | ✅ |
-| Spécial | Radar | 1 | placeholder |
+| Spécial | Radar (panneaux repliables, animé) | 1 | ✅ |
 | Spécial | Disque de bouclier | 1 | ✅ |
 
 Les « placeholders » sont des blocs jouables avec un cube gris : ce sont les
@@ -228,8 +228,8 @@ Règles communes :
 
 C'est le besoin numéro un du projet. Par ordre de priorité :
 
-1. Modéliser une famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
-   canons électriques, radar, ailes.
+1. Modéliser la dernière famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
+   les ailes.
 2. Améliorer les blocs existants (topologie, détails, textures).
 3. Décors : garage, hangar, carte Mars.
 
