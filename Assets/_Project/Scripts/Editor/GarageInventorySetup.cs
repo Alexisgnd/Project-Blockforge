@@ -745,6 +745,9 @@ public static class GarageInventorySetup
                 asset.icon = LoadBlockIcon(d.art);
                 if (asset.previewPrefab == null)
                     Debug.LogWarning($"[GarageInventorySetup] FBX introuvable : {modelDir}/{d.art}.fbx");
+                asset.modelBounds = asset.previewPrefab != null
+                    ? ComputeModelBounds(asset.previewPrefab)
+                    : default;
             }
 
             if (isNew)
@@ -771,13 +774,77 @@ public static class GarageInventorySetup
         return new Vector3Int(x, y, z);
     }
 
-    // Face d'ancrage par famille : roues plaquees par le moyeu (+X), pattes
-    // par la plaque de hanche (-X), plaques / lames de survol / disque de
-    // bouclier par leur fixation arriere (-Z) ; tout le reste est pose sur sa base.
+    // Bounds exacts d'un modele dans le repere de son prefab (pose importee) :
+    // sommets des MeshFilter transformes en monde, l'instance a l'identite.
+    // renderer.bounds surestime les pieces tournees (tourelle a 45 degres =
+    // boite 2x plus large) et ferait sous-dimensionner le bloc a l'ajustement.
+    // Les meshes skinnes (chenilles) gardent leurs bounds de renderer, exacts
+    // au repos. Calcule dans une scene de preview pour ne pas toucher la scene
+    // ouverte ; les sommets sont lisibles dans l'editeur meme sans Read/Write.
+    private static Bounds ComputeModelBounds(GameObject prefab)
+    {
+        var preview = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, preview);
+            instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+            return TryGetExactBounds(instance, out var bounds) ? bounds : default;
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(preview);
+        }
+    }
+
+    // Bounds exacts (monde) d'une hierarchie instanciee : sommets des MeshFilter
+    // transformes, meshes skinnes par leurs bounds de renderer. False si vide.
+    // Editeur seulement : les sommets ne sont pas lisibles en build sans Read/Write.
+    public static bool TryGetExactBounds(GameObject root, out Bounds bounds)
+    {
+        bool any = false;
+        var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+        foreach (var mf in root.GetComponentsInChildren<MeshFilter>())
+        {
+            if (mf.sharedMesh == null || mf.GetComponent<Renderer>() == null)
+                continue;
+            var toWorld = mf.transform.localToWorldMatrix;
+            foreach (var v in mf.sharedMesh.vertices)
+            {
+                var w = toWorld.MultiplyPoint3x4(v);
+                min = Vector3.Min(min, w);
+                max = Vector3.Max(max, w);
+                any = true;
+            }
+        }
+
+        foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            if (smr.sharedMesh == null)
+                continue;
+            var b = smr.bounds;
+            min = Vector3.Min(min, b.min);
+            max = Vector3.Max(max, b.max);
+            any = true;
+        }
+
+        bounds = new Bounds();
+        if (any)
+            bounds.SetMinMax(min, max);
+        return any;
+    }
+
+    // Face d'ancrage par famille, dans le repere Unity (l'import FBX inverse X
+    // par rapport a Blender ; verifie par Blockforge > Report Block Bounds) :
+    // roues plaquees par le moyeu (-X), pattes par la plaque de hanche (+X),
+    // plaques / lames de survol / disque de bouclier par leur fixation
+    // arriere (-Z) ; tout le reste est pose sur sa base.
     private static BlockAnchor AnchorFor(string file)
     {
-        if (file.StartsWith("Block_Wheel_")) return BlockAnchor.Right;
-        if (file.StartsWith("Block_InsectLeg_")) return BlockAnchor.Left;
+        if (file.StartsWith("Block_Wheel_")) return BlockAnchor.Left;
+        if (file.StartsWith("Block_InsectLeg_")) return BlockAnchor.Right;
         if (file.StartsWith("Block_HoverBlade_") || file.StartsWith("Block_Electroplate_")
             || file == "Block_20_DisqueBouclier")
             return BlockAnchor.Back;

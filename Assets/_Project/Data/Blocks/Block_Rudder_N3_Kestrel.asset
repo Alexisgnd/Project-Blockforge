@@ -24,3 +24,6 @@ MonoBehaviour:
   nativeScale: 0
   icon: {fileID: 21300000, guid: faa08b528dafc9544b9cf48aa96809d5, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: a9f972e27fa76dc43bb0e910739d92b9, type: 3}
+  modelBounds:
+    m_Center: {x: -0.045000017, y: 1.405, z: 0}
+    m_Extent: {x: 0.635, y: 1.405, z: 0.2265}

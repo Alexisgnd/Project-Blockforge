@@ -15,8 +15,10 @@ public class PlierBlockPreview : MonoBehaviour
     public Transform supportPlate;
 
     [Header("Placement")]
-    [Tooltip("Taille de reference (monde) d'un bloc 1x1x1")]
+    [Tooltip("Taille de reference (monde) d'une case sur la pince")]
     public float blockSize = 0.22f;
+    [Tooltip("Les blocs multi-cases sont reduits pour ne pas depasser ce nombre de cases sur la pince")]
+    public int maxPreviewCells = 2;
     public float surfaceGap = 0.005f;
     [Tooltip("Ajustement manuel (droite / normale / avant de la surface)")]
     public Vector3 manualOffset = Vector3.zero;
@@ -25,7 +27,7 @@ public class PlierBlockPreview : MonoBehaviour
     public float extraYaw;
 
     private GameObject current;
-    private float currentHalfHeight;
+    private float currentBottomDistance; // du pivot de l'apercu a son point le plus bas
     private Renderer plateRenderer;
     private Vector3 plateNormalLocal;  // axe local de la plaque qui pointe vers sa surface
     private float plateTopDistance;    // du centre de la plaque a sa surface, le long de cet axe
@@ -115,7 +117,7 @@ public class PlierBlockPreview : MonoBehaviour
 
         Vector3 plateCenter = plateRenderer != null ? plateRenderer.bounds.center : supportPlate.position;
         Vector3 position = plateCenter
-                           + up * (plateTopDistance + currentHalfHeight + surfaceGap + manualOffset.y)
+                           + up * (plateTopDistance + currentBottomDistance + surfaceGap + manualOffset.y)
                            + right * manualOffset.x
                            + forward * manualOffset.z;
 
@@ -130,7 +132,12 @@ public class PlierBlockPreview : MonoBehaviour
         if (def == null)
             return;
 
-        current = BlockPreviewFactory.CreateVisual(def, blockSize, out currentHalfHeight);
+        // Un bloc multi-cases est reduit pour tenir dans maxPreviewCells, et sa
+        // boite est centree sur la plaque (pas placee autour d'une case visee).
+        var footprint = BlockFootprint.Size(def);
+        int largest = Mathf.Max(footprint.x, footprint.y, footprint.z);
+        float cell = blockSize * Mathf.Min(1f, (float)Mathf.Max(maxPreviewCells, 1) / largest);
+        current = BlockPreviewFactory.CreateVisual(def, cell, out currentBottomDistance, fill: 1f, centerOnPivot: true);
         current.name = "SelectedBlockPreview";
 
         // Bloc choisi dans l'inventaire pendant que le spray est en main :

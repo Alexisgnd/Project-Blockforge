@@ -1,14 +1,22 @@
 using UnityEngine;
 
 // =========================================================
-// FABRIQUE DES VISUELS PLACEHOLDER DE BLOCS
-// Partagee entre l'apercu sur la pince, le ghost de pose
-// et les blocs poses. Sera remplacee par les vrais modeles
-// via BlockDefinition.previewPrefab.
+// FABRIQUE DES VISUELS DE BLOCS
+// Partagee entre l'apercu sur la pince, le ghost de pose et
+// les blocs poses. Un bloc a modele (previewPrefab) est ajuste
+// dans sa boite d'empreinte (BlockDefinition.footprint, en
+// cases) puis plaque sur sa face d'ancrage ; le pivot du
+// conteneur rendu est le centre de la case visee, la boite
+// s'etendant autour selon BlockFootprint.MinOffset. Sans
+// modele, un placeholder primitif d'une case est genere.
 // =========================================================
 
 public static class BlockPreviewFactory
 {
+    // Part de la boite laissee au modele : marge symetrique contre le
+    // z-fighting entre blocs voisins (un cube de chassis fait 0,96 case).
+    public const float DefaultFill = 0.96f;
+
     // CreatePrimitive assigne le materiau par defaut du pipeline, qui n'existe
     // que dans l'editeur avec HDRP (blocs roses en build) : on force un materiau
     // embarque via Resources.
@@ -24,11 +32,16 @@ public static class BlockPreviewFactory
         }
     }
 
-    // Cree le visuel d'un bloc (sans collider). unitSize = taille monde d'un bloc 1x1x1.
-    public static GameObject CreateVisual(BlockDefinition def, float unitSize, out float halfHeight)
+    // Cree le visuel d'un bloc (sans collider).
+    // cellSize = taille monde d'une case ; fill = part de la boite occupee par
+    // le modele ; centerOnPivot = boite centree sur le pivot (apercu sur la
+    // pince) au lieu d'etre placee autour de la case visee (grille).
+    // bottomDistance = distance du pivot au point le plus bas du visuel.
+    public static GameObject CreateVisual(BlockDefinition def, float cellSize, out float bottomDistance,
+                                          float fill = DefaultFill, bool centerOnPivot = false)
     {
         if (def.previewPrefab != null)
-            return CreatePrefabVisual(def, unitSize, out halfHeight);
+            return CreatePrefabVisual(def, cellSize, fill, centerOnPivot, out bottomDistance);
 
         var (primitive, scale) = PickShape(def.blockName);
         var go = GameObject.CreatePrimitive(primitive);
@@ -37,8 +50,9 @@ public static class BlockPreviewFactory
         if (collider != null)
             Object.Destroy(collider);
 
-        go.transform.localScale = scale * unitSize;
-        halfHeight = HalfHeight(primitive, scale.y * unitSize);
+        float size = cellSize * fill;
+        go.transform.localScale = scale * size;
+        bottomDistance = HalfHeight(primitive, scale.y * size);
 
         var renderer = go.GetComponent<Renderer>();
         if (PlaceholderMaterial != null)
@@ -47,38 +61,82 @@ public static class BlockPreviewFactory
         return go;
     }
 
-    // Instancie le vrai modele (FBX) dans un conteneur dont le pivot est le
-    // centre de la cellule : le modele est mis a l'echelle uniforme pour tenir
-    // dans unitSize, centre horizontalement et pose au fond de la cellule
-    // (base a -unitSize/2), comme un bloc plein.
-    private static GameObject CreatePrefabVisual(BlockDefinition def, float unitSize, out float halfHeight)
+    // Instancie le vrai modele (FBX ou prefab variant) dans un conteneur :
+    // - boite d'empreinte = footprint x cellSize, placee autour de la case visee
+    //   (ou centree sur le pivot pour la pince) ;
+    // - echelle uniforme maximale pour tenir dans la boite (moins la marge fill),
+    //   ou echelle native 1 m = 1 case pour les tiges ;
+    // - la face d'ancrage du modele est plaquee sur la face correspondante de
+    //   la boite, le modele est centre sur les autres axes.
+    private static GameObject CreatePrefabVisual(BlockDefinition def, float cellSize, float fill,
+                                                 bool centerOnPivot, out float bottomDistance)
     {
         var wrapper = new GameObject($"Visual_{def.name}");
         var instance = Object.Instantiate(def.previewPrefab, wrapper.transform, false);
         instance.transform.localPosition = Vector3.zero;
         instance.transform.localRotation = Quaternion.identity;
+        instance.transform.localScale = Vector3.one;
 
-        var renderers = instance.GetComponentsInChildren<Renderer>();
-        if (renderers.Length > 0)
+        Vector3 boxSize = (Vector3)BlockFootprint.Size(def) * cellSize;
+        Vector3 boxMin = centerOnPivot
+            ? -boxSize * 0.5f
+            : ((Vector3)BlockFootprint.MinOffset(def) - Vector3.one * 0.5f) * cellSize;
+
+        // Boite interieure : marge constante (1 - fill) / 2 case de chaque cote,
+        // quelle que soit la taille de la boite (un rail de 6 cases garde le
+        // meme jour avec ses voisins qu'un cube).
+        Vector3 margin = Vector3.one * (cellSize * (1f - fill) * 0.5f);
+        Vector3 innerMin = boxMin + margin;
+        Vector3 innerSize = boxSize - margin * 2f;
+
+        bottomDistance = -boxMin.y;
+
+        // Bounds exacts calcules par le resync (sommets) si disponibles ; sinon
+        // union des renderers, qui surestime les pieces tournees.
+        Bounds bounds = def.modelBounds;
+        if (bounds.size.sqrMagnitude < 1e-8f && !TryGetBounds(instance, out bounds))
+            return wrapper;
+
+        float scale = def.nativeScale
+            ? cellSize * fill
+            : Mathf.Min(innerSize.x / Mathf.Max(bounds.size.x, 1e-4f),
+                        innerSize.y / Mathf.Max(bounds.size.y, 1e-4f),
+                        innerSize.z / Mathf.Max(bounds.size.z, 1e-4f));
+
+        Vector3 scaledSize = bounds.size * scale;
+        Vector3 targetMin = innerMin + (innerSize - scaledSize) * 0.5f; // centre par defaut
+        switch (def.anchor)
         {
-            var bounds = renderers[0].bounds;
-            foreach (var r in renderers)
-                bounds.Encapsulate(r.bounds);
-
-            float maxDim = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
-            float scale = maxDim > 0.0001f ? unitSize / maxDim : 1f;
-            instance.transform.localScale = Vector3.one * scale;
-            instance.transform.localPosition = new Vector3(
-                -bounds.center.x * scale,
-                -unitSize * 0.5f - bounds.min.y * scale,
-                -bounds.center.z * scale);
+            case BlockAnchor.Bottom: targetMin.y = innerMin.y; break;
+            case BlockAnchor.Right:  targetMin.x = innerMin.x + innerSize.x - scaledSize.x; break;
+            case BlockAnchor.Left:   targetMin.x = innerMin.x; break;
+            case BlockAnchor.Back:   targetMin.z = innerMin.z; break;
+            case BlockAnchor.Center: break;
         }
 
-        halfHeight = unitSize * 0.5f;
+        // Les bounds ont ete mesures avec l'instance a l'identite : apres mise a
+        // l'echelle autour de son origine, son coin min vaut bounds.min * scale.
+        instance.transform.localScale = Vector3.one * scale;
+        instance.transform.localPosition = targetMin - bounds.min * scale;
+        bottomDistance = -targetMin.y;
         return wrapper;
     }
 
-    // Forme placeholder par nom de bloc (echelles en unites de unitSize)
+    // Union des bounds monde des renderers d'une hierarchie (false si aucun)
+    public static bool TryGetBounds(GameObject root, out Bounds bounds)
+    {
+        var renderers = root.GetComponentsInChildren<Renderer>();
+        bounds = default;
+        if (renderers.Length == 0)
+            return false;
+
+        bounds = renderers[0].bounds;
+        foreach (var r in renderers)
+            bounds.Encapsulate(r.bounds);
+        return true;
+    }
+
+    // Forme placeholder par nom de bloc (echelles en unites de case)
     public static (PrimitiveType, Vector3) PickShape(string blockName)
     {
         string n = blockName.ToLowerInvariant();

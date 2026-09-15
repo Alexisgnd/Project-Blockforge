@@ -19,7 +19,7 @@ using UnityEngine;
 public static class BlockFootprintSetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
-    private const string AutoRunMarker = "Library/BlockforgeBlockFootprints.done";
+    private const string AutoRunMarker = "Library/BlockforgeBlockFootprints-v3.done";
 
     static BlockFootprintSetup()
     {
@@ -50,6 +50,120 @@ public static class BlockFootprintSetup
         if (Run())
             File.WriteAllText(AutoRunMarker, "done");
     }
+
+    // =====================================================
+    // RAPPORT : BOUNDS BRUTS ET VISUEL AJUSTE DE CHAQUE BLOC
+    // Menu : Blockforge > Report Block Bounds
+    // Ecrit Library/BlockBoundsReport.txt : pour chaque bloc,
+    // les bounds du prefab (repere Unity, pour verifier le
+    // cote des faces d'ancrage) et le visuel produit par
+    // BlockPreviewFactory avec une case de 1 m, compare a la
+    // boite d'empreinte attendue.
+    // =====================================================
+
+    private const string ReportMarker = "Library/BlockforgeBlockBoundsReport-v3.done";
+    private const string ReportPath = "Library/BlockBoundsReport.txt";
+
+    // Noeuds dont la position aide a verifier le cote des faces d'ancrage
+    private static readonly string[] LandmarkNames =
+        { "mount", "plate", "hub", "foot", "tip", "muzzle", "emitter", "nozzle", "attach", "sole", "turret", "hinge" };
+
+    [InitializeOnLoadMethod]
+    private static void ReportOnce()
+    {
+        EditorApplication.delayCall += () =>
+        {
+            if (File.Exists(ReportMarker) || EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+            // L'ordre des rappels n'est pas garanti : le rapport doit mesurer des
+            // assets deja resynchronises (bounds exacts, ancrages a jour).
+            if (!File.Exists(AutoRunMarker) && Run())
+                File.WriteAllText(AutoRunMarker, "done");
+            ReportBounds();
+            File.WriteAllText(ReportMarker, "done");
+        };
+    }
+
+    [MenuItem("Blockforge/Report Block Bounds")]
+    public static void ReportBounds()
+    {
+        var sb = new System.Text.StringBuilder();
+        int errors = 0, overhangs = 0, count = 0;
+        const float fill = BlockPreviewFactory.DefaultFill;
+        const float faceTolerance = (1f - fill) * 0.5f + 0.005f;
+
+        foreach (var guid in AssetDatabase.FindAssets("t:BlockDefinition"))
+        {
+            var def = AssetDatabase.LoadAssetAtPath<BlockDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+            if (def == null || def.previewPrefab == null)
+                continue;
+            count++;
+
+            // Bounds bruts du prefab (echelle 1, origine = pivot du FBX) et
+            // position des noeuds reperes (moyeu, plaque, pied, bouche...)
+            var raw = Object.Instantiate(def.previewPrefab);
+            raw.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            GarageInventorySetup.TryGetExactBounds(raw, out var rawBounds);
+            var landmarks = new System.Text.StringBuilder();
+            int shown = 0;
+            foreach (var t in raw.GetComponentsInChildren<Transform>())
+            {
+                string lower = t.name.ToLowerInvariant();
+                bool match = false;
+                foreach (var key in LandmarkNames)
+                    if (lower.Contains(key)) { match = true; break; }
+                if (!match || t == raw.transform)
+                    continue;
+                var r = t.GetComponent<Renderer>();
+                Vector3 p = r != null ? r.bounds.center : t.position;
+                landmarks.Append($" {t.name}{F(p)}");
+                if (++shown >= 8)
+                    break;
+            }
+            Object.DestroyImmediate(raw);
+
+            // Visuel ajuste avec une case de 1 m : la boite attendue est en cases.
+            // Mesure exacte (sommets) : renderer.bounds surestime les pieces tournees.
+            var visual = BlockPreviewFactory.CreateVisual(def, 1f, out float bottom);
+            GarageInventorySetup.TryGetExactBounds(visual, out var vb);
+            Object.DestroyImmediate(visual);
+
+            Vector3 boxMin = (Vector3)BlockFootprint.MinOffset(def) - Vector3.one * 0.5f;
+            Vector3 boxMax = boxMin + BlockFootprint.Size(def);
+
+            bool inside = vb.min.x >= boxMin.x - 1e-3f && vb.min.y >= boxMin.y - 1e-3f && vb.min.z >= boxMin.z - 1e-3f
+                       && vb.max.x <= boxMax.x + 1e-3f && vb.max.y <= boxMax.y + 1e-3f && vb.max.z <= boxMax.z + 1e-3f;
+
+            float faceGap = def.anchor switch
+            {
+                BlockAnchor.Bottom => vb.min.y - boxMin.y,
+                BlockAnchor.Right => boxMax.x - vb.max.x,
+                BlockAnchor.Left => vb.min.x - boxMin.x,
+                BlockAnchor.Back => vb.min.z - boxMin.z,
+                _ => 0f,
+            };
+            bool faceOk = Mathf.Abs(faceGap) <= faceTolerance;
+
+            string status;
+            if (def.nativeScale && !inside) { status = "DEBORD"; overhangs++; }
+            else if (!inside || !faceOk) { status = "ERREUR"; errors++; }
+            else status = "OK";
+
+            sb.AppendLine($"{status,-6} {def.name,-36} {def.SizeLabel,-6} {def.anchor,-6} " +
+                          $"brut min{F(rawBounds.min)} max{F(rawBounds.max)} | " +
+                          $"boite [{F(boxMin)}..{F(boxMax)}] visuel [{F(vb.min)}..{F(vb.max)}] " +
+                          $"ecart face {faceGap:0.000} bas {bottom:0.00}");
+            if (landmarks.Length > 0)
+                sb.AppendLine($"       reperes :{landmarks}");
+        }
+
+        File.WriteAllText(ReportPath, sb.ToString());
+        string summary = $"[BlockFootprintSetup] Rapport de {count} blocs : {errors} erreur(s), {overhangs} debord(s) natifs -> {ReportPath}";
+        if (errors > 0) Debug.LogError(summary);
+        else Debug.Log(summary);
+    }
+
+    private static string F(Vector3 v) => $"({v.x:0.00},{v.y:0.00},{v.z:0.00})";
 
     private static bool Run()
     {

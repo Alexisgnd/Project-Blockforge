@@ -20,7 +20,10 @@ MonoBehaviour:
   weightKg: 420
   resistanceHp: 1500
   footprint: {x: 2, y: 3, z: 3}
-  anchor: 1
+  anchor: 2
   nativeScale: 0
   icon: {fileID: 21300000, guid: 7a9b422aaa893204a935f1b35af5778c, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: b04cdcb5ffcb9f34a96e7f6e39f74dd4, type: 3}
+  modelBounds:
+    m_Center: {x: 0.99, y: 0, z: 0}
+    m_Extent: {x: 0.998, y: 1.6370778, z: 1.6370778}

@@ -330,7 +330,7 @@ public class GarageBuildController : MonoBehaviour
         {
             if (ghost != null)
                 Destroy(ghost);
-            ghost = BlockPreviewFactory.CreateVisual(def, cellY * 0.96f, out _);
+            ghost = BlockPreviewFactory.CreateVisual(def, cellY, out _);
             ghost.name = "BuildGhost";
             ghostBlockId = def.name;
         }
@@ -399,7 +399,7 @@ public class GarageBuildController : MonoBehaviour
         view.cell = cell;
         view.definition = def;
 
-        var visual = BlockPreviewFactory.CreateVisual(def, cellY * 0.96f, out _);
+        var visual = BlockPreviewFactory.CreateVisual(def, cellY, out _);
         visual.transform.SetParent(root.transform, false);
 
         occupied[cell] = view;

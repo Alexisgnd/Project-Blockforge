@@ -57,6 +57,10 @@ public class BlockDefinition : ScriptableObject
     public Sprite icon;
     [Tooltip("Modele 3D affiche sur la pince ; a defaut un placeholder est genere")]
     public GameObject previewPrefab;
+    [Tooltip("Bounds exacts du modele (sommets, pose importee) dans le repere du prefab, calcules par " +
+             "Blockforge > Resync Block Definitions. Taille nulle = mesure a l'instanciation via les renderers, " +
+             "qui surestime les pieces tournees.")]
+    public Bounds modelBounds;
 
     public string CategoryLabel => CategoryLabels[(int)category];
 
