@@ -20,5 +20,5 @@ MonoBehaviour:
   sizeLabel: 1x1x3
   weightKg: 210
   resistanceHp: 450
-  icon: {fileID: 0}
-  previewPrefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 82e45d2b217c404459513e1870c0787c, type: 3}
+  previewPrefab: {fileID: 919132149155446097, guid: ff0b08029d8362943b89e827d7d9101d, type: 3}

@@ -136,7 +136,7 @@ resynchronisent avec les assets.
 | Mouvement | Propulseurs — Lynx → Cheetah | 5 | ✅ |
 | Armes | Lasers — Wasp → Leviathan | 6 | ✅ |
 | Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | ✅ |
-| Armes | Canons électriques (rail) — Piercer → Erazer | 4 | placeholder |
+| Armes | Canons électriques (rail) — Piercer → Erazer | 4 | ✅ |
 | Armes | Lames de Tesla — Slicer → Nova | 3 | ✅ |
 | Défense | Distributeurs nano — Blinder → Constructor | 3 | ✅ |
 | Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | ✅ |

@@ -663,11 +663,11 @@ public static class GarageInventorySetup
             ("Block_Plasma_N4_Ravager", "PLASMA RAVAGER", "Lanceur de plasma", BlockCategory.Armes, 28, "2x1x2", 350, 760, "Plasma_N4_Ravager", "Projectiles surchauffés. Fait fondre les blindages moyens."),
             ("Block_Plasma_N5_Devastator", "PLASMA DEVASTATOR", "Lanceur de plasma", BlockCategory.Armes, 35, "2x2x2", 450, 900, "Plasma_N5_Devastator", "Mortier plasma lourd. Dégâts de zone dévastateurs."),
             ("Block_Plasma_N6_Goliathon", "PLASMA GOLIATHON", "Lanceur de plasma", BlockCategory.Armes, 44, "3x2x2", 580, 1100, "Plasma_N6_Goliathon", "Batterie plasma de siège. Pulvérise tout ce qui reste debout."),
-            // ----- Armes offensives : canons electriques (Piercer -> Erazer) -----
-            ("Block_Rail_N1_Piercer", "RAIL PIERCER", "Canon électrique", BlockCategory.Armes, 16, "1x1x3", 210, 450, "", "Canon à rail léger. Traverse les blocs fins d'un seul tir."),
-            ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "1x1x3", 280, 550, "", "Rail à double bobine. Perforation nette à longue portée."),
-            ("Block_Rail_N3_Decimator", "RAIL DECIMATOR", "Canon électrique", BlockCategory.Armes, 30, "2x1x4", 380, 680, "", "Canon électrique lourd. Transperce plusieurs blocs alignés."),
-            ("Block_Rail_N4_Erazer", "RAIL ERAZER", "Canon électrique", BlockCategory.Armes, 40, "2x1x4", 500, 820, "", "Rail de siège. Un tir, une ligne entière effacée."),
+            // ----- Armes offensives : canons electriques (Piercer -> Erazer ; FBX Art/Models/Blocks/Weapons, canon vers l'avant, pied recentre, source Tools/Blender/RailCannons.blend, pack GLB du 15/09/2026) -----
+            ("Block_Rail_N1_Piercer", "RAIL PIERCER", "Canon électrique", BlockCategory.Armes, 16, "1x1x3", 210, 450, "Rail_N1_Piercer", "Canon à rail léger. Traverse les blocs fins d'un seul tir."),
+            ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "1x1x3", 280, 550, "Rail_N2_Penetrator", "Rail à double bobine. Perforation nette à longue portée."),
+            ("Block_Rail_N3_Decimator", "RAIL DECIMATOR", "Canon électrique", BlockCategory.Armes, 30, "2x1x4", 380, 680, "Rail_N3_Decimator", "Canon électrique lourd. Transperce plusieurs blocs alignés."),
+            ("Block_Rail_N4_Erazer", "RAIL ERAZER", "Canon électrique", BlockCategory.Armes, 40, "2x1x4", 500, 820, "Rail_N4_Erazer", "Rail de siège. Un tir, une ligne entière effacée."),
             // ----- Armes offensives : lames de Tesla (Slicer -> Nova ; FBX Art/Models/Blocks/Weapons, semelle a plat, arc dans l'axe avant/arriere, source Tools/Blender/TeslaBlades.blend, pack GLB du 15/09/2026) -----
             ("Block_Tesla_N1_Slicer", "TESLA SLICER", "Lame de Tesla", BlockCategory.Armes, 12, "1x1x2", 140, 500, "Tesla_N1_Slicer", "Lame électrifiée courte. Tranche au contact."),
             ("Block_Tesla_N2_Ripper", "TESLA RIPPER", "Lame de Tesla", BlockCategory.Armes, 19, "2x1x2", 210, 650, "Tesla_N2_Ripper", "Double lame à arc électrique. Déchire les blindages au corps à corps."),
