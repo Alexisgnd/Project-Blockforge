@@ -39,7 +39,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 | Garage : grille 14×14, pince de pose, inventaire par catégorie et famille, recherche | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
-| Catalogue de blocs avec vrais modèles 3D | 82 blocs modélisés, 1 placeholder (voir le catalogue) |
+| Catalogue de blocs avec vrais modèles 3D | 82 blocs, tous modélisés (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
 | Combat, physique des véhicules, multijoueur | pas commencé |
 
@@ -131,7 +131,6 @@ resynchronisent avec les assets.
 | Mouvement | Pattes d'insecte — Walker, Soldier | 2 | ✅ |
 | Mouvement | Lames de survol — Squall → Hurricane | 6 | ✅ |
 | Mouvement | Hélices (rotors) — Recon, Invader, Assault | 3 | ✅ |
-| Mouvement | Ailes | 1 | placeholder |
 | Mouvement | Ailerons — Hawk → Bat | 7 | ✅ |
 | Mouvement | Propulseurs — Lynx → Cheetah | 5 | ✅ |
 | Armes | Lasers — Wasp → Leviathan | 6 | ✅ |
@@ -143,8 +142,9 @@ resynchronisent avec les assets.
 | Spécial | Radar (panneaux repliables, animé) | 1 | ✅ |
 | Spécial | Disque de bouclier | 1 | ✅ |
 
-Les « placeholders » sont des blocs jouables avec un cube gris : ce sont les
-premières contributions 3D à prendre.
+Un bloc dont le champ `art` est vide dans `GarageInventorySetup` s'affiche en
+cube gris (placeholder) : il n'en reste plus aucun, toutes les familles sont
+modélisées. Les ailes, un temps prévues, sont couvertes par les ailerons.
 
 ---
 
@@ -228,10 +228,9 @@ Règles communes :
 
 C'est le besoin numéro un du projet. Par ordre de priorité :
 
-1. Modéliser la dernière famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
-   les ailes.
-2. Améliorer les blocs existants (topologie, détails, textures).
-3. Décors : garage, hangar, carte Mars.
+1. Améliorer les blocs existants (topologie, détails, textures) : toutes les
+   familles du [catalogue](#catalogue-des-blocs) ont déjà un modèle procédural.
+2. Décors : garage, hangar, carte Mars.
 
 Livrables attendus pour une famille de blocs :
 

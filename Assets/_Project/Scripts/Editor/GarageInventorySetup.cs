@@ -632,8 +632,6 @@ public static class GarageInventorySetup
             ("Block_RotorBlade_Recon", "ROTOR RECON", "Hélices", BlockCategory.Mouvement, 10, "2x1x2", 120, 350, "RotorBlade_Recon", "Rotor bipale léger. Vol stationnaire agile et discret."),
             ("Block_RotorBlade_Invader", "ROTOR INVADER", "Hélices", BlockCategory.Mouvement, 14, "2x1x2", 170, 500, "RotorBlade_Invader", "Rotor tripale équilibré. Portance stable pour châssis moyens."),
             ("Block_RotorBlade_Assault", "ROTOR ASSAULT", "Hélices", BlockCategory.Mouvement, 18, "2x1x2", 230, 650, "RotorBlade_Assault", "Rotor quadripale surpuissant. Soulève les châssis blindés."),
-            // ----- Mouvement : ailes -----
-            ("Block_11_Ailes", "AILES", "Ailes", BlockCategory.Mouvement, 10, "3x1x2", 130, 400, "", "Portance horizontale à grande vitesse."),
             // ----- Mouvement : ailerons (Hawk -> Bat ; FBX Art/Models/Blocks/Movement, source Tools/Blender/Rudders.blend, pack GLB du 11/09/2026) -----
             ("Block_Rudder_N1_Hawk", "RUDDER HAWK", "Ailerons", BlockCategory.Mouvement, 6, "1x2x1", 60, 300, "Rudder_N1_Hawk", "Aileron léger de reconnaissance. Virages vifs à faible vitesse."),
             ("Block_Rudder_N2_Falcon", "RUDDER FALCON", "Ailerons", BlockCategory.Mouvement, 8, "1x3x1", 75, 360, "Rudder_N2_Falcon", "Dérive polyvalente à rail titane. Bon compromis stabilité / réactivité."),
