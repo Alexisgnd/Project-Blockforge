@@ -668,15 +668,15 @@ public static class GarageInventorySetup
             ("Block_Rail_N2_Penetrator", "RAIL PENETRATOR", "Canon électrique", BlockCategory.Armes, 22, "1x1x3", 280, 550, "", "Rail à double bobine. Perforation nette à longue portée."),
             ("Block_Rail_N3_Decimator", "RAIL DECIMATOR", "Canon électrique", BlockCategory.Armes, 30, "2x1x4", 380, 680, "", "Canon électrique lourd. Transperce plusieurs blocs alignés."),
             ("Block_Rail_N4_Erazer", "RAIL ERAZER", "Canon électrique", BlockCategory.Armes, 40, "2x1x4", 500, 820, "", "Rail de siège. Un tir, une ligne entière effacée."),
-            // ----- Armes offensives : lames de Tesla (Slicer -> Nova) -----
-            ("Block_Tesla_N1_Slicer", "TESLA SLICER", "Lame de Tesla", BlockCategory.Armes, 12, "1x1x2", 140, 500, "", "Lame électrifiée courte. Tranche au contact."),
-            ("Block_Tesla_N2_Ripper", "TESLA RIPPER", "Lame de Tesla", BlockCategory.Armes, 19, "2x1x2", 210, 650, "", "Double lame à arc électrique. Déchire les blindages au corps à corps."),
-            ("Block_Tesla_N3_Nova", "TESLA NOVA", "Lame de Tesla", BlockCategory.Armes, 28, "2x1x2", 300, 820, "", "Lame à décharge en étoile. Frappe tous les blocs adjacents."),
+            // ----- Armes offensives : lames de Tesla (Slicer -> Nova ; FBX Art/Models/Blocks/Weapons, semelle a plat, arc dans l'axe avant/arriere, source Tools/Blender/TeslaBlades.blend, pack GLB du 15/09/2026) -----
+            ("Block_Tesla_N1_Slicer", "TESLA SLICER", "Lame de Tesla", BlockCategory.Armes, 12, "1x1x2", 140, 500, "Tesla_N1_Slicer", "Lame électrifiée courte. Tranche au contact."),
+            ("Block_Tesla_N2_Ripper", "TESLA RIPPER", "Lame de Tesla", BlockCategory.Armes, 19, "2x1x2", 210, 650, "Tesla_N2_Ripper", "Double lame à arc électrique. Déchire les blindages au corps à corps."),
+            ("Block_Tesla_N3_Nova", "TESLA NOVA", "Lame de Tesla", BlockCategory.Armes, 28, "2x1x2", 300, 820, "Tesla_N3_Nova", "Lame à décharge en étoile. Frappe tous les blocs adjacents."),
 
-            // ----- Materiaux defensifs : distributeurs nano (Blinder -> Constructor) -----
-            ("Block_Nano_N1_Blinder", "NANO BLINDER", "Distributeur nano / Healer", BlockCategory.Defense, 14, "1x1x1", 180, 550, "", "Nuage de nanites aveuglant. Brouille les capteurs adverses."),
-            ("Block_Nano_N2_Mender", "NANO MENDER", "Distributeur nano / Healer", BlockCategory.Defense, 18, "2x2x1", 300, 800, "", "Répare progressivement les blocs proches."),
-            ("Block_Nano_N3_Constructor", "NANO CONSTRUCTOR", "Distributeur nano / Healer", BlockCategory.Defense, 24, "2x2x1", 380, 950, "", "Reconstruit les blocs détruits en pleine bataille."),
+            // ----- Materiaux defensifs : distributeurs nano (Blinder -> Constructor ; FBX Art/Models/Blocks/Defense, emetteur vers l'avant, empties Turret/Mount conserves, source Tools/Blender/NanoDisruptors.blend, pack GLB du 15/09/2026) -----
+            ("Block_Nano_N1_Blinder", "NANO BLINDER", "Distributeur nano / Healer", BlockCategory.Defense, 14, "1x1x1", 180, 550, "Nano_N1_Blinder", "Nuage de nanites aveuglant. Brouille les capteurs adverses."),
+            ("Block_Nano_N2_Mender", "NANO MENDER", "Distributeur nano / Healer", BlockCategory.Defense, 18, "2x2x1", 300, 800, "Nano_N2_Mender", "Répare progressivement les blocs proches."),
+            ("Block_Nano_N3_Constructor", "NANO CONSTRUCTOR", "Distributeur nano / Healer", BlockCategory.Defense, 24, "2x2x1", 380, 950, "Nano_N3_Constructor", "Reconstruit les blocs détruits en pleine bataille."),
             // ----- Materiaux defensifs : electroplates (T2 -> T9 ; FBX Art/Models/Blocks/Defense, face protectrice vers l'avant, pivot sur la fixation arriere, source Tools/Blender/Electroplates.blend, pack GLB du 15/09/2026) -----
             ("Block_Electroplate_T2", "ELECTROPLATE T2", "Blindage électrodéposé", BlockCategory.Defense, 4, "1x2x1", 120, 900, "Electroplate_T2", "Plaque ogivale légère. Première protection électrodéposée."),
             ("Block_Electroplate_T3", "ELECTROPLATE T3", "Blindage électrodéposé", BlockCategory.Defense, 6, "1x2x1", 160, 1300, "Electroplate_T3", "Plaque à épaulement. Couvre un flanc de châssis léger."),

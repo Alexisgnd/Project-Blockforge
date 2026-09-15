@@ -137,8 +137,8 @@ resynchronisent avec les assets.
 | Armes | Lasers — Wasp → Leviathan | 6 | ✅ |
 | Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | ✅ |
 | Armes | Canons électriques (rail) — Piercer → Erazer | 4 | placeholder |
-| Armes | Lames de Tesla — Slicer → Nova | 3 | placeholder |
-| Défense | Distributeurs nano — Blinder → Constructor | 3 | placeholder |
+| Armes | Lames de Tesla — Slicer → Nova | 3 | ✅ |
+| Défense | Distributeurs nano — Blinder → Constructor | 3 | ✅ |
 | Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | ✅ |
 | Spécial | Radar | 1 | placeholder |
 | Spécial | Disque de bouclier | 1 | ✅ |
@@ -229,7 +229,7 @@ Règles communes :
 C'est le besoin numéro un du projet. Par ordre de priorité :
 
 1. Modéliser une famille encore en placeholder (voir le [catalogue](#catalogue-des-blocs)) :
-   canons électriques, Tesla, nano, radar, ailes.
+   canons électriques, radar, ailes.
 2. Améliorer les blocs existants (topologie, détails, textures).
 3. Décors : garage, hangar, carte Mars.
 
