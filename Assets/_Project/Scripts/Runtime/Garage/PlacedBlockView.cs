@@ -10,5 +10,6 @@ public class PlacedBlockView : MonoBehaviour
 {
     public Vector3Int cell;
     public BlockDefinition definition;
+    public bool mirrored;
     public Vector3Int[] cells;
 }

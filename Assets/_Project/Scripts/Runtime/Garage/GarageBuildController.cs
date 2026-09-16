@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,6 +14,9 @@ using UnityEngine.InputSystem;
 //   dessous, flancs) ; le chassis reste droit
 // - Clic gauche : poser / clic droit : retirer
 // - Molette : quart de tour autour de la face visee (ou de Y)
+// - M : mode miroir, le symetrique du bloc par le plan de la ligne
+//   centrale est affiche, pose et retire en meme temps (image
+//   miroir vraie : echelle -1 sur l'axe du plan, PlacedBlock.mirrored)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
 // La grille est mesuree depuis les renderers de "buildGrid".
@@ -51,6 +55,16 @@ public class GarageBuildController : MonoBehaviour
     private int spinIndex; // quarts de tour a la molette, autour de la face visee (ou de Y)
     private int totalCpu;
 
+    [Header("Miroir (touche M)")]
+    [Tooltip("Affiche, pose et retire aussi le symetrique du bloc par rapport a la ligne centrale de la grille")]
+    public bool mirrorMode;
+
+    private bool mirrorAlongX = true; // la ligne centrale court le long de Z : le miroir inverse X
+    private GameObject mirrorGhost;
+    private string mirrorGhostBlockId;
+    private TMP_Text mirrorLabel;
+    private readonly List<Vector3Int> mirrorBuffer = new();
+
     private BlockDefinition Selected => inventory != null ? inventory.CurrentBlock : null;
 
     private void Start()
@@ -59,6 +73,12 @@ public class GarageBuildController : MonoBehaviour
             viewCamera = Camera.main;
 
         ComputeGridFromRenderers();
+        DetectMirrorAxis();
+
+        var mirrorLabelGo = GameObject.Find("Ctrl_MIROIR");
+        if (mirrorLabelGo != null)
+            mirrorLabel = mirrorLabelGo.GetComponent<TMP_Text>();
+        RefreshMirrorLabel();
 
         if (inventory != null)
         {
@@ -78,6 +98,8 @@ public class GarageBuildController : MonoBehaviour
     {
         if (ghost != null)
             Destroy(ghost);
+        if (mirrorGhost != null)
+            Destroy(mirrorGhost);
     }
 
     // Coupe par GarageToolSwitcher quand le spray est en main :
@@ -104,6 +126,7 @@ public class GarageBuildController : MonoBehaviour
         }
 
         HandleWheelRotation();
+        HandleMirrorToggle();
 
         var def = Selected;
         if (def == null)
@@ -138,9 +161,31 @@ public class GarageBuildController : MonoBehaviour
         bool valid = CanPlace(def, placeCell, rotation) && CapacityAllows(def);
         ShowGhost(def, placeCell, rotation, valid);
 
+        // Mode miroir : le symetrique est pose avec le bloc s'il tient (cases
+        // libres, hors du bloc lui-meme, capacite pour les deux) ; un bloc
+        // deja symetrique (a cheval sur la ligne) n'a pas de jumeau.
+        Vector3Int mirrorCell = MirrorCell(placeCell);
+        bool placeMirror = false;
+        if (mirrorMode)
+        {
+            bool symmetric = false;
+            placeMirror = valid && MirrorPlaceable(def, placeCell, rotation, out symmetric)
+                          && (statsHud == null || totalCpu + 2 * def.costCpu <= statsHud.capacityMax);
+            if (symmetric)
+                HideMirrorGhost();
+            else
+                ShowMirrorGhost(def, mirrorCell, rotation, placeMirror);
+        }
+        else
+        {
+            HideMirrorGhost();
+        }
+
         if (valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            PlaceBlock(def, placeCell, rotation);
+            PlaceBlock(def, placeCell, rotation, false);
+            if (placeMirror)
+                PlaceBlock(def, mirrorCell, rotation, true);
             HideGhost();
         }
     }
@@ -269,16 +314,113 @@ public class GarageBuildController : MonoBehaviour
             && !occupied.ContainsKey(cell);
     }
 
-    // Toutes les cases de la boite d'empreinte (tournee) sont dans la grille et libres
-    private bool CanPlace(BlockDefinition def, Vector3Int anchorCell, int rotation)
+    // Toutes les cases de la boite d'empreinte (orientee, eventuellement en
+    // miroir) sont dans la grille et libres
+    private bool CanPlace(BlockDefinition def, Vector3Int anchorCell, int rotation, bool mirrored = false)
     {
-        BlockFootprint.GetCells(def, anchorCell, rotation, cellBuffer);
+        GetBlockCells(def, anchorCell, rotation, mirrored, cellBuffer);
         foreach (var c in cellBuffer)
         {
             if (!IsCellFree(c))
                 return false;
         }
         return true;
+    }
+
+    // Cases d'un bloc ; en miroir, ce sont les cases du bloc d'origine (ancre
+    // sur la case en face) reflechies par le plan central.
+    private void GetBlockCells(BlockDefinition def, Vector3Int anchorCell, int rotation, bool mirrored, List<Vector3Int> result)
+    {
+        if (!mirrored)
+        {
+            BlockFootprint.GetCells(def, anchorCell, rotation, result);
+            return;
+        }
+        BlockFootprint.GetCells(def, MirrorCell(anchorCell), rotation, result);
+        for (int i = 0; i < result.Count; i++)
+            result[i] = MirrorCell(result[i]);
+    }
+
+    // =========================================================
+    // MIROIR (plan de la ligne centrale de la grille)
+    // =========================================================
+
+    // La ligne centrale (rouge) donne l'axe du miroir : longue sur un axe
+    // horizontal, fine sur l'autre ; le plan du miroir est perpendiculaire a
+    // l'axe fin. Par defaut : ligne le long de Z, miroir sur X.
+    private void DetectMirrorAxis()
+    {
+        if (gridRoot == null)
+            return;
+
+        foreach (var r in gridRoot.GetComponentsInChildren<Renderer>())
+        {
+            if (r.gameObject.name.IndexOf("center", System.StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+            mirrorAlongX = r.bounds.size.x <= r.bounds.size.z;
+            Debug.Log($"[GarageBuild] Ligne centrale '{r.gameObject.name}' : miroir sur l'axe {(mirrorAlongX ? "X" : "Z")}.");
+            return;
+        }
+        Debug.LogWarning("[GarageBuild] Ligne centrale introuvable sous buildGrid : miroir sur l'axe X par defaut.");
+    }
+
+    // Case symetrique par le plan central (entre les colonnes 6 et 7 d'une grille de 14)
+    private Vector3Int MirrorCell(Vector3Int c)
+    {
+        return mirrorAlongX
+            ? new Vector3Int(RobotBlueprint.GridWidth - 1 - c.x, c.y, c.z)
+            : new Vector3Int(c.x, c.y, RobotBlueprint.GridDepth - 1 - c.z);
+    }
+
+    private Vector3 MirrorScale => mirrorAlongX ? new Vector3(-1f, 1f, 1f) : new Vector3(1f, 1f, -1f);
+
+    // Reflexion d'une rotation par le plan du miroir (conjugaison par la
+    // reflexion) : la composante du vecteur le long de la normale du plan est
+    // conservee, les deux autres sont inversees. Avec l'echelle -1 sur cet
+    // axe, la racine reproduit exactement l'image miroir du bloc d'origine.
+    private Quaternion MirrorRotation(Quaternion q)
+    {
+        return mirrorAlongX
+            ? new Quaternion(q.x, -q.y, -q.z, q.w)
+            : new Quaternion(-q.x, -q.y, q.z, q.w);
+    }
+
+    // Le symetrique du bloc vise tient-il ? symmetric = le bloc est son propre
+    // symetrique (a cheval sur la ligne), auquel cas il n'y a rien a ajouter.
+    private bool MirrorPlaceable(BlockDefinition def, Vector3Int anchorCell, int rotation, out bool symmetric)
+    {
+        BlockFootprint.GetCells(def, anchorCell, rotation, cellBuffer);
+        GetBlockCells(def, MirrorCell(anchorCell), rotation, true, mirrorBuffer);
+
+        symmetric = true;
+        bool ok = true;
+        foreach (var c in mirrorBuffer)
+        {
+            bool overlapsSelf = cellBuffer.Contains(c);
+            if (!overlapsSelf)
+                symmetric = false;
+            if (overlapsSelf || !IsCellFree(c))
+                ok = false;
+        }
+        return ok;
+    }
+
+    private void HandleMirrorToggle()
+    {
+        var kb = Keyboard.current;
+        if (kb == null || !kb.mKey.wasPressedThisFrame)
+            return;
+
+        mirrorMode = !mirrorMode;
+        RefreshMirrorLabel();
+        if (!mirrorMode)
+            HideMirrorGhost();
+    }
+
+    private void RefreshMirrorLabel()
+    {
+        if (mirrorLabel != null)
+            mirrorLabel.text = mirrorMode ? "MIROIR : ON" : "MIROIR : OFF";
     }
 
     private bool CapacityAllows(BlockDefinition def)
@@ -404,18 +546,39 @@ public class GarageBuildController : MonoBehaviour
 
         ghost.SetActive(true);
         ghost.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(def, rotation));
+        ApplyGhostMaterial(ghost, valid);
+    }
 
-        var material = valid ? ghostValidMaterial : ghostInvalidMaterial;
-        if (material != null)
+    private void ShowMirrorGhost(BlockDefinition def, Vector3Int cell, int rotation, bool valid)
+    {
+        if (mirrorGhost == null || mirrorGhostBlockId != def.name)
         {
-            // Remplace tous les sous-materiaux (les FBX d'armes en ont plusieurs)
-            foreach (var renderer in ghost.GetComponentsInChildren<Renderer>())
-            {
-                var materials = renderer.sharedMaterials;
-                for (int i = 0; i < materials.Length; i++)
-                    materials[i] = material;
-                renderer.sharedMaterials = materials;
-            }
+            if (mirrorGhost != null)
+                Destroy(mirrorGhost);
+            mirrorGhost = BlockPreviewFactory.CreateVisual(def, cellY, out _);
+            mirrorGhost.name = "BuildGhostMirror";
+            mirrorGhostBlockId = def.name;
+        }
+
+        mirrorGhost.SetActive(true);
+        mirrorGhost.transform.SetPositionAndRotation(CellToWorld(cell), MirrorRotation(BlockFootprint.Rotation(def, rotation)));
+        mirrorGhost.transform.localScale = MirrorScale;
+        ApplyGhostMaterial(mirrorGhost, valid);
+    }
+
+    private void ApplyGhostMaterial(GameObject target, bool valid)
+    {
+        var material = valid ? ghostValidMaterial : ghostInvalidMaterial;
+        if (material == null)
+            return;
+
+        // Remplace tous les sous-materiaux (les FBX d'armes en ont plusieurs)
+        foreach (var renderer in target.GetComponentsInChildren<Renderer>())
+        {
+            var materials = renderer.sharedMaterials;
+            for (int i = 0; i < materials.Length; i++)
+                materials[i] = material;
+            renderer.sharedMaterials = materials;
         }
     }
 
@@ -423,15 +586,22 @@ public class GarageBuildController : MonoBehaviour
     {
         if (ghost != null)
             ghost.SetActive(false);
+        HideMirrorGhost();
+    }
+
+    private void HideMirrorGhost()
+    {
+        if (mirrorGhost != null)
+            mirrorGhost.SetActive(false);
     }
 
     // =========================================================
     // POSE / RETRAIT
     // =========================================================
 
-    private void PlaceBlock(BlockDefinition def, Vector3Int cell, int rotation)
+    private void PlaceBlock(BlockDefinition def, Vector3Int cell, int rotation, bool mirrored)
     {
-        SpawnView(def, cell, rotation);
+        SpawnView(def, cell, rotation, mirrored);
         RobotSession.Blueprint.blocks.Add(new PlacedBlock
         {
             blockId = def.name,
@@ -439,6 +609,7 @@ public class GarageBuildController : MonoBehaviour
             y = cell.y,
             z = cell.z,
             rotation = rotation,
+            mirrored = mirrored,
         });
         RobotSession.Dirty = true;
         UpdateStats();
@@ -446,20 +617,37 @@ public class GarageBuildController : MonoBehaviour
 
     private void RemoveBlock(PlacedBlockView view)
     {
+        // Mode miroir : le jumeau (meme bloc, ancre sur la case en face) part aussi
+        if (mirrorMode && occupied.TryGetValue(MirrorCell(view.cell), out var twin)
+            && twin != view && twin.definition == view.definition)
+        {
+            RemoveSingle(twin);
+        }
+        RemoveSingle(view);
+        RobotSession.Dirty = true;
+        UpdateStats();
+    }
+
+    private void RemoveSingle(PlacedBlockView view)
+    {
         foreach (var c in view.cells)
             occupied.Remove(c);
         placedViews.Remove(view);
         RobotSession.Blueprint.blocks.RemoveAll(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
         Destroy(view.gameObject);
-        RobotSession.Dirty = true;
-        UpdateStats();
     }
 
-    private void SpawnView(BlockDefinition def, Vector3Int cell, int rotation)
+    private void SpawnView(BlockDefinition def, Vector3Int cell, int rotation, bool mirrored)
     {
         var root = new GameObject($"Block_{cell.x}_{cell.y}_{cell.z}");
         root.transform.SetParent(robotRoot, false);
-        root.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(def, rotation));
+
+        // Image miroir : racine reflechie (echelle -1 sur l'axe du plan, rotation
+        // conjuguee) ; Unity retourne les faces des meshes a echelle negative.
+        var rot = BlockFootprint.Rotation(def, rotation);
+        root.transform.SetPositionAndRotation(CellToWorld(cell), mirrored ? MirrorRotation(rot) : rot);
+        if (mirrored)
+            root.transform.localScale = MirrorScale;
 
         // Collider a la taille de la boite d'empreinte, dans le repere local de la
         // racine (il tourne avec elle) : la case visee est a l'origine.
@@ -471,7 +659,8 @@ public class GarageBuildController : MonoBehaviour
         var view = root.AddComponent<PlacedBlockView>();
         view.cell = cell;
         view.definition = def;
-        BlockFootprint.GetCells(def, cell, rotation, cellBuffer);
+        view.mirrored = mirrored;
+        GetBlockCells(def, cell, rotation, mirrored, cellBuffer);
         view.cells = cellBuffer.ToArray();
 
         var visual = BlockPreviewFactory.CreateVisual(def, cellY, out _);
@@ -502,8 +691,8 @@ public class GarageBuildController : MonoBehaviour
         {
             var cell = new Vector3Int(placed.x, placed.y, placed.z);
             var def = defsById[placed.blockId];
-            if (CanPlace(def, cell, placed.rotation))
-                SpawnView(def, cell, placed.rotation);
+            if (CanPlace(def, cell, placed.rotation, placed.mirrored))
+                SpawnView(def, cell, placed.rotation, placed.mirrored);
             else
                 purged.Add(placed);
         }

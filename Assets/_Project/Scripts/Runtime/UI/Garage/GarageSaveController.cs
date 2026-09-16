@@ -5,8 +5,10 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // =========================================================
-// SAUVEGARDE ET SORTIE DU GARAGE
+// SAUVEGARDE, TEST ET SORTIE DU GARAGE
 // T      : popup "nom du robot" puis envoi vers PocketBase.
+// P      : lance un test du robot (scene Map_Test ; le
+//          blueprint reste en memoire dans RobotSession).
 // ECHAP  : ferme popup/inventaire, sinon quitte le garage —
 //          avec confirmation si des modifications ne sont
 //          pas sauvegardees (RobotSession.Dirty).
@@ -36,6 +38,8 @@ public class GarageSaveController : MonoBehaviour
 
     [Header("Navigation")]
     public string mainMenuSceneName = "MainMenu";
+    [Tooltip("Scene chargee par la touche P pour tester le robot en cours")]
+    public string testSceneName = "Map_Test";
 
     private bool saving;
 
@@ -86,6 +90,24 @@ public class GarageSaveController : MonoBehaviour
 
         if (kb.tKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame)
             OpenNamePopup();
+        else if (kb.pKey.wasPressedThisFrame)
+            StartTest();
+    }
+
+    // =========================================================
+    // P : TEST DU ROBOT (scene Map_Test)
+    // =========================================================
+
+    private void StartTest()
+    {
+        if (saving)
+            return;
+
+        // Le blueprint courant reste dans RobotSession (statique) : la scene de
+        // test peut le lire ; les modifications non sauvegardees le restent.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        SceneManager.LoadScene(testSceneName);
     }
 
     // =========================================================

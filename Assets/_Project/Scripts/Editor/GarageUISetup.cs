@@ -15,6 +15,35 @@ using UnityEngine.UI;
 // Ne touche a rien d'autre dans la scene.
 // =========================================================
 
+// Reconstruit la liste des commandes une fois apres compilation quand la
+// scene Garage est ouverte (touches MIROIR / TESTER ajoutees) ; sinon
+// retente au prochain rechargement de domaine, sans ouvrir de scene.
+[InitializeOnLoad]
+public static class GarageControlsPanelOneShot
+{
+    private const string Marker = "Library/BlockforgeGarageControls-mirror-test.done";
+
+    static GarageControlsPanelOneShot()
+    {
+        EditorApplication.delayCall += () =>
+        {
+            if (System.IO.File.Exists(Marker) || EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+            var canvasGo = GameObject.Find("GarageCanvas");
+            if (canvasGo == null)
+                return;
+
+            bool wasDirty = canvasGo.scene.isDirty;
+            GarageUISetup.RebuildControlsPanel();
+            // Scene propre avant : on sauvegarde nous-memes, sinon on laisse
+            // l'utilisateur decider (Ctrl+S) pour ne pas embarquer ses modifs.
+            if (!wasDirty)
+                EditorSceneManager.SaveScene(canvasGo.scene);
+            System.IO.File.WriteAllText(Marker, "done");
+        };
+    }
+}
+
 public static class GarageUISetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
@@ -200,14 +229,42 @@ public static class GarageUISetup
     // COMMANDES (DROITE)
     // =========================================================
 
-    private static void BuildControlsPanel(Transform canvas)
+    // Reconstruit seulement la liste des commandes dans la scene ouverte (touche
+    // ajoutee) sans regenerer tout le HUD, en gardant sa place dans l'ordre des
+    // panneaux (l'inventaire et les popups doivent rester au-dessus).
+    [MenuItem("Blockforge/Rebuild Garage Controls Panel")]
+    public static void RebuildControlsPanel()
+    {
+        var canvasGo = GameObject.Find("GarageCanvas");
+        if (canvasGo == null)
+        {
+            Debug.LogError("[GarageUISetup] GarageCanvas introuvable : ouvre la scene Garage (ou lance Setup Garage UI).");
+            return;
+        }
+
+        int index = canvasGo.transform.childCount;
+        var old = canvasGo.transform.Find("ControlsPanel");
+        if (old != null)
+        {
+            index = old.GetSiblingIndex();
+            Object.DestroyImmediate(old.gameObject);
+        }
+
+        var panel = BuildControlsPanel(canvasGo.transform);
+        panel.SetSiblingIndex(index);
+        EditorUtility.SetDirty(canvasGo);
+        EditorSceneManager.MarkSceneDirty(canvasGo.scene);
+        Debug.Log("[GarageUISetup] Liste des commandes du garage reconstruite. Pense a sauvegarder la scene (Ctrl+S).");
+    }
+
+    private static RectTransform BuildControlsPanel(Transform canvas)
     {
         var groups = new (string action, string key)[][]
         {
             new[] { ("AVANCER", "Z"), ("RECULER", "S"), ("GAUCHE", "Q"), ("DROITE", "D") },
-            new[] { ("INVENTAIRE", "TAB"), ("AJOUTER", "CLIC G"), ("SUPPRIMER", "CLIC D"), ("PIVOTER", "MOLETTE") },
+            new[] { ("INVENTAIRE", "TAB"), ("AJOUTER", "CLIC G"), ("SUPPRIMER", "CLIC D"), ("PIVOTER", "MOLETTE"), ("MIROIR", "M") },
             new[] { ("MONTER", "ESPACE"), ("DESCENDRE", "CTRL") },
-            new[] { ("SAUVER & TESTER", "T"), ("RENOMMER", "R"), ("RETOUR", "ESC") },
+            new[] { ("SAUVER", "T"), ("TESTER", "P"), ("RENOMMER", "R"), ("RETOUR", "ESC") },
         };
 
         var container = CreateUI(canvas, "ControlsPanel");
@@ -237,6 +294,7 @@ public static class GarageUISetup
             }
             y -= 14f; // espace entre les groupes
         }
+        return container;
     }
 
     // =========================================================

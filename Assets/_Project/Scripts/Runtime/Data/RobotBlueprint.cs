@@ -16,6 +16,7 @@ public class PlacedBlock
     public int z;
     public int rotation;     // face d'accroche * 4 + quart de tour autour de cette face (BlockFootprint) ;
                              // 0-3 = orientation naturelle + lacet (anciens blueprints)
+    public bool mirrored;    // pose en mode miroir : image du bloc par le plan central de la grille
     public int colorIndex;
 }
 
