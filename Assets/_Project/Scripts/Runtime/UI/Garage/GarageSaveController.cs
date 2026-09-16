@@ -105,6 +105,8 @@ public class GarageSaveController : MonoBehaviour
 
         // Le blueprint courant reste dans RobotSession (statique) : la scene de
         // test peut le lire ; les modifications non sauvegardees le restent.
+        // On note la scene garage courante (Garage ou Garage_V2) pour y revenir.
+        RobotSession.ReturnSceneName = SceneManager.GetActiveScene().name;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         SceneManager.LoadScene(testSceneName);

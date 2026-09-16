@@ -2,9 +2,14 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 // =========================================================
-// SYSTEME DE POSE DE BLOCS SUR LA GRILLE (14x14, hauteur 50)
+// SYSTEME DE POSE DE BLOCS SUR LA GRILLE (31x31x31 max)
+// - La grille est mesuree sur les lignes du vaisseau (gx*/gz*
+//   ou BuildGrid_X/Y_*) : nombre de cases = lignes - 1 par axe
+//   (Mothership : 32 lignes = 31 cases de 1 m ; ancien vaisseau :
+//   15 lignes = 14 cases), plafonne par RobotBlueprint
 // - Ghost transparent sur la case visee (vert = ok, rouge = invalide)
 // - Un bloc occupe toutes les cases de sa boite d'empreinte
 //   (BlockFootprint) orientee autour de la case visee ; seule la
@@ -19,7 +24,6 @@ using UnityEngine.InputSystem;
 //   miroir vraie : echelle -1 sur l'axe du plan, PlacedBlock.mirrored)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
-// La grille est mesuree depuis les renderers de "buildGrid".
 // =========================================================
 
 public class GarageBuildController : MonoBehaviour
@@ -42,6 +46,8 @@ public class GarageBuildController : MonoBehaviour
     private Vector3 gridMin;
     private float topY;
     private float cellX, cellZ, cellY;
+    private int cellsX = RobotBlueprint.GridWidth; // cases mesurees sur les lignes (max : constantes du blueprint)
+    private int cellsZ = RobotBlueprint.GridDepth;
 
     private readonly Dictionary<Vector3Int, PlacedBlockView> occupied = new(); // une entree par case occupee
     private readonly HashSet<PlacedBlockView> placedViews = new();             // une entree par bloc
@@ -58,11 +64,16 @@ public class GarageBuildController : MonoBehaviour
     [Header("Miroir (touche M)")]
     [Tooltip("Affiche, pose et retire aussi le symetrique du bloc par rapport a la ligne centrale de la grille")]
     public bool mirrorMode;
+    [Tooltip("Puce de la touche M dans la legende (Key_MIROIR), coloree quand le miroir est actif ; retrouvee par son nom si vide")]
+    public Image mirrorChip;
+    [Tooltip("Libelle MIROIR de la legende (Ctrl_MIROIR) ; retrouve par son nom si vide")]
+    public TMP_Text mirrorLabel;
+    public Color mirrorOnColor = new(0.23f, 0.51f, 0.96f);
 
     private bool mirrorAlongX = true; // la ligne centrale court le long de Z : le miroir inverse X
     private GameObject mirrorGhost;
     private string mirrorGhostBlockId;
-    private TMP_Text mirrorLabel;
+    private Color mirrorChipOffColor;
     private readonly List<Vector3Int> mirrorBuffer = new();
 
     private BlockDefinition Selected => inventory != null ? inventory.CurrentBlock : null;
@@ -75,10 +86,22 @@ public class GarageBuildController : MonoBehaviour
         ComputeGridFromRenderers();
         DetectMirrorAxis();
 
-        var mirrorLabelGo = GameObject.Find("Ctrl_MIROIR");
-        if (mirrorLabelGo != null)
-            mirrorLabel = mirrorLabelGo.GetComponent<TMP_Text>();
-        RefreshMirrorLabel();
+        // Indicateur de la legende : cable par le setup, sinon retrouve par nom
+        if (mirrorLabel == null)
+        {
+            var mirrorLabelGo = GameObject.Find("Ctrl_MIROIR");
+            if (mirrorLabelGo != null)
+                mirrorLabel = mirrorLabelGo.GetComponent<TMP_Text>();
+        }
+        if (mirrorChip == null)
+        {
+            var mirrorChipGo = GameObject.Find("Key_MIROIR");
+            if (mirrorChipGo != null)
+                mirrorChip = mirrorChipGo.GetComponent<Image>();
+        }
+        if (mirrorChip != null)
+            mirrorChipOffColor = mirrorChip.color;
+        RefreshMirrorIndicator();
 
         if (inventory != null)
         {
@@ -203,16 +226,18 @@ public class GarageBuildController : MonoBehaviour
             return;
         }
 
-        // La zone de jeu est delimitee par les lignes gx0..gx14 / gz0..gz14.
-        // On ignore les bordures decoratives et la centerLine (qui depasse de la grille).
+        // La zone de jeu est delimitee par les lignes de la grille (gx*/gz* sur
+        // l'ancien vaisseau, BuildGrid_X_*/BuildGrid_Y_* sur le Mothership).
+        // On ignore les bordures decoratives et la centerLine (qui depasse).
         Bounds bounds = default;
         bool hasBounds = false;
         float lineThickness = 0f;
+        int linesAlongX = 0; // lignes qui courent le long de X (Z constant) : separent les rangees
+        int linesAlongZ = 0; // lignes qui courent le long de Z (X constant) : separent les colonnes
 
         foreach (var r in gridRoot.GetComponentsInChildren<Renderer>())
         {
-            string n = r.gameObject.name;
-            if (!n.StartsWith("gx") && !n.StartsWith("gz"))
+            if (!IsGridLine(r.gameObject.name))
                 continue;
 
             if (!hasBounds)
@@ -226,9 +251,28 @@ public class GarageBuildController : MonoBehaviour
             }
 
             // Epaisseur d'une ligne = sa plus petite dimension horizontale
-            float t = Mathf.Min(r.bounds.size.x, r.bounds.size.z);
+            var size = r.bounds.size;
+            float t = Mathf.Min(size.x, size.z);
             if (lineThickness <= 0f || t < lineThickness)
                 lineThickness = t;
+
+            if (size.x > size.z * 2f)
+                linesAlongX++;
+            else if (size.z > size.x * 2f)
+                linesAlongZ++;
+        }
+
+        // Nombre de cases = lignes - 1 sur chaque axe, borne par le blueprint
+        // (contrat 31 x 31 ; l'ancien vaisseau n'offre que 14 x 14)
+        if (linesAlongX >= 2 && linesAlongZ >= 2)
+        {
+            cellsX = Mathf.Min(linesAlongZ - 1, RobotBlueprint.GridWidth);
+            cellsZ = Mathf.Min(linesAlongX - 1, RobotBlueprint.GridDepth);
+        }
+        else
+        {
+            cellsX = RobotBlueprint.GridWidth;
+            cellsZ = RobotBlueprint.GridDepth;
         }
 
         // Secours si les lignes ne sont pas trouvees : bounds complets (ancien comportement)
@@ -252,12 +296,19 @@ public class GarageBuildController : MonoBehaviour
         float half = lineThickness * 0.5f;
         gridMin = new Vector3(bounds.min.x + half, 0f, bounds.min.z + half);
         topY = bounds.min.y; // base des lignes = surface de la grille (pas de flottement)
-        cellX = (bounds.size.x - lineThickness) / RobotBlueprint.GridWidth;
-        cellZ = (bounds.size.z - lineThickness) / RobotBlueprint.GridDepth;
+        cellX = (bounds.size.x - lineThickness) / cellsX;
+        cellZ = (bounds.size.z - lineThickness) / cellsZ;
         cellY = Mathf.Min(cellX, cellZ); // hauteur d'un etage = taille de cellule
 
-        Debug.Log($"[GarageBuild] Grille mesuree : cellules {cellX:0.###} x {cellZ:0.###} m, " +
-                  $"surface y={topY:0.###}, origine ({gridMin.x:0.##}, {gridMin.z:0.##}).");
+        Debug.Log($"[GarageBuild] Grille mesuree : {cellsX} x {cellsZ} cases de {cellX:0.###} x {cellZ:0.###} m " +
+                  $"(hauteur {RobotBlueprint.GridHeight}), surface y={topY:0.###}, origine ({gridMin.x:0.##}, {gridMin.z:0.##}).");
+
+        if (cellsX != RobotBlueprint.GridWidth || cellsZ != RobotBlueprint.GridDepth)
+        {
+            Debug.LogWarning($"[GarageBuild] Ce vaisseau n'offre que {cellsX} x {cellsZ} cases (contrat " +
+                             $"{RobotBlueprint.GridWidth} x {RobotBlueprint.GridDepth}) : les blueprints construits ici " +
+                             "occuperont le coin d'une grille complete.");
+        }
 
         // Les boites d'empreinte (visuel, collider) utilisent une case uniforme
         // cellY sur les trois axes : une boite tournee de 90 degres doit garder
@@ -269,6 +320,14 @@ public class GarageBuildController : MonoBehaviour
         }
     }
 
+    // Lignes de la grille du vaisseau : gx0..gx14 / gz0..gz14 (ShipGarage) ou
+    // BuildGrid_X_00..31 / BuildGrid_Y_00..31 (Mothership)
+    private static bool IsGridLine(string name)
+    {
+        return name.StartsWith("gx") || name.StartsWith("gz")
+            || name.StartsWith("BuildGrid_", System.StringComparison.OrdinalIgnoreCase);
+    }
+
     // Visualisation des cellules calculees dans la Scene view (objet BuildSystem selectionne)
     private void OnDrawGizmosSelected()
     {
@@ -276,16 +335,16 @@ public class GarageBuildController : MonoBehaviour
             return;
 
         Gizmos.color = Color.cyan;
-        for (int x = 0; x <= RobotBlueprint.GridWidth; x++)
+        for (int x = 0; x <= cellsX; x++)
         {
             var a = new Vector3(gridMin.x + x * cellX, topY + 0.01f, gridMin.z);
-            var b = new Vector3(gridMin.x + x * cellX, topY + 0.01f, gridMin.z + RobotBlueprint.GridDepth * cellZ);
+            var b = new Vector3(gridMin.x + x * cellX, topY + 0.01f, gridMin.z + cellsZ * cellZ);
             Gizmos.DrawLine(a, b);
         }
-        for (int z = 0; z <= RobotBlueprint.GridDepth; z++)
+        for (int z = 0; z <= cellsZ; z++)
         {
             var a = new Vector3(gridMin.x, topY + 0.01f, gridMin.z + z * cellZ);
-            var b = new Vector3(gridMin.x + RobotBlueprint.GridWidth * cellX, topY + 0.01f, gridMin.z + z * cellZ);
+            var b = new Vector3(gridMin.x + cellsX * cellX, topY + 0.01f, gridMin.z + z * cellZ);
             Gizmos.DrawLine(a, b);
         }
     }
@@ -308,8 +367,8 @@ public class GarageBuildController : MonoBehaviour
 
     private bool IsCellFree(Vector3Int cell)
     {
-        return cell.x >= 0 && cell.x < RobotBlueprint.GridWidth
-            && cell.z >= 0 && cell.z < RobotBlueprint.GridDepth
+        return cell.x >= 0 && cell.x < cellsX
+            && cell.z >= 0 && cell.z < cellsZ
             && cell.y >= 0 && cell.y < RobotBlueprint.GridHeight
             && !occupied.ContainsKey(cell);
     }
@@ -358,32 +417,27 @@ public class GarageBuildController : MonoBehaviour
             if (r.gameObject.name.IndexOf("center", System.StringComparison.OrdinalIgnoreCase) < 0)
                 continue;
             mirrorAlongX = r.bounds.size.x <= r.bounds.size.z;
+            RobotSession.MirrorAlongX = mirrorAlongX;
             Debug.Log($"[GarageBuild] Ligne centrale '{r.gameObject.name}' : miroir sur l'axe {(mirrorAlongX ? "X" : "Z")}.");
             return;
         }
-        Debug.LogWarning("[GarageBuild] Ligne centrale introuvable sous buildGrid : miroir sur l'axe X par defaut.");
+        RobotSession.MirrorAlongX = mirrorAlongX;
+        Debug.LogWarning("[GarageBuild] Ligne centrale introuvable sous la grille : miroir sur l'axe X par defaut.");
     }
 
-    // Case symetrique par le plan central (entre les colonnes 6 et 7 d'une grille de 14)
+    // Case symetrique par le plan central : entre deux colonnes si le nombre
+    // de cases est pair (14 : colonnes 6 et 7), au milieu de la colonne
+    // centrale s'il est impair (31 : colonne 15, qui est sa propre image)
     private Vector3Int MirrorCell(Vector3Int c)
     {
         return mirrorAlongX
-            ? new Vector3Int(RobotBlueprint.GridWidth - 1 - c.x, c.y, c.z)
-            : new Vector3Int(c.x, c.y, RobotBlueprint.GridDepth - 1 - c.z);
+            ? new Vector3Int(cellsX - 1 - c.x, c.y, c.z)
+            : new Vector3Int(c.x, c.y, cellsZ - 1 - c.z);
     }
 
-    private Vector3 MirrorScale => mirrorAlongX ? new Vector3(-1f, 1f, 1f) : new Vector3(1f, 1f, -1f);
+    private Vector3 MirrorScale => BlockFootprint.MirrorScale(mirrorAlongX);
 
-    // Reflexion d'une rotation par le plan du miroir (conjugaison par la
-    // reflexion) : la composante du vecteur le long de la normale du plan est
-    // conservee, les deux autres sont inversees. Avec l'echelle -1 sur cet
-    // axe, la racine reproduit exactement l'image miroir du bloc d'origine.
-    private Quaternion MirrorRotation(Quaternion q)
-    {
-        return mirrorAlongX
-            ? new Quaternion(q.x, -q.y, -q.z, q.w)
-            : new Quaternion(-q.x, -q.y, q.z, q.w);
-    }
+    private Quaternion MirrorRotation(Quaternion q) => BlockFootprint.MirrorRotation(q, mirrorAlongX);
 
     // Le symetrique du bloc vise tient-il ? symmetric = le bloc est son propre
     // symetrique (a cheval sur la ligne), auquel cas il n'y a rien a ajouter.
@@ -436,16 +490,19 @@ public class GarageBuildController : MonoBehaviour
             return;
 
         mirrorMode = !mirrorMode;
-        RefreshMirrorLabel();
+        RefreshMirrorIndicator();
         if (!mirrorMode)
             HideMirrorGhost();
         Debug.Log($"[GarageBuild] Mode miroir {(mirrorMode ? "active" : "desactive")} (axe {(mirrorAlongX ? "X" : "Z")}).");
     }
 
-    private void RefreshMirrorLabel()
+    // Legende : puce de la touche coloree et libelle "MIROIR  [ON]" quand actif
+    private void RefreshMirrorIndicator()
     {
         if (mirrorLabel != null)
-            mirrorLabel.text = mirrorMode ? "MIROIR : ON" : "MIROIR : OFF";
+            mirrorLabel.text = mirrorMode ? "MIROIR  [ON]" : "MIROIR";
+        if (mirrorChip != null)
+            mirrorChip.color = mirrorMode ? mirrorOnColor : mirrorChipOffColor;
     }
 
     private bool CapacityAllows(BlockDefinition def)
@@ -504,8 +561,8 @@ public class GarageBuildController : MonoBehaviour
         {
             cell = WorldToCell(ray.GetPoint(planeDist));
             cell.y = 0;
-            return cell.x >= 0 && cell.x < RobotBlueprint.GridWidth
-                && cell.z >= 0 && cell.z < RobotBlueprint.GridDepth;
+            return cell.x >= 0 && cell.x < cellsX
+                && cell.z >= 0 && cell.z < cellsZ;
         }
 
         return false;

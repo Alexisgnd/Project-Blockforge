@@ -10,12 +10,14 @@ using UnityEngine.UI;
 // SETUP DE L'INVENTAIRE DU GARAGE (fenetre du bas)
 // Menu : Blockforge > Setup Garage Inventory
 // A lancer APRES "Setup Garage UI" (il a besoin du
-// GarageCanvas et de la Toolbar).
+// GarageCanvas et de la Toolbar). S'applique a la scene garage
+// active (Garage ou Garage_V2), sinon a Garage.unity ; recable
+// aussi le systeme de pose (grille du vaisseau, indicateur
+// miroir, switch d'outil et roue de couleur du spray).
 // =========================================================
 
 public static class GarageInventorySetup
 {
-    private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
     private const string BlockDataDir = "Assets/_Project/Data/Blocks";
     private const string ChassisModelDir = "Assets/_Project/Art/Models/Blocks/Chassis";
     private const string MovementModelDir = "Assets/_Project/Art/Models/Blocks/Movement";
@@ -41,10 +43,8 @@ public static class GarageInventorySetup
     {
         var blocks = EnsureBlocks();
 
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        if (!BlockforgeScenes.OpenForSetup(BlockforgeScenes.ResolveGarageScenePath(), out var scene))
             return;
-
-        var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         var canvasGo = GameObject.Find("GarageCanvas");
         if (canvasGo == null)
@@ -318,11 +318,12 @@ public static class GarageInventorySetup
         if (oldBuild != null)
             Object.DestroyImmediate(oldBuild);
 
-        var buildGrid = GameObject.Find("buildGrid");
+        GarageBuildController build = null;
+        var buildGrid = FindGridRoot();
         if (buildGrid != null)
         {
             var buildGo = new GameObject("BuildSystem");
-            var build = buildGo.AddComponent<GarageBuildController>();
+            build = buildGo.AddComponent<GarageBuildController>();
             build.gridRoot = buildGrid.transform;
             build.inventory = inventory;
             build.toolbar = canvasGo.transform.Find("Toolbar")?.GetComponent<GarageToolbar>();
@@ -337,16 +338,51 @@ public static class GarageInventorySetup
 
             build.ghostValidMaterial = GetOrCreateGhostMaterial("GhostValid", new Color(0.25f, 0.85f, 1f, 0.4f));
             build.ghostInvalidMaterial = GetOrCreateGhostMaterial("GhostInvalid", new Color(1f, 0.25f, 0.25f, 0.4f));
+
+            // Indicateur du mode miroir dans la legende (GarageUISetup)
+            build.mirrorChip = canvasGo.transform.Find("ControlsPanel/Key_MIROIR")?.GetComponent<Image>();
+            build.mirrorLabel = canvasGo.transform.Find("ControlsPanel/Ctrl_MIROIR")?.GetComponent<TMP_Text>();
         }
         else
         {
-            Debug.LogWarning("[GarageInventorySetup] 'buildGrid' introuvable : le systeme de pose " +
-                             "de blocs n'a pas pu etre cable.");
+            Debug.LogWarning("[GarageInventorySetup] Grille du vaisseau introuvable (objet 'buildGrid' ou lignes " +
+                             "BuildGrid_*) : le systeme de pose de blocs n'a pas pu etre cable.");
+        }
+
+        // BuildSystem et inventaire viennent d'etre recrees : le switch d'outil et
+        // la roue de couleur du spray (cables par Setup Paint Spray) pointaient
+        // encore sur les anciens objets.
+        foreach (var switcher in Object.FindObjectsByType<GarageToolSwitcher>(FindObjectsInactive.Include))
+        {
+            switcher.buildController = build;
+            switcher.inventory = inventory;
+            EditorUtility.SetDirty(switcher);
+        }
+        foreach (var wheel in Object.FindObjectsByType<PaintSprayColorWheel>(FindObjectsInactive.Include))
+        {
+            wheel.inventory = inventory;
+            EditorUtility.SetDirty(wheel);
         }
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[GarageInventorySetup] Inventaire genere ({blocks.Length} blocs). TAB pour ouvrir/fermer.");
+    }
+
+    // Racine de la grille de construction : l'objet "buildGrid" de l'ancien
+    // vaisseau, sinon le parent des lignes BuildGrid_* du Mothership (V2)
+    private static GameObject FindGridRoot()
+    {
+        var named = GameObject.Find("buildGrid");
+        if (named != null)
+            return named;
+
+        foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include))
+        {
+            if (r.gameObject.name.StartsWith("BuildGrid_", System.StringComparison.OrdinalIgnoreCase) && r.transform.parent != null)
+                return r.transform.parent.gameObject;
+        }
+        return null;
     }
 
     // =========================================================

@@ -12,7 +12,8 @@ using UnityEngine.UI;
 // - Panneau capacites (gauche) + slot courant
 // - Barre d'outils 1-5 (bas) : pince, couleur, suppr...
 // - Liste des commandes (droite)
-// Ne touche a rien d'autre dans la scene.
+// S'applique a la scene garage active (Garage ou Garage_V2),
+// sinon a Garage.unity. Ne touche a rien d'autre dans la scene.
 // =========================================================
 
 // Reconstruit la liste des commandes une fois apres compilation quand la
@@ -46,8 +47,6 @@ public static class GarageControlsPanelOneShot
 
 public static class GarageUISetup
 {
-    private const string ScenePath = "Assets/_Project/Scenes/Garage.unity";
-
     private static readonly Color PanelBg = new(0.04f, 0.07f, 0.12f, 0.88f);
     private static readonly Color CardBg = new(0.06f, 0.10f, 0.16f, 0.95f);
     private static readonly Color BarBg = new(0.10f, 0.15f, 0.22f, 1f);
@@ -66,10 +65,8 @@ public static class GarageUISetup
             return;
         }
 
-        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        if (!BlockforgeScenes.OpenForSetup(BlockforgeScenes.ResolveGarageScenePath(), out var scene))
             return;
-
-        var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         var oldCanvas = GameObject.Find("GarageCanvas");
         if (oldCanvas != null)

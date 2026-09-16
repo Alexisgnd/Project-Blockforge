@@ -23,10 +23,14 @@ public class PlacedBlock
 [Serializable]
 public class RobotBlueprint
 {
-    // Dimensions de la grille de construction du garage (v2 : 14x14)
-    public const int GridWidth = 14;
-    public const int GridDepth = 14;
-    public const int GridHeight = 50; // hauteur max en blocs
+    // Dimensions maximales de la baie de construction du garage : 31 x 31 x 31
+    // blocs (largeur x profondeur x hauteur), contrat du vaisseau Mothership
+    // (Garage_V2, cases de 1 m). Le nombre de cases reellement disponibles est
+    // mesure sur les lignes du modele de la scene (l'ancien vaisseau n'en a
+    // que 14 x 14) ; ces constantes bornent les coordonnees d'un blueprint.
+    public const int GridWidth = 31;
+    public const int GridDepth = 31;
+    public const int GridHeight = 31;
 
     public string name = "NOUVEAU ROBOT";
     public List<PlacedBlock> blocks = new();

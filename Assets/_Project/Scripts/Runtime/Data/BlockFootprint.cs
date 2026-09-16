@@ -129,6 +129,29 @@ public static class BlockFootprint
         return Quaternion.AngleAxis(spin * 90f, n) * align;
     }
 
+    // =====================================================
+    // MIROIR (plan de la ligne centrale de la grille)
+    // =====================================================
+
+    // Echelle de la racine d'un bloc pose en miroir : -1 sur la normale du
+    // plan (Unity retourne les faces des meshes a echelle negative : on obtient
+    // l'image miroir vraie du bloc, pas une copie tournee).
+    public static Vector3 MirrorScale(bool alongX)
+    {
+        return alongX ? new Vector3(-1f, 1f, 1f) : new Vector3(1f, 1f, -1f);
+    }
+
+    // Reflexion d'une rotation par le plan du miroir (conjugaison par la
+    // reflexion) : la composante du vecteur le long de la normale du plan est
+    // conservee, les deux autres sont inversees. Combinee a MirrorScale, la
+    // racine reproduit exactement l'image miroir du bloc d'origine.
+    public static Quaternion MirrorRotation(Quaternion q, bool alongX)
+    {
+        return alongX
+            ? new Quaternion(q.x, -q.y, -q.z, q.w)
+            : new Quaternion(-q.x, -q.y, q.z, q.w);
+    }
+
     // Cases occupees par un bloc dont la case visee est anchorCell, avec
     // l'orientation rotation. La case visee fait toujours partie de la boite.
     public static void GetCells(BlockDefinition def, Vector3Int anchorCell, int rotation, List<Vector3Int> result)
