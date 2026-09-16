@@ -19888,17 +19888,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8d79049a48317648b30d6a1c98b731e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Blockforge.Runtime::BuildMenuController
-  slots:
-  - {fileID: 11400000, guid: 2ed0928f845447649890cbea051a7412, type: 2}
-  - {fileID: 11400000, guid: 589a70e9bd7a1364080af78af828400f, type: 2}
-  - {fileID: 0}
   cards:
   - {fileID: 579560495}
   - {fileID: 211118085}
   - {fileID: 1506698775}
   usedCountText: {fileID: 1188969577}
   presetsButton: {fileID: 276065341}
-  garageSceneName: Garage
+  garageSceneName: Garage_V2
 --- !u!114 &1525822610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24491,7 +24487,7 @@ MonoBehaviour:
   playMenu: {fileID: 590433628}
   buildMenu: {fileID: 1525822609}
   arenaSceneName: Arena
-  garageSceneName: Garage
+  garageSceneName: Garage_V2
   navButtonsRoot: {fileID: 0}
   tabActiveBg: {r: 0.09, g: 0.16, b: 0.28, a: 1}
   tabTextActive: {r: 0.86, g: 0.91, b: 0.96, a: 1}
