@@ -65,7 +65,7 @@ Tous les outils suivent le même pattern « one-shot » :
 | `MainMenuHangarSetup`, `MapMarsSceneSetup`, `MapMarsMaterialSetup` | Décors du hangar et de la carte Mars |
 | `BlockforgeScenes` | Chemins des scènes, `OpenForSetup`, `RegisterAllInBuildSettings` (liste globale **et** profil de build actif, qui la surcharge), `LoadModelAsset` (FBX ou GLB) |
 | `GarageV2SceneSetup` | **Setup Garage V2 Scene** : copie de Garage en Garage_V2, vaisseau Mothership (GLB), ligne centrale du miroir, grille recâblée, joueur sur `PlayerSpawn` ; **MainMenu -> Garage V2 / (V1)** |
-| `MapTestSceneSetup` | **Setup Map Test Scene** (arène) / **(Red Canyon)** : soleil, volume, caméra de poursuite, map GLB avec `MeshCollider`, spawn, `TestSceneBootstrap` |
+| `MapTestSceneSetup` | **Setup Map Test Scene** (Red Canyon) / **(arène plate)** : soleil, volume, caméra de poursuite, map GLB avec `MeshCollider` (marquages et décor non jouable exclus), spawn, `TestSceneBootstrap` |
 | `BlockforgeBatch` | Pilotage externe de l'éditeur ouvert : `Library/BlockforgeRun.request` (menus, `open:<scène>`, `play`, `stop`) → `Library/BlockforgeRun.result` |
 
 Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à la
@@ -97,8 +97,8 @@ Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à l
 - `Garage` — construction du robot (grille 14×14 de l'ancien vaisseau, pince, inventaire, spray)
 - `Garage_V2` — même contenu sur le vaisseau Mothership (baie 31×31×31, cases de 1 m) ;
   c'est la scène chargée par le menu principal depuis le 16/09/2026
-- `Map_Test` — terrain d'essai : touche P du garage, le robot en cours apparaît sur le
-  `SpawnPoint` et se conduit en ZQSD ; ESC ×2 ramène au garage d'origine
+- `Map_Test` — terrain d'essai (Red Canyon) : touche P du garage, le robot en cours
+  apparaît sur le `SpawnPoint` et se conduit en ZQSD ; ESC ×2 ramène au garage d'origine
 - `Map_MARS` — future arène de combat
 
 ## Conventions
@@ -109,7 +109,7 @@ Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à l
   les blocs historiques gardent leur numéro (`Block_01_Cube`, `Block_11_Ailes`).
 - Modèles : `<Famille>_<Nom>.fbx` dans `Art/Models/Blocks/<Catégorie>/` ;
   icônes `Icon_<Nom>.png` (512×512) dans `Art/Textures/Icons/`. Décors en GLB à la
-  racine de `Art/Models/` (`ShipGarage_V2.glb`, `Map_Test.glb`, `Map_Canyon.glb`),
+  racine de `Art/Models/` (`ShipGarage_V2.glb`, `Map_Canyon.glb`, `Map_Arena.glb`),
   importés par glTFast (`com.unity.cloud.gltfast`), stockés en LFS.
 - Matériaux : `<Famille>_<Matériau>.mat` (`Wheel_Rubber`, `Shield_CyanChannel`)
   dans `Art/Materials/Blocks/`, `Spray_*` dans `Art/Materials/Garage/`.

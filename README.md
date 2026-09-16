@@ -41,7 +41,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Garage V2 : vaisseau Mothership (GLB), baie 31 × 31 × 31 m, joueur sur `PlayerSpawn` | généré par script, à valider en jeu |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
-| Scène de test (P depuis le garage) : arène d'entraînement, robot assemblé depuis le blueprint, conduite ZQSD, caméra de poursuite | prototype |
+| Scène de test (P depuis le garage) : canyon Red Canyon, robot assemblé depuis le blueprint, conduite ZQSD, caméra de poursuite | prototype |
 | Catalogue de blocs avec vrais modèles 3D | 82 blocs, tous modélisés (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
 | Combat, physique de roues, multijoueur | pas commencé |
@@ -90,7 +90,7 @@ Project-Blockforge/
 │   ├── _Project/            ← TOUT notre contenu (le préfixe _ le garde en tête de liste)
 │   │   ├── Art/
 │   │   │   ├── Models/Blocks/{Chassis,Movement,Weapons,Special}/   FBX des blocs
-│   │   │   ├── Models/*.glb                                         décors GLB (vaisseau V2, cartes de test) importés par glTFast
+│   │   │   ├── Models/*.glb                                         décors GLB (ShipGarage_V2, Map_Canyon, Map_Arena) importés par glTFast
 │   │   │   ├── Materials/{Blocks,Garage,Map}/                       matériaux HDRP/Lit
 │   │   │   ├── Textures/{Blocks,Icons,Map}/                         textures et icônes 512 px
 │   │   │   └── Animations/, Garage/, Hangar/, Shaders/, VFX/
@@ -232,17 +232,23 @@ en LFS) et les scènes se (re)construisent par script :
   collider. **Setup Garage UI** / **Setup Garage Inventory** s'appliquent ensuite à la
   scène garage ouverte, et **Blockforge > MainMenu -> Garage V2** fait entrer le menu
   principal dans la V2 (retour avec *MainMenu -> Garage (V1)*).
-- `Map_Test.glb` (arène d'entraînement 180 × 160 m : rampes 10–45°, cibles, murs,
-  plateformes) et `Map_Canyon.glb` (Red Canyon, 1,4 km, 17 Mo) →
-  **Blockforge > Setup Map Test Scene** (ou *… (Red Canyon)* pour échanger la map) :
-  soleil, volume, caméra de poursuite, map instanciée avec un `MeshCollider` par maillage
-  solide (les noms contenant `Marking`, `Deck_joint`, `_dash`, `Lane_`, `height_band`,
-  `Spawn_ring`… sont décoratifs et restent sans collision), `SpawnPoint` du modèle (sinon
-  créé à (0, 0.2, 0)), `TestSceneBootstrap` (`RobotTestSpawner`, case de 1 m). Sans GLB,
-  un sol plat et quelques obstacles procéduraux sont générés. Contrat : mètres, Y vertical,
-  sol praticable vers y = 0, un empty `SpawnPoint` ~0,2 m au-dessus du sol, normales vers
-  l'extérieur, pas de collider. Les générateurs Python et les aperçus sont dans
-  `Tools/Maps/TrainingArena/`.
+- `Map_Canyon.glb` (**Red Canyon**, la map de test : raffinerie dans un canyon, circuit au
+  sol, mesa, pont du réacteur, toitures, viaduc rompu, 12 cibles, 1,4 km avec son décor,
+  17 Mo) → **Blockforge > Setup Map Test Scene**. La variante
+  *… (arène plate)* charge à la place `Map_Arena.glb`, l'arène d'entraînement 180 × 160 m
+  (rampes calibrées 10 à 45°, cibles, murs d'escalade, plateformes), pratique pour un essai
+  de conduite rapide. Le setup pose soleil, volume, caméra de poursuite, map instanciée
+  avec un `MeshCollider` par maillage solide, `SpawnPoint` du modèle (sinon créé à
+  (0, 0.2, 0)) et `TestSceneBootstrap` (`RobotTestSpawner`, case de 1 m) ; sans GLB, un sol
+  plat et quelques obstacles procéduraux sont générés. Restent **sans collision** : les
+  marquages et liserés décoratifs (noms contenant `Marking`, `Deck_joint`, `_dash`, `Lane_`,
+  `edge_paint`, `height_band`, `Spawn_ring`…) et le groupe `BACKGROUND_NON_PLAYABLE` du
+  canyon, ses 154 000 triangles de décor extérieur que le fichier déclare non jouables.
+  Contrat : mètres, Y vertical, sol praticable vers y = 0, un empty `SpawnPoint` ~0,2 m
+  au-dessus du sol, normales vers l'extérieur, pas de collider ; regrouper le décor non
+  jouable sous un objet nommé `BACKGROUND_NON_PLAYABLE`. Au lancement, le robot vérifie
+  qu'il a bien un sol sous lui et le dit dans la console. Les générateurs Python et les
+  aperçus sont dans `Tools/Maps/TrainingArena/`.
 
 Depuis le garage, **P** charge `Map_Test` avec le robot en cours (non sauvegardé) ;
 **ESC** libère le curseur, un second **ESC** ramène au garage d'origine.
