@@ -32,6 +32,12 @@ public class RobotBlueprint
     public const int GridDepth = 31;
     public const int GridHeight = 31;
 
+    // Cases autorisees SOUS le sol de la baie : une roue ou une patte montee sur
+    // le flanc du plancher du robot descend plus bas que lui. Le garage souleve
+    // alors tout le robot pour que ces pieces posent sur le sol au lieu de s'y
+    // encastrer, donc ces cases ne sont pas dans le vide.
+    public const int GridUnderfloor = 8;
+
     public string name = "NOUVEAU ROBOT";
     public List<PlacedBlock> blocks = new();
 }

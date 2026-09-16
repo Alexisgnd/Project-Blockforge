@@ -16,7 +16,12 @@ using UnityEngine.UI;
 //   case visee + l'orientation sont sauvegardees (PlacedBlock)
 // - Les blocs "orientToFace" (tout sauf le chassis) plaquent leur
 //   face d'ancrage contre la face visee du support (dessus,
-//   dessous, flancs) ; le chassis reste droit
+//   dessous, flancs) ; le chassis reste droit. Ils doivent aussi
+//   toucher une piece deja posee : seul le chassis se pose seul
+//   sur le sol de la baie (ghost rouge sinon)
+// - Une roue ou une patte montee sur le flanc du plancher
+//   descend sous lui : le robot entier est souleve (lift) pour
+//   qu'elle pose sur le sol au lieu de s'y encastrer
 // - Clic gauche : poser / clic droit : retirer
 // - Molette : quart de tour autour de la face visee (ou de Y)
 // - M : mode miroir, le symetrique du bloc par le plan de la ligne
@@ -54,6 +59,17 @@ public class GarageBuildController : MonoBehaviour
     private readonly Dictionary<string, BlockDefinition> defsById = new();
     private readonly RaycastHit[] hitBuffer = new RaycastHit[32];
     private readonly List<Vector3Int> cellBuffer = new();
+    private readonly List<Vector3Int> supportBuffer = new();
+
+    // Hauteur dont tout le robot est souleve au-dessus du sol de la baie pour
+    // que la piece la plus basse (roue, patte) pose dessus sans s'y encastrer.
+    private float lift;
+
+    private static readonly Vector3Int[] Neighbours =
+    {
+        Vector3Int.up, Vector3Int.down, Vector3Int.right,
+        Vector3Int.left, Vector3Int.forward, Vector3Int.back,
+    };
 
     private Transform robotRoot;
     private GameObject ghost;
@@ -181,7 +197,8 @@ public class GarageBuildController : MonoBehaviour
         int face = def.orientToFace ? BlockFootprint.FaceIndex(faceNormal) : BlockFootprint.NaturalFace;
         int rotation = BlockFootprint.Compose(face, spinIndex);
 
-        bool valid = CanPlace(def, placeCell, rotation) && CapacityAllows(def);
+        bool valid = CanPlace(def, placeCell, rotation) && CapacityAllows(def)
+                     && HasSupport(def, placeCell, rotation, false);
         ShowGhost(def, placeCell, rotation, valid);
 
         // Mode miroir : le symetrique est pose avec le bloc s'il tient (cases
@@ -193,7 +210,8 @@ public class GarageBuildController : MonoBehaviour
         {
             bool symmetric = false;
             placeMirror = valid && MirrorPlaceable(def, placeCell, rotation, out symmetric)
-                          && (statsHud == null || totalCpu + 2 * def.costCpu <= statsHud.capacityMax);
+                          && (statsHud == null || totalCpu + 2 * def.costCpu <= statsHud.capacityMax)
+                          && HasSupport(def, mirrorCell, rotation, true);
             if (symmetric)
                 HideMirrorGhost();
             else
@@ -349,7 +367,8 @@ public class GarageBuildController : MonoBehaviour
         }
     }
 
-    private Vector3 CellToWorld(Vector3Int cell)
+    // Centre d'une case dans le repere de la grille, robot non souleve
+    private Vector3 CellToWorldRaw(Vector3Int cell)
     {
         return new Vector3(
             gridMin.x + (cell.x + 0.5f) * cellX,
@@ -357,20 +376,100 @@ public class GarageBuildController : MonoBehaviour
             gridMin.z + (cell.z + 0.5f) * cellZ);
     }
 
+    // Centre d'une case tel que le robot est reellement pose (avec le relevage)
+    private Vector3 CellToWorld(Vector3Int cell)
+    {
+        var world = CellToWorldRaw(cell);
+        world.y += lift;
+        return world;
+    }
+
     private Vector3Int WorldToCell(Vector3 point)
     {
         return new Vector3Int(
             Mathf.FloorToInt((point.x - gridMin.x) / cellX),
-            Mathf.FloorToInt((point.y - topY) / cellY),
+            Mathf.FloorToInt((point.y - topY - lift) / cellY),
             Mathf.FloorToInt((point.z - gridMin.z) / cellZ));
     }
 
+    // Les cases sous le sol de la baie (y < 0) sont permises : c'est la place
+    // des roues et des pattes montees sur le flanc du plancher, et le robot est
+    // souleve d'autant (RefreshLift) pour qu'elles posent au sol.
     private bool IsCellFree(Vector3Int cell)
     {
         return cell.x >= 0 && cell.x < cellsX
             && cell.z >= 0 && cell.z < cellsZ
-            && cell.y >= 0 && cell.y < RobotBlueprint.GridHeight
+            && cell.y >= -RobotBlueprint.GridUnderfloor && cell.y < RobotBlueprint.GridHeight
             && !occupied.ContainsKey(cell);
+    }
+
+    // =========================================================
+    // RELEVAGE DU ROBOT
+    // =========================================================
+
+    // Souleve tout le robot pour que le point le plus bas de ses blocs affleure
+    // le sol de la baie : une roue ou une patte fixee sur le flanc du plancher
+    // descend sous lui et doit poser dessus, pas le traverser. Sans piece
+    // debordante, le relevage est nul et le chassis reste sur le sol.
+    private void RefreshLift()
+    {
+        float lowest = topY;
+        foreach (var view in placedViews)
+        {
+            if (view == null || view.definition == null)
+                continue;
+
+            var box = BlockFootprint.LocalBox(view.definition);
+            Vector3 min = box.min * cellY, max = box.max * cellY;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = new Vector3((i & 1) == 0 ? min.x : max.x,
+                                         (i & 2) == 0 ? min.y : max.y,
+                                         (i & 4) == 0 ? min.z : max.z);
+                // La pose courante contient deja le relevage : on le retire
+                // pour raisonner dans le repere de la grille.
+                lowest = Mathf.Min(lowest, view.transform.TransformPoint(corner).y - lift);
+            }
+        }
+
+        float target = Mathf.Max(0f, topY - lowest);
+        if (Mathf.Abs(target - lift) < 1e-4f)
+            return;
+
+        float previous = lift;
+        lift = target;
+        foreach (var view in placedViews)
+        {
+            if (view != null)
+                view.transform.position = CellToWorld(view.cell);
+        }
+        Debug.Log($"[GarageBuild] Robot souleve de {lift:0.###} m ({lift / cellY:0.##} case) pour que la piece la plus " +
+                  $"basse pose sur le sol (avant : {previous:0.###} m).");
+    }
+
+    // =========================================================
+    // ATTACHE
+    // =========================================================
+
+    // Un bloc qui s'accroche a une face (tout sauf le chassis) doit toucher une
+    // piece deja posee : une roue, un propulseur ou une arme ne tient pas en
+    // l'air au milieu de la baie. Le chassis, lui, se pose librement sur le sol :
+    // c'est par lui que le robot commence.
+    private bool HasSupport(BlockDefinition def, Vector3Int anchorCell, int rotation, bool mirrored)
+    {
+        if (!def.orientToFace)
+            return true;
+
+        GetBlockCells(def, anchorCell, rotation, mirrored, supportBuffer);
+        foreach (var cell in supportBuffer)
+        {
+            foreach (var direction in Neighbours)
+            {
+                if (occupied.ContainsKey(cell + direction))
+                    return true;
+            }
+        }
+        return false;
     }
 
     // Toutes les cases de la boite d'empreinte (orientee, eventuellement en
@@ -694,6 +793,7 @@ public class GarageBuildController : MonoBehaviour
             mirrored = mirrored,
         });
         RobotSession.Dirty = true;
+        RefreshLift();
         UpdateStats();
     }
 
@@ -707,6 +807,7 @@ public class GarageBuildController : MonoBehaviour
         }
         RemoveSingle(view);
         RobotSession.Dirty = true;
+        RefreshLift();
         UpdateStats();
     }
 
@@ -789,6 +890,8 @@ public class GarageBuildController : MonoBehaviour
                              $"un autre bloc ou sort de la grille) ; la prochaine sauvegarde les perd : {string.Join(", ", names)}");
             RobotSession.Dirty = true;
         }
+
+        RefreshLift();
     }
 
     // =========================================================

@@ -139,6 +139,26 @@ cette face. Les pièces de châssis restent droites et ne font que du lacet. Seu
 la case visée et l'orientation (face × 4 + quart de tour) sont sauvegardées ; les
 anciennes valeurs 0 à 3 restent valides.
 
+Trois règles complètent la pose :
+
+- **Rien ne flotte.** Un bloc qui s'accroche à une face (mouvement, armes, défense,
+  spécial) doit toucher une pièce déjà posée, sinon le fantôme reste rouge. Seul le
+  châssis se pose librement sur le sol de la baie : c'est par lui qu'on commence.
+- **Le bloc est centré sur celui qui le porte.** Les cases réservées sont arrondies
+  au nombre impair supérieur sur les deux axes perpendiculaires à la face d'ancrage
+  (une roue déclarée 1×2×2 en réserve 1×3×3), car un nombre pair de cases tomberait
+  à cheval entre deux cases. Le modèle, lui, garde la taille déclarée dans le
+  catalogue : il ne grandit pas, il se recentre. Les hélices, déjà en 3×1×3, ne
+  bougent pas.
+- **Le robot se soulève sur ses roues.** Une roue ou une patte montée sur le flanc
+  du plancher descend plus bas que lui ; ces cases sous le sol de la baie sont
+  autorisées et tout le robot est relevé d'autant, pour que la pièce la plus basse
+  pose sur le sol au lieu de s'y encastrer. La scène de test applique la même règle
+  au moment de faire apparaître le robot.
+
+Un robot sauvegardé avant ces règles peut perdre un bloc dont les cases réservées
+chevauchent maintenant un voisin ; le garage le dit dans la console au chargement.
+
 | Catégorie | Famille | Tiers | Empreinte (L×H×P) | Ancrage |
 |---|---|---|---|---|
 | Châssis | Pièces pleines (cube, pentes, coins, cône, pyramide…) | 12 | 1×1×1 | base |

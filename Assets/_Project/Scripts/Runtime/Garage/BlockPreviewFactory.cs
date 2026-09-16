@@ -7,8 +7,9 @@ using UnityEngine;
 // dans sa boite d'empreinte (BlockDefinition.footprint, en
 // cases) puis plaque sur sa face d'ancrage ; le pivot du
 // conteneur rendu est le centre de la case visee, la boite
-// s'etendant autour selon BlockFootprint.MinOffset. Sans
-// modele, un placeholder primitif d'une case est genere.
+// s'etendant autour selon BlockFootprint.LocalBox (centree sur
+// la case visee hors axe d'ancrage). Sans modele, un
+// placeholder primitif d'une case est genere.
 // =========================================================
 
 public static class BlockPreviewFactory

@@ -6,9 +6,12 @@ using UnityEngine;
 // Partagee par le visuel (BlockPreviewFactory), la pose
 // (GarageBuildController) et le rapport de verification
 // (BlockFootprintSetup).
-// - Boite : croit a l'oppose de la face d'ancrage depuis la
-//   case visee ; sur les autres axes, centree si le nombre de
-//   cases est impair, sinon deborde vers le cote positif.
+// - Cases reservees : la boite croit a l'oppose de la face
+//   d'ancrage depuis la case visee ; sur les deux autres axes
+//   elle est centree sur cette case (une taille paire y est
+//   arrondie au nombre impair superieur, OccupancySize).
+// - Boite du modele (LocalBox) : taille declaree, affleurant la
+//   face d'ancrage et centree sur la case visee.
 // - Orientation (PlacedBlock.rotation = face * 4 + spin) :
 //   face 0 = orientation naturelle du modele (chassis, anciens
 //   blueprints), faces 1..6 = face d'ancrage plaquee contre la
@@ -31,19 +34,54 @@ public static class BlockFootprint
         Vector3Int.forward, Vector3Int.back,                 // 5, 6 : avant / arriere
     };
 
-    // Empreinte garantie >= 1 case sur chaque axe
+    // Taille declaree du bloc (celle de la table de GarageInventorySetup), en
+    // cases, garantie >= 1 sur chaque axe. C'est la boite qui donne l'echelle
+    // du modele : elle ne change pas quand les cases reservees s'arrondissent.
     public static Vector3Int Size(BlockDefinition def)
     {
         return Vector3Int.Max(def.footprint, Vector3Int.one);
     }
 
-    // Decalage (en cases) de la case "min" de la boite par rapport a la case
-    // visee, avant rotation. Exemples : aileron 1x2x1 pose (Bottom) -> (0,0,0),
-    // roue 2x3x3 fixee par le moyeu en -X (Left) -> (0,-1,-1), plaque 2x3x1
-    // fixee a l'arriere (Back) -> (0,-1,0).
-    public static Vector3Int MinOffset(BlockDefinition def)
+    // Axe de la face d'ancrage (0 = X, 1 = Y, 2 = Z ; -1 = aucun, ancrage Center).
+    // Le bloc croit le long de cet axe a l'oppose de sa face ; sur les deux
+    // autres, il est centre sur la case visee.
+    public static int AnchorAxis(BlockAnchor anchor)
+    {
+        return anchor switch
+        {
+            BlockAnchor.Right or BlockAnchor.Left => 0,
+            BlockAnchor.Bottom => 1,
+            BlockAnchor.Back => 2,
+            _ => -1,
+        };
+    }
+
+    // Cases reservees sur la grille. Sur les deux axes perpendiculaires a la
+    // face d'ancrage, un nombre pair de cases ne peut pas etre centre sur la
+    // case visee (le milieu tomberait entre deux cases) : il est arrondi au
+    // nombre impair superieur, de sorte que le bloc soit pile au milieu du bloc
+    // sur lequel il se monte. Le modele, lui, garde la taille declaree (Size)
+    // et reste centre dans ces cases : une roue 1x2x2 reserve 1x3x3 sans
+    // grandir. Les helices (3x1x3), deja impaires, ne bougent pas.
+    public static Vector3Int OccupancySize(BlockDefinition def)
     {
         var size = Size(def);
+        int axis = AnchorAxis(def.anchor);
+        for (int i = 0; i < 3; i++)
+        {
+            if (i != axis && size[i] % 2 == 0)
+                size[i] += 1;
+        }
+        return size;
+    }
+
+    // Decalage (en cases) de la case "min" des cases reservees par rapport a la
+    // case visee, avant rotation. Exemples : aileron 1x2x1 pose (Bottom) ->
+    // (0,0,0), roue 2x3x3 fixee par le moyeu en -X (Left) -> (0,-1,-1),
+    // plaque 2x3x1 fixee a l'arriere (Back) -> (0,-1,0).
+    public static Vector3Int MinOffset(BlockDefinition def)
+    {
+        var size = OccupancySize(def);
         var min = new Vector3Int(Centered(size.x), Centered(size.y), Centered(size.z));
         switch (def.anchor)
         {
@@ -56,12 +94,33 @@ public static class BlockFootprint
         return min;
     }
 
-    // Boite d'empreinte en unites de case, dans le repere local du bloc
-    // (origine = centre de la case visee, avant rotation) : la case (i,j,k)
-    // couvre [i-0.5, i+0.5] sur chaque axe.
+    // Boite du MODELE en unites de case, dans le repere local du bloc (origine =
+    // centre de la case visee, avant rotation). Le long de l'axe d'ancrage elle
+    // affleure la face d'ancrage des cases reservees ; sur les deux autres axes
+    // elle est centree sur la case visee, meme quand sa taille est paire (elle
+    // deborde alors d'une demi-case de chaque cote, dans les cases reservees
+    // par l'arrondi de OccupancySize).
     public static Bounds LocalBox(BlockDefinition def)
     {
-        var size = Size(def);
+        var visual = Size(def);
+        var occupancyMin = MinOffset(def);
+        int axis = AnchorAxis(def.anchor);
+
+        Vector3 min = Vector3.zero, size = Vector3.zero;
+        for (int i = 0; i < 3; i++)
+        {
+            size[i] = visual[i];
+            // Une case (i) couvre [i-0.5, i+0.5] : la boite des cases reservees
+            // commence donc une demi-case avant leur case min.
+            min[i] = i == axis ? occupancyMin[i] - 0.5f : -visual[i] * 0.5f;
+        }
+        return new Bounds(min + size * 0.5f, size);
+    }
+
+    // Boite des cases reservees, meme repere que LocalBox (verification et debug)
+    public static Bounds OccupancyBox(BlockDefinition def)
+    {
+        var size = OccupancySize(def);
         var min = MinOffset(def);
         var center = new Vector3(min.x + (size.x - 1) * 0.5f, min.y + (size.y - 1) * 0.5f, min.z + (size.z - 1) * 0.5f);
         return new Bounds(center, size);
@@ -157,7 +216,7 @@ public static class BlockFootprint
     public static void GetCells(BlockDefinition def, Vector3Int anchorCell, int rotation, List<Vector3Int> result)
     {
         result.Clear();
-        var size = Size(def);
+        var size = OccupancySize(def);
         var min = MinOffset(def);
         var rot = Rotation(def, rotation);
         for (int x = 0; x < size.x; x++)
