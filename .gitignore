@@ -117,3 +117,7 @@ InitTestScene*.unity*
 
 # Captures du profiler
 /ProfilerCaptures/
+
+# Caches Python des générateurs de cartes (Tools/Maps)
+__pycache__/
+*.pyc
