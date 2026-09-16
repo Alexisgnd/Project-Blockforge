@@ -369,15 +369,10 @@ public static class MainMenuUISetup
         rect.offsetMax = Vector2.zero;
     }
 
+    // Liste canonique partagee (supprime au passage l'entree fantome Arena.unity)
     private static void AddScenesToBuild()
     {
-        var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-        foreach (var path in new[] { "Assets/_Project/Scenes/Garage.unity", "Assets/_Project/Scenes/Arena.unity" })
-        {
-            if (scenes.All(s => s.path != path))
-                scenes.Add(new EditorBuildSettingsScene(path, true));
-        }
-        EditorBuildSettings.scenes = scenes.ToArray();
+        BlockforgeScenes.RegisterAllInBuildSettings();
     }
 
     private static void EnsureFolder(string path)

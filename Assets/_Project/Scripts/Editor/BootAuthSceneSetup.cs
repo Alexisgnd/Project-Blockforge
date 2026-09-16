@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -16,8 +15,7 @@ using UnityEngine.UIElements;
 
 public static class BootAuthSceneSetup
 {
-    private const string BootScenePath = "Assets/_Project/Scenes/Boot.unity";
-    private const string MainMenuScenePath = "Assets/_Project/Scenes/MainMenu.unity";
+    private const string BootScenePath = BlockforgeScenes.Boot;
     private const string UxmlPath = "Assets/_Project/UI/Boot/BootAuth.uxml";
     private const string ThemePath = "Assets/_Project/UI/UnityDefaultRuntimeTheme.tss";
     private const string PanelSettingsPath = "Assets/_Project/UI/BootPanelSettings.asset";
@@ -121,17 +119,9 @@ public static class BootAuthSceneSetup
         return AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(ThemePath);
     }
 
+    // Liste canonique partagee (Boot en 0) : liste globale + profil de build actif
     private static void AddScenesToBuildSettings()
     {
-        var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-
-        // Boot doit etre la premiere scene du build
-        scenes.RemoveAll(s => s.path == BootScenePath);
-        scenes.Insert(0, new EditorBuildSettingsScene(BootScenePath, true));
-
-        if (scenes.All(s => s.path != MainMenuScenePath))
-            scenes.Add(new EditorBuildSettingsScene(MainMenuScenePath, true));
-
-        EditorBuildSettings.scenes = scenes.ToArray();
+        BlockforgeScenes.RegisterAllInBuildSettings();
     }
 }
