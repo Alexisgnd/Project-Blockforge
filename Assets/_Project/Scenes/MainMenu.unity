@@ -19894,7 +19894,7 @@ MonoBehaviour:
   - {fileID: 1506698775}
   usedCountText: {fileID: 1188969577}
   presetsButton: {fileID: 276065341}
-  garageSceneName: Garage_V2
+  garageSceneName: Garage
 --- !u!114 &1525822610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24487,7 +24487,7 @@ MonoBehaviour:
   playMenu: {fileID: 590433628}
   buildMenu: {fileID: 1525822609}
   arenaSceneName: Arena
-  garageSceneName: Garage_V2
+  garageSceneName: Garage
   navButtonsRoot: {fileID: 0}
   tabActiveBg: {r: 0.09, g: 0.16, b: 0.28, a: 1}
   tabTextActive: {r: 0.86, g: 0.91, b: 0.96, a: 1}

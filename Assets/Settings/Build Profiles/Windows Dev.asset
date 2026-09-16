@@ -30,9 +30,6 @@ MonoBehaviour:
     m_guid: 6a6fbcc4ee8ee194b9ee71306c5adeb8
   - m_enabled: 1
     m_path: Assets/_Project/Scenes/Garage.unity
-    m_guid: d755430bfe3235544a7eaea357bc300c
-  - m_enabled: 1
-    m_path: Assets/_Project/Scenes/Garage_V2.unity
     m_guid: c7e9bd9205746354c87c92e41eaea75c
   - m_enabled: 0
     m_path: Assets/_Project/Scenes/Map_MARS.unity

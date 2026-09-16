@@ -12,8 +12,8 @@ using UnityEngine.UI;
 // - Panneau capacites (gauche) + slot courant
 // - Barre d'outils 1-5 (bas) : pince, couleur, suppr...
 // - Liste des commandes (droite)
-// S'applique a la scene garage active (Garage ou Garage_V2),
-// sinon a Garage.unity. Ne touche a rien d'autre dans la scene.
+// S'applique a la scene garage ouverte, sinon a Garage.unity.
+// Ne touche a rien d'autre dans la scene.
 // =========================================================
 
 // Reconstruit la liste des commandes une fois apres compilation quand la

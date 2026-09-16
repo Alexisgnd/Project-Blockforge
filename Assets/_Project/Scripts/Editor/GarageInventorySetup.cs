@@ -11,7 +11,7 @@ using UnityEngine.UI;
 // Menu : Blockforge > Setup Garage Inventory
 // A lancer APRES "Setup Garage UI" (il a besoin du
 // GarageCanvas et de la Toolbar). S'applique a la scene garage
-// active (Garage ou Garage_V2), sinon a Garage.unity ; recable
+// ouverte, sinon a Garage.unity ; recable
 // aussi le systeme de pose (grille du vaisseau, indicateur
 // miroir, switch d'outil et roue de couleur du spray).
 // =========================================================

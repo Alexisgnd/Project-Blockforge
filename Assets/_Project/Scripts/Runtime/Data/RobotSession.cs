@@ -13,8 +13,8 @@ public static class RobotSession
     // Modifications non sauvegardees (nouveau robot, renommage, futurs blocs poses...)
     public static bool Dirty;
 
-    // Scene garage a recharger quand un test (touche P) se termine : Garage
-    // ou Garage_V2, fixee par le garage au moment de lancer le test.
+    // Scene garage a recharger quand un test (touche P) se termine, fixee par
+    // le garage au moment de lancer le test.
     public static string ReturnSceneName = "Garage";
 
     // Plan du miroir de la grille (true : x' = largeur - 1 - x, la ligne

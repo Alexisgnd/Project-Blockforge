@@ -14,7 +14,7 @@
 param(
     [Parameter(Mandatory = $true)][string[]]$Commands,
     [int]$TimeoutSeconds = 300,
-    [string]$LogPattern = "\[Blockforge|\[MapTestSceneSetup\]|\[GarageV2SceneSetup\]|\[GarageInventorySetup\]|\[GarageUISetup\]|\[RobotTest|\[GarageBuild|Exception|error CS|Assertion"
+    [string]$LogPattern = "\[Blockforge|\[MapTestSceneSetup\]|\[GarageSceneSetup\]|\[GarageInventorySetup\]|\[GarageUISetup\]|\[RobotTest|\[GarageBuild|Exception|error CS|Assertion"
 )
 
 $req = "Library\BlockforgeRun.request"

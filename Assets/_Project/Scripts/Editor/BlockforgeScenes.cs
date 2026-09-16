@@ -16,29 +16,31 @@ using UnityEngine.SceneManagement;
 //   liste du profil de build actif (Assets/Settings/Build
 //   Profiles/Windows Dev.asset surcharge la liste globale :
 //   sans lui, SceneManager.LoadScene echoue meme en Play mode)
-// - La scene garage "active" (Garage ou Garage_V2) est celle
-//   que les setups du garage modifient.
+// - Les setups du garage travaillent sur la scene garage
+//   ouverte, sinon ils ouvrent Garage.unity.
 // =========================================================
 
 public static class BlockforgeScenes
 {
     public const string Boot = "Assets/_Project/Scenes/Boot.unity";
     public const string MainMenu = "Assets/_Project/Scenes/MainMenu.unity";
+    // Unique scene de garage depuis le 17/09/2026 : le vaisseau Mothership
+    // (baie 31 x 31 x 31). L'ancien garage a ete supprime, la scene qui portait
+    // le nom Garage_V2 pendant la transition a repris le nom Garage.
     public const string Garage = "Assets/_Project/Scenes/Garage.unity";
-    public const string GarageV2 = "Assets/_Project/Scenes/Garage_V2.unity";
     public const string MapMars = "Assets/_Project/Scenes/Map_MARS.unity";
     public const string MapTest = "Assets/_Project/Scenes/Map_Test.unity";
 
     // Boot doit rester en index 0 (premiere scene chargee par le build)
-    public static readonly string[] BuildOrder = { Boot, MainMenu, Garage, GarageV2, MapMars, MapTest };
+    public static readonly string[] BuildOrder = { Boot, MainMenu, Garage, MapMars, MapTest };
 
     public static bool IsGarageScene(string path)
     {
-        return path == Garage || path == GarageV2;
+        return path == Garage;
     }
 
-    // Scene garage ciblee par les setups : la scene active si c'est un garage,
-    // sinon Garage.unity (comportement historique).
+    // Scene ciblee par les setups du garage : la scene active si c'est le
+    // garage, sinon le garage lui-meme (qu'il faudra donc ouvrir).
     public static string ResolveGarageScenePath()
     {
         string active = SceneManager.GetActiveScene().path;
