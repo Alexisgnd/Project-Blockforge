@@ -405,16 +405,41 @@ public class GarageBuildController : MonoBehaviour
         return ok;
     }
 
+    private Keyboard mirrorKeyboard;
+    private UnityEngine.InputSystem.Controls.KeyControl mirrorKey;
+
     private void HandleMirrorToggle()
     {
         var kb = Keyboard.current;
-        if (kb == null || !kb.mKey.wasPressedThisFrame)
+        if (kb == null)
+            return;
+
+        // Keyboard.mKey designe la position physique QWERTY (le point-virgule
+        // en AZERTY) : on cherche la touche par son nom sur la disposition
+        // courante, avec repli sur la position physique.
+        if (mirrorKeyboard != kb || mirrorKey == null)
+        {
+            mirrorKeyboard = kb;
+            mirrorKey = kb.mKey;
+            foreach (var key in kb.allKeys)
+            {
+                if (string.Equals(key.displayName, "m", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    mirrorKey = key;
+                    break;
+                }
+            }
+        }
+
+        bool pressed = mirrorKey.wasPressedThisFrame || (mirrorKey != kb.mKey && kb.mKey.wasPressedThisFrame);
+        if (!pressed)
             return;
 
         mirrorMode = !mirrorMode;
         RefreshMirrorLabel();
         if (!mirrorMode)
             HideMirrorGhost();
+        Debug.Log($"[GarageBuild] Mode miroir {(mirrorMode ? "active" : "desactive")} (axe {(mirrorAlongX ? "X" : "Z")}).");
     }
 
     private void RefreshMirrorLabel()
