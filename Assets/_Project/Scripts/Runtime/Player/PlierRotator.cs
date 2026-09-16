@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 // ROTATION DE LA TETE DE PINCE A LA MOLETTE
 // Chaque cran de molette fait tourner les machoires et leur
 // support (wrist_hub) de 120 degres (360/3) autour de l'axe
-// du bras, avec une animation. Les crans s'additionnent si
-// le joueur enchaine.
+// du bras, avec une animation. Un geste continu de molette ne
+// declenche qu'une rotation, puis la molette doit etre relachee.
 // =========================================================
 
 public class PlierRotator : MonoBehaviour
@@ -26,6 +26,7 @@ public class PlierRotator : MonoBehaviour
 
     private float currentAngle;
     private float targetAngle;
+    private bool scrollReleased = true;
 
     private void Update()
     {
@@ -44,9 +45,23 @@ public class PlierRotator : MonoBehaviour
 
         float scrollY = mouse.scroll.ReadValue().y;
         if (Mathf.Abs(scrollY) < 0.01f)
+        {
+            // Rearme la molette uniquement apres une frame sans scroll.
+            scrollReleased = true;
+            return;
+        }
+
+        bool canTrigger =
+            scrollReleased && Mathf.Approximately(currentAngle, targetAngle);
+
+        // Toute impulsion est consommee immediatement : meme si elle arrive
+        // pendant l'animation, il faudra relacher la molette avant de retenter.
+        scrollReleased = false;
+
+        if (!canTrigger)
             return;
 
-        // Un cran = un pas de 120° (le sens suit le sens de la molette)
+        // Un geste = un pas de 120° (le sens suit le sens de la molette).
         targetAngle += stepAngle * Mathf.Sign(scrollY);
     }
 
