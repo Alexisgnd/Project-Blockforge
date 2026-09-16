@@ -36,12 +36,15 @@ sauvegarde des robots). Sources 3D : **Blender**.
 |---|---|
 | Écran de démarrage + authentification PocketBase | fonctionnel |
 | Menu principal (hangar, 3 slots de robots, choix du mode de jeu) | fonctionnel |
-| Garage : grille 14×14, pince de pose, inventaire par catégorie et famille, recherche | fonctionnel |
+| Garage : grille de pose (14×14 sur l'ancien vaisseau, 31×31×31 dans Garage_V2), pince, inventaire par catégorie et famille, recherche | fonctionnel |
+| Garage : mode miroir (M, jumeau par le plan de la ligne centrale) | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
+| Garage V2 : vaisseau Mothership (GLB), baie 31 × 31 × 31 m, joueur sur `PlayerSpawn` | généré par script, à valider en jeu |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
+| Scène de test (P depuis le garage) : arène d'entraînement, robot assemblé depuis le blueprint, conduite ZQSD, caméra de poursuite | prototype |
 | Catalogue de blocs avec vrais modèles 3D | 82 blocs, tous modélisés (voir le catalogue) |
 | Carte Mars | scène et planète en place, gameplay à venir |
-| Combat, physique des véhicules, multijoueur | pas commencé |
+| Combat, physique de roues, multijoueur | pas commencé |
 
 ---
 
@@ -87,6 +90,7 @@ Project-Blockforge/
 │   ├── _Project/            ← TOUT notre contenu (le préfixe _ le garde en tête de liste)
 │   │   ├── Art/
 │   │   │   ├── Models/Blocks/{Chassis,Movement,Weapons,Special}/   FBX des blocs
+│   │   │   ├── Models/*.glb                                         décors GLB (vaisseau V2, cartes de test) importés par glTFast
 │   │   │   ├── Materials/{Blocks,Garage,Map}/                       matériaux HDRP/Lit
 │   │   │   ├── Textures/{Blocks,Icons,Map}/                         textures et icônes 512 px
 │   │   │   └── Animations/, Garage/, Hangar/, Shaders/, VFX/
@@ -94,7 +98,7 @@ Project-Blockforge/
 │   │   ├── Data/Blocks/                un asset BlockDefinition par bloc
 │   │   ├── Data/{Robots,GameModes}/    presets de robots, modes de jeu
 │   │   ├── Resources/                  matériau placeholder des blocs sans modèle
-│   │   ├── Scenes/                     Boot, MainMenu, Garage, Map_MARS
+│   │   ├── Scenes/                     Boot, MainMenu, Garage, Garage_V2, Map_MARS, Map_Test
 │   │   ├── Scripts/Runtime/            code du jeu   (asmdef Blockforge.Runtime)
 │   │   ├── Scripts/Editor/             outils éditeur (asmdef Blockforge.Editor)
 │   │   └── UI/                         UXML/USS de l'écran d'auth, polices, sprites
@@ -103,6 +107,7 @@ Project-Blockforge/
 │   └── ThirdParty/                     assets externes, jamais mélangés à _Project
 ├── Packages/, ProjectSettings/         manifeste UPM et réglages Unity
 ├── Tools/Blender/                      sources .blend de tous les modèles + scripts de pipeline
+├── Tools/Maps/                         générateurs Python des cartes de test (arène, canyon) + aperçus
 ├── ARCHITECTURE.md                     découpage du code et principes
 └── README.md
 ```
@@ -210,6 +215,37 @@ comme référence) :
   graphite, acier, liserés cyan émissifs).
 - Peu de matériaux par bloc, nommés explicitement : c'est ce nom que le script
   `MaterialSetup` utilise pour le remap.
+
+### Décors : vaisseau V2 et cartes de test (GLB)
+
+Les décors générés hors Blender arrivent en **GLB** dans `Assets/_Project/Art/Models/`
+(package `com.unity.cloud.gltfast` : import automatique, matériaux HDRP générés, fichiers
+en LFS) et les scènes se (re)construisent par script :
+
+- `ShipGarage_V2.glb` (Mothership) → **Blockforge > Setup Garage V2 Scene** copie
+  `Garage.unity` en `Garage_V2.unity`, remplace l'ancien vaisseau par le GLB à l'identité
+  (échelle 1), ajoute la ligne centrale du miroir, recâble la grille et place le joueur.
+  Contrat du modèle : mètres, Y vertical, baie de construction **31 × 31 × 31 m** centrée
+  à l'origine ; lignes `BuildGrid_X_NN` / `BuildGrid_Y_NN` (32 par axe : le code prend
+  l'union des lignes, retire une épaisseur et compte les cases, soit 31 cases de 1 m) ;
+  empties `BuildBounds_Min` / `BuildBounds_Max`, `BuildOrigin`, `PlayerSpawn` ; aucun
+  collider. **Setup Garage UI** / **Setup Garage Inventory** s'appliquent ensuite à la
+  scène garage ouverte, et **Blockforge > MainMenu -> Garage V2** fait entrer le menu
+  principal dans la V2 (retour avec *MainMenu -> Garage (V1)*).
+- `Map_Test.glb` (arène d'entraînement 180 × 160 m : rampes 10–45°, cibles, murs,
+  plateformes) et `Map_Canyon.glb` (Red Canyon, 1,4 km, 17 Mo) →
+  **Blockforge > Setup Map Test Scene** (ou *… (Red Canyon)* pour échanger la map) :
+  soleil, volume, caméra de poursuite, map instanciée avec un `MeshCollider` par maillage
+  solide (les noms contenant `Marking`, `Deck_joint`, `_dash`, `Lane_`, `height_band`,
+  `Spawn_ring`… sont décoratifs et restent sans collision), `SpawnPoint` du modèle (sinon
+  créé à (0, 0.2, 0)), `TestSceneBootstrap` (`RobotTestSpawner`, case de 1 m). Sans GLB,
+  un sol plat et quelques obstacles procéduraux sont générés. Contrat : mètres, Y vertical,
+  sol praticable vers y = 0, un empty `SpawnPoint` ~0,2 m au-dessus du sol, normales vers
+  l'extérieur, pas de collider. Les générateurs Python et les aperçus sont dans
+  `Tools/Maps/TrainingArena/`.
+
+Depuis le garage, **P** charge `Map_Test` avec le robot en cours (non sauvegardé) ;
+**ESC** libère le curseur, un second **ESC** ramène au garage d'origine.
 
 ---
 
