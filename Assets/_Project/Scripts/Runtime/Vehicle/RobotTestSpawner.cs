@@ -48,6 +48,7 @@ public class RobotTestSpawner : MonoBehaviour
         Vector3 position = spawnPoint != null ? spawnPoint.position : Vector3.up * 0.2f;
         Quaternion rotation = spawnPoint != null ? Quaternion.Euler(0f, spawnPoint.eulerAngles.y, 0f) : Quaternion.identity;
         Robot.transform.SetPositionAndRotation(position, rotation);
+        CheckGround(position);
 
         // Rigidbody ajoute avant le pilote : [RequireComponent] en creerait un
         // par defaut sinon. La masse n'influe pas sur la conduite (pilotee en
@@ -64,6 +65,25 @@ public class RobotTestSpawner : MonoBehaviour
         Debug.Log($"[RobotTest] Robot '{blueprint.name}' assemble : {placed} bloc(s), {weightKg} kg, case {cellSize} m" +
                   (isDefault ? " (robot par defaut : aucun blueprint en memoire)" : "") +
                   $" ; ECHAP x2 -> '{RobotSession.ReturnSceneName}'.");
+    }
+
+    // Le spawn a-t-il un sol sous lui ? Une map sans collider (marquage pris pour
+    // une surface, decor exclu par erreur) laisserait le robot tomber sans fin.
+    private static void CheckGround(Vector3 position)
+    {
+        var origin = position + Vector3.up * 5f;
+        if (Physics.Raycast(origin, Vector3.down, out var hit, 50f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            float drop = position.y - hit.point.y;
+            string surface = hit.collider != null ? hit.collider.gameObject.name : "?";
+            if (drop < -0.5f)
+                Debug.LogWarning($"[RobotTest] Le point d'apparition est {-drop:0.##} m SOUS le sol ('{surface}') : le robot peut rester coince.");
+            else
+                Debug.Log($"[RobotTest] Sol sous le point d'apparition : '{surface}' a {drop:0.##} m.");
+            return;
+        }
+        Debug.LogWarning("[RobotTest] Aucun sol (collider) sous le point d'apparition : le robot va tomber. " +
+                         "Relance Blockforge > Setup Map Test Scene, ou verifie le filtre des maillages sans collision.");
     }
 
     // Robot de demonstration au centre de la grille 31 x 31 : 2 x 3 cubes et

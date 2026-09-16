@@ -9,15 +9,17 @@ using UnityEngine.SceneManagement;
 
 // =========================================================
 // SETUP DE LA SCENE MAP_TEST (terrain d'essai du robot)
-// Menus : Blockforge > Setup Map Test Scene              (arene d'entrainement 180 x 160 m)
-//         Blockforge > Setup Map Test Scene (Red Canyon) (raffinerie dans un canyon, 1,4 km, lourde)
+// Menus : Blockforge > Setup Map Test Scene               (Red Canyon : raffinerie dans un canyon, la map de test)
+//         Blockforge > Setup Map Test Scene (arene plate) (arene d'entrainement 180 x 160 m, variante rapide)
 // - Soleil, volume global (profil Sky and Fog partage avec
 //   Map_MARS), camera de poursuite (RobotFollowCamera)
-// - Map : GLB importe par glTFast (Art/Models/Map_Test.glb ou
-//   Map_Canyon.glb) instancie a l'identite, MeshCollider sur
-//   chaque maillage solide (marquages, joints et liseres
-//   decoratifs exclus) ; repli sur un sol plat + obstacles
-//   procéduraux si le GLB manque
+// - Map : GLB importe par glTFast (Art/Models/Map_Canyon.glb
+//   ou Map_Arena.glb) instancie a l'identite, MeshCollider sur
+//   chaque maillage solide ; sont exclus les marquages et
+//   liseres decoratifs et le decor exterieur du canyon
+//   (groupe BACKGROUND_NON_PLAYABLE : 154 000 triangles que le
+//   GLB declare "collisionRequired: false") ; repli sur un sol
+//   plat + obstacles proceduraux si le GLB manque
 // - SpawnPoint : noeud "SpawnPoint" du modele (ou premier noeud
 //   sans maillage dont le nom commence par "spawn"), sinon un
 //   objet a (0, 0.2, 0)
@@ -32,21 +34,32 @@ using UnityEngine.SceneManagement;
 public static class MapTestSceneSetup
 {
     private const string ScenePath = BlockforgeScenes.MapTest;
-    public const string ArenaModelPath = "Assets/_Project/Art/Models/Map_Test.glb";
     public const string CanyonModelPath = "Assets/_Project/Art/Models/Map_Canyon.glb";
+    public const string ArenaModelPath = "Assets/_Project/Art/Models/Map_Arena.glb";
+    private const string CanyonObjectName = "Map_Canyon";
+    private const string ArenaObjectName = "Map_Arena";
     private const string AssetDir = "Assets/_Project/Art/MapTest";
     private const string TemplateProfilePath = "Assets/Settings/SkyandFogSettingsProfile.asset";
     private const string ProfilePath = AssetDir + "/MapTestVolumeProfile.asset";
     private const string BlockDataDir = "Assets/_Project/Data/Blocks";
-    private const string AutoRunMarker = "Library/BlockforgeMapTestScene-v1.done";
+    private const string AutoRunMarker = "Library/BlockforgeMapTestScene-v2.done";
 
     // Maillages sans collision : marquages au sol, joints du sol, pointilles des
-    // routes, liseres et bandes de hauteur (README de l'arene : « exclure les
-    // marquages et les liserés décoratifs »)
+    // routes, liseres de bord de voie et bandes de hauteur (README des cartes :
+    // « ajouter les collisions aux surfaces solides, sans les marquages »)
     private static readonly string[] DecorativeNameParts =
     {
         "marking", "deck_joint", "_dash", "lane_", "height_band", "top_marker", "landing_marker",
-        "spawn_cross", "spawn_ring", "lettering", "label", "decal", "stripe",
+        "spawn_cross", "spawn_ring", "lettering", "label", "decal", "stripe", "edge_paint",
+    };
+
+    // Sous-arbres entierement sans collision : decor exterieur du canyon, que le
+    // GLB declare non jouable (extras nonPlayable / collisionRequired: false).
+    // 154 000 triangles : les charger en MeshCollider serait du gachis et
+    // laisserait le robot escalader hors de la zone de jeu.
+    private static readonly string[] NoCollisionGroupNames =
+    {
+        "BACKGROUND_NON_PLAYABLE",
     };
 
     static MapTestSceneSetup()
@@ -61,20 +74,22 @@ public static class MapTestSceneSetup
         if (SceneManager.GetActiveScene().path != ScenePath)
             return;
 
-        if (Setup(ArenaModelPath, "Map_Test"))
+        if (Setup(CanyonModelPath, CanyonObjectName))
             File.WriteAllText(AutoRunMarker, "done");
     }
 
+    // La map de test du projet : le canyon (Red Canyon)
     [MenuItem("Blockforge/Setup Map Test Scene")]
-    public static void SetupArena()
-    {
-        Setup(ArenaModelPath, "Map_Test");
-    }
-
-    [MenuItem("Blockforge/Setup Map Test Scene (Red Canyon)")]
     public static void SetupCanyon()
     {
-        Setup(CanyonModelPath, "Map_Canyon");
+        Setup(CanyonModelPath, CanyonObjectName);
+    }
+
+    // Variante : l'arene plate d'entrainement (rampes calibrees, cibles, murs)
+    [MenuItem("Blockforge/Setup Map Test Scene (arene plate)")]
+    public static void SetupArena()
+    {
+        Setup(ArenaModelPath, ArenaObjectName);
     }
 
     public static bool Setup(string modelPath, string mapName)
@@ -231,8 +246,9 @@ public static class MapTestSceneSetup
         {
             switch (root.name)
             {
-                case "Map_Test":
-                case "Map_Canyon":
+                case CanyonObjectName:
+                case ArenaObjectName:
+                case "Map_Test":     // instances des versions precedentes du setup
                 case "TestGround":
                 case "TestObstacles":
                 case "SpawnPoint":
@@ -254,7 +270,7 @@ public static class MapTestSceneSetup
         instance.name = mapName;
         instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         instance.transform.localScale = Vector3.one;
-        int colliders = AddColliders(instance);
+        var (colliders, skipped) = AddColliders(instance);
 
         var spawn = FindSpawnNode(instance.transform);
         string spawnSource = "noeud du modele";
@@ -265,27 +281,34 @@ public static class MapTestSceneSetup
             spawnSource = "objet cree (aucun noeud spawn dans le modele)";
         }
 
-        Debug.Log($"[MapTestSceneSetup] {Path.GetFileName(modelPath)} instancie : {colliders} MeshCollider, spawn = {spawnSource}.");
+        Debug.Log($"[MapTestSceneSetup] {Path.GetFileName(modelPath)} instancie : {colliders} MeshCollider " +
+                  $"({skipped} maillages laisses sans collision : marquages et decor exterieur), spawn = {spawnSource}.");
         return (spawn, Path.GetFileName(modelPath));
     }
 
     // MeshCollider (statique, non convexe) sur chaque maillage solide du modele
-    private static int AddColliders(GameObject root)
+    private static (int added, int skipped) AddColliders(GameObject root)
     {
-        int count = 0;
+        int added = 0, skipped = 0;
         foreach (var filter in root.GetComponentsInChildren<MeshFilter>(true))
         {
-            if (filter.sharedMesh == null || IsDecorative(filter.gameObject.name))
+            if (filter.sharedMesh == null)
                 continue;
+
+            if (IsDecorative(filter.gameObject.name) || IsInNoCollisionGroup(filter.transform, root.transform))
+            {
+                skipped++;
+                continue;
+            }
 
             if (!filter.TryGetComponent<Collider>(out _))
             {
                 var collider = filter.gameObject.AddComponent<MeshCollider>();
                 collider.sharedMesh = filter.sharedMesh;
             }
-            count++;
+            added++;
         }
-        return count;
+        return (added, skipped);
     }
 
     private static bool IsDecorative(string name)
@@ -295,6 +318,20 @@ public static class MapTestSceneSetup
         {
             if (lower.Contains(part))
                 return true;
+        }
+        return false;
+    }
+
+    // Le maillage est-il sous un groupe declare sans collision (decor exterieur) ?
+    private static bool IsInNoCollisionGroup(Transform node, Transform root)
+    {
+        for (var t = node; t != null && t != root; t = t.parent)
+        {
+            foreach (var group in NoCollisionGroupNames)
+            {
+                if (string.Equals(t.name, group, System.StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
         }
         return false;
     }
