@@ -117,30 +117,46 @@ référence est GitHub).
 
 Le jeu est *data-driven* : chaque bloc est un asset `BlockDefinition`
 (`Assets/_Project/Data/Blocks/Block_<Famille>_N<tier>_<Nom>.asset`) qui porte le nom,
-la famille, la catégorie, les stats (coût CPU, masse, résistance, taille), l'icône
-et le prefab d'aperçu. La liste canonique vit dans
+la famille, la catégorie, les stats (coût CPU, masse, résistance), l'empreinte en
+cases (`footprint`, largeur × hauteur × profondeur), la face d'ancrage (`anchor`),
+l'icône et le prefab d'aperçu. La liste canonique vit dans
 `Scripts/Editor/GarageInventorySetup.cs` ; les scripts `<Famille>BlockSetup` la
-resynchronisent avec les assets.
+resynchronisent avec les assets (**Blockforge > Resync Block Definitions** la rejoue
+seule).
 
-| Catégorie | Famille | Tiers | Modèle 3D |
-|---|---|---|---|
-| Châssis | Pièces pleines (cube, pentes, coins, cône, pyramide…) | 12 | ✅ |
-| Châssis | Tiges (courte, longue, arc, diagonales 2D/3D) | 5 | ✅ |
-| Mouvement | Roues — Scout → Monster | 6 | ✅ |
-| Mouvement | Chenilles — Bison → Mammoth (animées) | 4 | ✅ |
-| Mouvement | Pattes d'insecte — Walker, Soldier | 2 | ✅ |
-| Mouvement | Lames de survol — Squall → Hurricane | 6 | ✅ |
-| Mouvement | Hélices (rotors) — Recon, Invader, Assault | 3 | ✅ |
-| Mouvement | Ailerons — Hawk → Bat | 7 | ✅ |
-| Mouvement | Propulseurs — Lynx → Cheetah | 5 | ✅ |
-| Armes | Lasers — Wasp → Leviathan | 6 | ✅ |
-| Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | ✅ |
-| Armes | Canons électriques (rail) — Piercer → Erazer | 4 | ✅ |
-| Armes | Lames de Tesla — Slicer → Nova | 3 | ✅ |
-| Défense | Distributeurs nano — Blinder → Constructor | 3 | ✅ |
-| Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | ✅ |
-| Spécial | Radar (panneaux repliables, animé) | 1 | ✅ |
-| Spécial | Disque de bouclier | 1 | ✅ |
+Un bloc occupe toutes les cases de son empreinte : le modèle est mis à l'échelle
+pour remplir sa boîte, sa face d'ancrage est plaquée contre la case visée et la
+boîte s'étend à l'opposé (une roue se pose par son moyeu, une électroplate par sa
+fixation arrière, tout le reste par sa base). Tout ce qui n'est pas châssis
+s'accroche à la face visée, dessus, dessous ou sur un flanc (un laser se monte
+aussi bien sur le côté d'un cube que sur son toit) ; la molette tourne autour de
+cette face. Les pièces de châssis restent droites et ne font que du lacet. Seule
+la case visée et l'orientation (face × 4 + quart de tour) sont sauvegardées ; les
+anciennes valeurs 0 à 3 restent valides.
+
+| Catégorie | Famille | Tiers | Empreinte (L×H×P) | Ancrage |
+|---|---|---|---|---|
+| Châssis | Pièces pleines (cube, pentes, coins, cône, pyramide…) | 12 | 1×1×1 | base |
+| Châssis | Tiges (courte, longue, arc, diagonales 2D/3D) | 5 | 1×1×1, tige longue 1×2×1 (échelle native, les plaques débordent) | base |
+| Mouvement | Roues — Scout → Monster | 6 | 1×2×2 → 2×3×3 | moyeu (côté) |
+| Mouvement | Chenilles — Bison → Mammoth (animées) | 4 | 1×1×3 → 2×2×4 | base |
+| Mouvement | Pattes d'insecte — Walker, Soldier | 2 | 1×2×1, 2×2×1 | plaque de hanche (côté) |
+| Mouvement | Lames de survol — Squall → Hurricane | 6 | 2×1×2 → 3×1×3 | arrière |
+| Mouvement | Hélices (rotors) — Recon, Invader, Assault | 3 | 3×1×3 | base |
+| Mouvement | Ailerons — Hawk → Bat | 7 | 1×2×1 → 2×4×1 | base |
+| Mouvement | Propulseurs — Lynx → Cheetah | 5 | 2×2×2 → 2×2×3 | base |
+| Armes | Lasers — Wasp → Leviathan | 6 | 1×1×1 → 2×2×4 | base |
+| Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | 1×2×2 → 3×3×4 | base |
+| Armes | Canons électriques (rail) — Piercer → Erazer | 4 | 2×2×4 → 2×3×6 | base |
+| Armes | Lames de Tesla — Slicer → Nova | 3 | 1×2×4 → 1×3×5 | base |
+| Défense | Distributeurs nano — Blinder → Constructor | 3 | 1×2×2 → 1×2×3 | base |
+| Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | 1×2×1 → 3×4×1 | arrière |
+| Spécial | Radar (panneaux repliables, animé) | 1 | 1×2×2 (replié) | base |
+| Spécial | Disque de bouclier | 1 | 2×2×2 | arrière |
+
+Toutes les familles ont un modèle 3D. Les empreintes sont mesurées au repos : le
+radar déplié et les lames de Tesla en action déborderont de leur boîte, c'est
+accepté.
 
 Un bloc dont le champ `art` est vide dans `GarageInventorySetup` s'affiche en
 cube gris (placeholder) : il n'en reste plus aucun, toutes les familles sont
@@ -178,10 +194,18 @@ Chaque famille de blocs suit le même chemin, entièrement automatisé côté Un
 Conventions à respecter (ouvrir `Tools/Blender/Chassis.blend` ou `Wheels.blend`
 comme référence) :
 
-- Échelle : un cube de châssis = une case de la grille du garage.
+- Échelle : un cube de châssis = 1 m = une case de la grille du garage. Les autres
+  blocs sont modélisés à l'échelle qui leur va ; Unity les ajuste dans leur empreinte
+  en cases (`footprint` dans `GarageInventorySetup`). Seules les tiges gardent
+  l'échelle native (1 m = 1 case), car elles relient des centres de cases.
 - Orientation : l'avant du bloc regarde vers **-Y Blender** (soit +Z dans Unity) ;
-  par exemple la tuyère d'un propulseur pointe vers +Y.
-- Pivot sur la racine Empty, posé au point d'ancrage du bloc sur la grille.
+  par exemple la tuyère d'un propulseur pointe vers +Y. Attention, l'import FBX
+  **inverse l'axe X** : ce qui est à +X dans Blender se retrouve à -X dans Unity
+  (le moyeu des roues est à +X dans Blender, donc ancré côté -X dans Unity).
+- Pivot sur la racine Empty. Sa position n'est plus critique : Unity aligne le modèle
+  sur ses bounds exacts et plaque sa face d'ancrage (`anchor` : base, côté, arrière)
+  contre la boîte. **Blockforge > Report Block Bounds** écrit
+  `Library/BlockBoundsReport.txt` pour vérifier l'ajustement et le côté des faces.
 - Style low-poly stylisé, palette cohérente avec les blocs existants (armure blanche,
   graphite, acier, liserés cyan émissifs).
 - Peu de matériaux par bloc, nommés explicitement : c'est ce nom que le script

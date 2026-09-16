@@ -16,11 +16,13 @@ public enum BlockCategory
 // Face du modele plaquee sur sa boite d'empreinte. La boite croit a
 // l'oppose de cette face depuis la case visee (sur les autres axes :
 // centree si le nombre de cases est impair, sinon vers le cote positif).
+// Cotes dans le repere Unity, qui inverse X par rapport a Blender ; la face
+// se verifie avec Blockforge > Report Block Bounds (noeuds reperes).
 public enum BlockAnchor
 {
     Bottom = 0,  // base posee au fond de la boite (defaut : chassis, armes, propulseurs...)
-    Right = 1,   // fixation cote +X (roues : moyeu)
-    Left = 2,    // fixation cote -X (pattes d'insecte : plaque de hanche)
+    Right = 1,   // fixation cote +X (pattes d'insecte : plaque de hanche)
+    Left = 2,    // fixation cote -X (roues : moyeu)
     Back = 3,    // fixation a l'arriere, -Z (electroplates, lames de survol, disque de bouclier)
     Center = 4,  // centre dans la boite
 }
@@ -49,6 +51,10 @@ public class BlockDefinition : ScriptableObject
     public Vector3Int footprint = Vector3Int.one;
     [Tooltip("Face du modele plaquee sur la boite d'empreinte ; la boite croit a l'oppose depuis la case visee.")]
     public BlockAnchor anchor = BlockAnchor.Bottom;
+    [Tooltip("A la pose, la face d'ancrage est plaquee contre la face visee du support (dessus, dessous, flancs) " +
+             "et la molette tourne autour de cette face. Sinon le bloc garde son orientation naturelle et la " +
+             "molette ne fait que du lacet (chassis).")]
+    public bool orientToFace;
     [Tooltip("Garde l'echelle native du FBX (1 m = 1 case) au lieu d'ajuster le modele dans sa boite. " +
              "Pour les tiges, dont la geometrie relie des centres de cases et deborde legerement.")]
     public bool nativeScale;

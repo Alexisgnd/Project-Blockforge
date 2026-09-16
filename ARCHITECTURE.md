@@ -35,9 +35,9 @@ Tools/
 
 | Dossier     | Responsabilité                                                          |
 |-------------|-------------------------------------------------------------------------|
-| `Data/`     | ScriptableObjects : `BlockDefinition`, `RobotPreset`, `GameModeDefinition` ; état de session (`RobotSession`, `RobotBlueprint`) |
+| `Data/`     | ScriptableObjects : `BlockDefinition`, `RobotPreset`, `GameModeDefinition` ; géométrie d'empreinte (`BlockFootprint` : boîte en cases, face d'ancrage, rotation) ; état de session (`RobotSession`, `RobotBlueprint`) |
 | `Building/` | Pince de pose (`PlierGarageController`) : inertie, orientation de l'outil |
-| `Garage/`   | Grille de construction 14×14 (`GarageBuildController`), ghost, blocs posés, fabrique d'aperçus |
+| `Garage/`   | Grille de construction 14×14 (`GarageBuildController` : un bloc occupe toutes les cases de son empreinte orientée ; hors châssis, la face d'ancrage se plaque contre la face visée du support), ghost, blocs posés, fabrique d'aperçus (`BlockPreviewFactory` : modèle ajusté dans sa boîte et plaqué sur sa face d'ancrage) |
 | `Player/`   | Contrôleur joueur du garage, switch pince/spray, molette de couleur du spray |
 | `UI/`       | `Garage/` (inventaire, stats, toolbar, sauvegarde), `MainMenu/` (slots de robots, modes), `BootAuthController` |
 | `Network/`  | Client PocketBase (`PocketBaseClient`) et garde d'authentification (`AuthGuard`) |
@@ -55,7 +55,8 @@ Tous les outils suivent le même pattern « one-shot » :
 
 | Script | Rôle |
 |---|---|
-| `GarageInventorySetup` | Catalogue canonique des blocs (`EnsureBlocks`) et UI de l'inventaire dans la scène Garage |
+| `GarageInventorySetup` | Catalogue canonique des blocs (`EnsureBlocks` : stats, empreintes, ancrages, bounds exacts) et UI de l'inventaire dans la scène Garage |
+| `BlockFootprintSetup` | **Resync Block Definitions** (rejoue `EnsureBlocks` sans régénérer l'UI) et **Report Block Bounds** (`Library/BlockBoundsReport.txt` : chaque modèle ajusté comparé à sa boîte, 4 rotations) |
 | `<Famille>BlockSetup` | Relie FBX + icône aux `BlockDefinition` d'une famille (Chassis, Wheel, InsectLeg, Thruster, Rudder, RotorBlade, LaserWeapon, ShieldDisk) |
 | `<Famille>MaterialSetup` | Crée les matériaux HDRP/Lit partagés de la famille et remappe les FBX dessus |
 | `PaintSprayMaterialSetup` | Matériaux, animation et câblage du spray de peinture |
@@ -66,8 +67,10 @@ Tous les outils suivent le même pattern « one-shot » :
 
 1. **Data-driven** : chaque bloc du jeu est un asset `BlockDefinition`
    (ScriptableObject) dans `Data/Blocks/`. Ajouter un bloc = créer un asset +
-   un modèle, zéro code. Les stats (coût CPU, masse, résistance, taille) vivent
-   dans la donnée. La liste canonique est tenue dans `GarageInventorySetup`.
+   un modèle, zéro code. Les stats (coût CPU, masse, résistance), l'empreinte en
+   cases et la face d'ancrage vivent dans la donnée ; la géométrie de pose en
+   découle (`BlockFootprint`). La liste canonique est tenue dans
+   `GarageInventorySetup`.
 2. **Blueprint ≠ véhicule** : le design (`RobotBlueprint` / `VehicleBlueprint`,
    pure donnée sérialisable) est séparé du véhicule instancié en jeu. C'est ce qui
    rend la sauvegarde, le partage de designs et un futur multijoueur possibles.

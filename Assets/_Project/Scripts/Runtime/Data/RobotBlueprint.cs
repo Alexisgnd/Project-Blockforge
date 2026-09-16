@@ -14,7 +14,8 @@ public class PlacedBlock
     public int x;
     public int y;
     public int z;
-    public int rotation;     // pas de 90 degres (0-3)
+    public int rotation;     // face d'accroche * 4 + quart de tour autour de cette face (BlockFootprint) ;
+                             // 0-3 = orientation naturelle + lacet (anciens blueprints)
     public int colorIndex;
 }
 

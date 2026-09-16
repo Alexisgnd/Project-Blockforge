@@ -568,8 +568,8 @@ public static class PaintSprayMaterialSetup
     // creation : les ajustements manuels ulterieurs sont conserves.
     private static void FitToPlier(GameObject wrapper, GameObject plierRoot)
     {
-        if (!TryGetBounds(plierRoot, out var plierBounds) ||
-            !TryGetBounds(wrapper, out var sprayBounds))
+        if (!BlockPreviewFactory.TryGetBounds(plierRoot, out var plierBounds) ||
+            !BlockPreviewFactory.TryGetBounds(wrapper, out var sprayBounds))
             return;
 
         float plierSize = MaxDimension(plierBounds);
@@ -580,21 +580,8 @@ public static class PaintSprayMaterialSetup
             wrapper.transform.localScale *= scale;
         }
 
-        if (TryGetBounds(wrapper, out sprayBounds))
+        if (BlockPreviewFactory.TryGetBounds(wrapper, out sprayBounds))
             wrapper.transform.position += plierBounds.center - sprayBounds.center;
-    }
-
-    private static bool TryGetBounds(GameObject root, out Bounds bounds)
-    {
-        bounds = default;
-        var renderers = root.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0)
-            return false;
-
-        bounds = renderers[0].bounds;
-        foreach (var r in renderers)
-            bounds.Encapsulate(r.bounds);
-        return true;
     }
 
     private static float MaxDimension(Bounds b)

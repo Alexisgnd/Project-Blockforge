@@ -16017,6 +16017,7 @@ MonoBehaviour:
   inventory: {fileID: 409309212}
   supportPlate: {fileID: 1880735788}
   blockSize: 0.22
+  maxPreviewCells: 2
   surfaceGap: 0.005
   manualOffset: {x: 0, y: 0, z: 0}
   extraYaw: 0

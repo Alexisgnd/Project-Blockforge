@@ -13,9 +13,10 @@ using UnityEngine;
 
 public static class BlockPreviewFactory
 {
-    // Part de la boite laissee au modele : marge symetrique contre le
-    // z-fighting entre blocs voisins (un cube de chassis fait 0,96 case).
-    public const float DefaultFill = 0.96f;
+    // Part de la boite laissee au modele. 1 = les blocs se touchent (les faces
+    // communes de deux cubes sont internes, jamais visibles, donc pas de
+    // z-fighting) ; un fill < 1 laisserait un creux visible entre voisins.
+    public const float DefaultFill = 1f;
 
     // CreatePrimitive assigne le materiau par defaut du pipeline, qui n'existe
     // que dans l'editeur avec HDRP (blocs roses en build) : on force un materiau
@@ -77,10 +78,9 @@ public static class BlockPreviewFactory
         instance.transform.localRotation = Quaternion.identity;
         instance.transform.localScale = Vector3.one;
 
-        Vector3 boxSize = (Vector3)BlockFootprint.Size(def) * cellSize;
-        Vector3 boxMin = centerOnPivot
-            ? -boxSize * 0.5f
-            : ((Vector3)BlockFootprint.MinOffset(def) - Vector3.one * 0.5f) * cellSize;
+        var box = BlockFootprint.LocalBox(def);
+        Vector3 boxSize = box.size * cellSize;
+        Vector3 boxMin = centerOnPivot ? -boxSize * 0.5f : box.min * cellSize;
 
         // Boite interieure : marge constante (1 - fill) / 2 case de chaque cote,
         // quelle que soit la taille de la boite (un rail de 6 cases garde le
@@ -97,11 +97,22 @@ public static class BlockPreviewFactory
         if (bounds.size.sqrMagnitude < 1e-8f && !TryGetBounds(instance, out bounds))
             return wrapper;
 
-        float scale = def.nativeScale
-            ? cellSize * fill
-            : Mathf.Min(innerSize.x / Mathf.Max(bounds.size.x, 1e-4f),
-                        innerSize.y / Mathf.Max(bounds.size.y, 1e-4f),
-                        innerSize.z / Mathf.Max(bounds.size.z, 1e-4f));
+        if (def.nativeScale)
+        {
+            // Echelle ET placement natifs : le pivot du FBX va au centre de la
+            // boite, sans recentrage sur les bounds (les tiges sont modelisees
+            // autour du centre de leur case, plaques en debord sur les faces).
+            float native = cellSize * fill;
+            Vector3 boxCenter = boxMin + boxSize * 0.5f;
+            instance.transform.localScale = Vector3.one * native;
+            instance.transform.localPosition = boxCenter;
+            bottomDistance = -(boxCenter.y + bounds.min.y * native);
+            return wrapper;
+        }
+
+        float scale = Mathf.Min(innerSize.x / Mathf.Max(bounds.size.x, 1e-4f),
+                                innerSize.y / Mathf.Max(bounds.size.y, 1e-4f),
+                                innerSize.z / Mathf.Max(bounds.size.z, 1e-4f));
 
         Vector3 scaledSize = bounds.size * scale;
         Vector3 targetMin = innerMin + (innerSize - scaledSize) * 0.5f; // centre par defaut

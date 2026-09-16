@@ -9,7 +9,6 @@ using UnityEngine;
 public class PlacedBlockView : MonoBehaviour
 {
     public Vector3Int cell;
-    public int rotation;
     public BlockDefinition definition;
     public Vector3Int[] cells;
 }

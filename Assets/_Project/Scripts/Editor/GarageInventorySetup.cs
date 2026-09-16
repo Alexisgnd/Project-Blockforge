@@ -729,6 +729,10 @@ public static class GarageInventorySetup
             asset.footprint = ParseFootprint(d.footprint);
             asset.anchor = AnchorFor(d.file);
             asset.nativeScale = d.file.StartsWith("Block_Rod_");
+            // Tout sauf le chassis s'accroche a la face visee (une arme se monte
+            // aussi bien sur un flanc que sur le dessus) ; les pieces de chassis
+            // restent droites et ne font que du lacet.
+            asset.orientToFace = d.cat != BlockCategory.Chassis;
 
             // Blocs a vrai modele FBX + icone rendue depuis Blender.
             // Les blocs sans "art" gardent le placeholder : on ne touche
@@ -800,6 +804,8 @@ public static class GarageInventorySetup
     // Bounds exacts (monde) d'une hierarchie instanciee : sommets des MeshFilter
     // transformes, meshes skinnes par leurs bounds de renderer. False si vide.
     // Editeur seulement : les sommets ne sont pas lisibles en build sans Read/Write.
+    private static readonly List<Vector3> vertexScratch = new();
+
     public static bool TryGetExactBounds(GameObject root, out Bounds bounds)
     {
         bool any = false;
@@ -811,7 +817,8 @@ public static class GarageInventorySetup
             if (mf.sharedMesh == null || mf.GetComponent<Renderer>() == null)
                 continue;
             var toWorld = mf.transform.localToWorldMatrix;
-            foreach (var v in mf.sharedMesh.vertices)
+            mf.sharedMesh.GetVertices(vertexScratch); // sans copie de tableau, contrairement a .vertices
+            foreach (var v in vertexScratch)
             {
                 var w = toWorld.MultiplyPoint3x4(v);
                 min = Vector3.Min(min, w);

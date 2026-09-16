@@ -6,10 +6,13 @@ using UnityEngine.InputSystem;
 // SYSTEME DE POSE DE BLOCS SUR LA GRILLE (14x14, hauteur 50)
 // - Ghost transparent sur la case visee (vert = ok, rouge = invalide)
 // - Un bloc occupe toutes les cases de sa boite d'empreinte
-//   (BlockFootprint), tournee par le yaw autour de la case visee ;
-//   seule la case visee + la rotation sont sauvegardees (PlacedBlock)
+//   (BlockFootprint) orientee autour de la case visee ; seule la
+//   case visee + l'orientation sont sauvegardees (PlacedBlock)
+// - Les blocs "orientToFace" (tout sauf le chassis) plaquent leur
+//   face d'ancrage contre la face visee du support (dessus,
+//   dessous, flancs) ; le chassis reste droit
 // - Clic gauche : poser / clic droit : retirer
-// - Molette : rotation du bloc par pas de 90 degres
+// - Molette : quart de tour autour de la face visee (ou de Y)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
 // La grille est mesuree depuis les renderers de "buildGrid".
@@ -45,7 +48,7 @@ public class GarageBuildController : MonoBehaviour
     private Transform robotRoot;
     private GameObject ghost;
     private string ghostBlockId;
-    private int rotationIndex;
+    private int spinIndex; // quarts de tour a la molette, autour de la face visee (ou de Y)
     private int totalCpu;
 
     private BlockDefinition Selected => inventory != null ? inventory.CurrentBlock : null;
@@ -109,7 +112,7 @@ public class GarageBuildController : MonoBehaviour
             return;
         }
 
-        bool hasTarget = TryGetTarget(out Vector3Int placeCell, out PlacedBlockView hoverBlock);
+        bool hasTarget = TryGetTarget(out Vector3Int placeCell, out PlacedBlockView hoverBlock, out Vector3Int faceNormal);
         var mouse = Mouse.current;
 
         // Retrait au clic droit (independant de la validite du ghost)
@@ -126,12 +129,18 @@ public class GarageBuildController : MonoBehaviour
             return;
         }
 
-        bool valid = CanPlace(def, placeCell, rotationIndex) && CapacityAllows(def);
-        ShowGhost(def, placeCell, valid);
+        // Orientation : les blocs qui s'accrochent a la face visee (armes,
+        // mouvement, defense...) y plaquent leur face d'ancrage ; le chassis
+        // garde son orientation naturelle. La molette tourne autour de la face.
+        int face = def.orientToFace ? BlockFootprint.FaceIndex(faceNormal) : BlockFootprint.NaturalFace;
+        int rotation = BlockFootprint.Compose(face, spinIndex);
+
+        bool valid = CanPlace(def, placeCell, rotation) && CapacityAllows(def);
+        ShowGhost(def, placeCell, rotation, valid);
 
         if (valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            PlaceBlock(def, placeCell, rotationIndex);
+            PlaceBlock(def, placeCell, rotation);
             HideGhost();
         }
     }
@@ -204,6 +213,15 @@ public class GarageBuildController : MonoBehaviour
 
         Debug.Log($"[GarageBuild] Grille mesuree : cellules {cellX:0.###} x {cellZ:0.###} m, " +
                   $"surface y={topY:0.###}, origine ({gridMin.x:0.##}, {gridMin.z:0.##}).");
+
+        // Les boites d'empreinte (visuel, collider) utilisent une case uniforme
+        // cellY sur les trois axes : une boite tournee de 90 degres doit garder
+        // sa taille. Les cellules doivent donc etre carrees.
+        if (Mathf.Abs(cellX - cellZ) > 0.01f * cellY)
+        {
+            Debug.LogWarning($"[GarageBuild] Cellules non carrees ({cellX:0.###} x {cellZ:0.###} m) : les blocs " +
+                             $"multi-cases sont poses avec une case de {cellY:0.###} m et se decaleront des lignes.");
+        }
     }
 
     // Visualisation des cellules calculees dans la Scene view (objet BuildSystem selectionne)
@@ -272,10 +290,13 @@ public class GarageBuildController : MonoBehaviour
     // VISEE
     // =========================================================
 
-    private bool TryGetTarget(out Vector3Int cell, out PlacedBlockView hoverBlock)
+    // cell = case libre visee, faceNormal = normale (axe entier) de la face du
+    // support qui la designe (+Y pour le sol de la grille)
+    private bool TryGetTarget(out Vector3Int cell, out PlacedBlockView hoverBlock, out Vector3Int faceNormal)
     {
         cell = default;
         hoverBlock = null;
+        faceNormal = Vector3Int.up;
 
         var ray = viewCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
@@ -303,10 +324,12 @@ public class GarageBuildController : MonoBehaviour
         if (view != null && (!planeHit || blockDist <= planeDist))
         {
             // Un bloc multi-cases n'a qu'une case d'ancrage : la case touchee
-            // se lit au point d'impact (rentre d'un peu dans la face visee).
+            // est celle de ses cases dont le centre est le plus proche du point
+            // d'impact (un point d'une face n'est jamais equidistant de deux
+            // cases du meme bloc, sauf sur une arete).
             hoverBlock = view;
-            Vector3Int hitCell = WorldToCell(hitPoint - normal * (cellY * 0.05f));
-            cell = hitCell + NormalToDelta(normal);
+            faceNormal = NormalToDelta(normal);
+            cell = NearestCell(view, hitPoint) + faceNormal;
             return true;
         }
 
@@ -319,6 +342,22 @@ public class GarageBuildController : MonoBehaviour
         }
 
         return false;
+    }
+
+    private Vector3Int NearestCell(PlacedBlockView view, Vector3 point)
+    {
+        Vector3Int best = view.cell;
+        float bestDist = float.MaxValue;
+        foreach (var c in view.cells)
+        {
+            float d = (CellToWorld(c) - point).sqrMagnitude;
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = c;
+            }
+        }
+        return best;
     }
 
     private static Vector3Int NormalToDelta(Vector3 normal)
@@ -343,16 +382,16 @@ public class GarageBuildController : MonoBehaviour
         if (Mathf.Abs(scrollY) < 0.01f)
             return;
 
-        rotationIndex = (rotationIndex + (scrollY > 0 ? 1 : 3)) % 4;
+        spinIndex = (spinIndex + (scrollY > 0 ? 1 : 3)) % 4;
         if (plierPreview != null)
-            plierPreview.extraYaw = rotationIndex * 90f;
+            plierPreview.extraYaw = spinIndex * 90f;
     }
 
     // =========================================================
     // GHOST
     // =========================================================
 
-    private void ShowGhost(BlockDefinition def, Vector3Int cell, bool valid)
+    private void ShowGhost(BlockDefinition def, Vector3Int cell, int rotation, bool valid)
     {
         if (ghost == null || ghostBlockId != def.name)
         {
@@ -364,7 +403,7 @@ public class GarageBuildController : MonoBehaviour
         }
 
         ghost.SetActive(true);
-        ghost.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(rotationIndex));
+        ghost.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(def, rotation));
 
         var material = valid ? ghostValidMaterial : ghostInvalidMaterial;
         if (material != null)
@@ -420,21 +459,20 @@ public class GarageBuildController : MonoBehaviour
     {
         var root = new GameObject($"Block_{cell.x}_{cell.y}_{cell.z}");
         root.transform.SetParent(robotRoot, false);
-        root.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(rotation));
+        root.transform.SetPositionAndRotation(CellToWorld(cell), BlockFootprint.Rotation(def, rotation));
 
         // Collider a la taille de la boite d'empreinte, dans le repere local de la
         // racine (il tourne avec elle) : la case visee est a l'origine.
-        var size = BlockFootprint.Size(def);
-        var min = BlockFootprint.MinOffset(def);
+        var box = BlockFootprint.LocalBox(def);
         var collider = root.AddComponent<BoxCollider>();
-        collider.center = new Vector3(min.x + (size.x - 1) * 0.5f, min.y + (size.y - 1) * 0.5f, min.z + (size.z - 1) * 0.5f) * cellY;
-        collider.size = (Vector3)size * (cellY * 0.98f);
+        collider.center = box.center * cellY;
+        collider.size = box.size * (cellY * 0.98f);
 
         var view = root.AddComponent<PlacedBlockView>();
         view.cell = cell;
-        view.rotation = rotation;
         view.definition = def;
-        view.cells = BlockFootprint.Cells(def, cell, rotation);
+        BlockFootprint.GetCells(def, cell, rotation, cellBuffer);
+        view.cells = cellBuffer.ToArray();
 
         var visual = BlockPreviewFactory.CreateVisual(def, cellY, out _);
         visual.transform.SetParent(root.transform, false);
@@ -473,8 +511,11 @@ public class GarageBuildController : MonoBehaviour
         if (purged.Count > 0)
         {
             RobotSession.Blueprint.blocks.RemoveAll(purged.Contains);
-            Debug.LogWarning($"[GarageBuild] {purged.Count} bloc(s) retires du blueprint : leur empreinte chevauche " +
-                             "un autre bloc ou sort de la grille.");
+            var names = new List<string>();
+            foreach (var p in purged)
+                names.Add($"{p.blockId}@({p.x},{p.y},{p.z})");
+            Debug.LogWarning($"[GarageBuild] {purged.Count} bloc(s) retires du blueprint (empreinte qui chevauche " +
+                             $"un autre bloc ou sort de la grille) ; la prochaine sauvegarde les perd : {string.Join(", ", names)}");
             RobotSession.Dirty = true;
         }
     }

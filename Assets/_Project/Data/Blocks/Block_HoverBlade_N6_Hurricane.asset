@@ -21,6 +21,7 @@ MonoBehaviour:
   resistanceHp: 780
   footprint: {x: 3, y: 1, z: 3}
   anchor: 3
+  orientToFace: 1
   nativeScale: 0
   icon: {fileID: 21300000, guid: 2ca8d4f0f8711154aa073f862fe09940, type: 3}
   previewPrefab: {fileID: 919132149155446097, guid: 48f855ff30e84e447bd080eb6945c3f1, type: 3}
