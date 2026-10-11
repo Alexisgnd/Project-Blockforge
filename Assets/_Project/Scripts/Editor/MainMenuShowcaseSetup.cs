@@ -8,8 +8,9 @@ using UnityEngine;
 // Menu : Blockforge > Setup MainMenu Robot Showcase
 // Cree (ou met a jour) l'objet "RobotShowcase" au centre de
 // la plateforme du hangar, branche la selection des slots
-// et le catalogue des blocs. Les reglages deja faits sur le
-// composant (vitesse, tailles...) sont conserves.
+// et le catalogue des blocs, et ajoute le zoom molette
+// (HangarCameraZoom) sur la camera du menu. Les reglages deja
+// faits sur les composants (vitesse, tailles...) sont conserves.
 // =========================================================
 
 public static class MainMenuShowcaseSetup
@@ -56,9 +57,31 @@ public static class MainMenuShowcaseSetup
             .ToArray();
 
         EditorUtility.SetDirty(showcase);
+
+        // ---------- Zoom molette sur la camera du menu ----------
+        var cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
+        if (cam != null)
+        {
+            if (!cam.TryGetComponent<HangarCameraZoom>(out var zoom))
+                zoom = cam.gameObject.AddComponent<HangarCameraZoom>();
+            zoom.showcase = showcase;
+            zoom.stepPerNotch = 0.15f;
+            zoom.minDistanceFactor = 1.9f;
+            zoom.minDistance = 6f;
+            var menu = Object.FindAnyObjectByType<MainMenuController>(FindObjectsInactive.Include);
+            zoom.homeScreen = menu != null ? menu.homeScreen : null;
+            if (zoom.homeScreen == null)
+                Debug.LogWarning("[MainMenuShowcaseSetup] Ecran Accueil introuvable : le zoom restera actif sur tous les ecrans.");
+            EditorUtility.SetDirty(zoom);
+        }
+        else
+        {
+            Debug.LogWarning("[MainMenuShowcaseSetup] Aucune camera dans MainMenu : zoom molette non installe.");
+        }
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[MainMenuShowcaseSetup] Vitrine {(created ? "creee" : "mise a jour")} en {go.transform.position} : " +
-                  $"{showcase.blocks.Length} bloc(s) au catalogue. Scene sauvegardee.");
+                  $"{showcase.blocks.Length} bloc(s) au catalogue, zoom molette {(cam != null ? "installe" : "absent")}. Scene sauvegardee.");
     }
 }
