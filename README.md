@@ -96,7 +96,7 @@ Project-Blockforge/
 │   │   │   └── Animations/, Garage/, Hangar/, Shaders/, VFX/
 │   │   ├── Audio/{Music,SFX,Mixers}/   (vide pour l'instant, voir Contribuer)
 │   │   ├── Data/Blocks/                un asset BlockDefinition par bloc
-│   │   ├── Data/{Robots,GameModes}/    presets de robots, modes de jeu
+│   │   ├── Data/GameModes/             modes de jeu
 │   │   ├── Resources/                  matériau placeholder des blocs sans modèle
 │   │   ├── Scenes/                     Boot, MainMenu, Garage, Garage_V2, Map_MARS, Map_Test
 │   │   ├── Scripts/Runtime/            code du jeu   (asmdef Blockforge.Runtime)

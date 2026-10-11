@@ -25,6 +25,21 @@ public class PlayerGarageController : MonoBehaviour
     [Header("Cursor")]
     [SerializeField] private bool lockCursorOnStart = true;
 
+    [Header("Limites du vaisseau")]
+    [Tooltip("Empeche le joueur de traverser les parois et de sortir du Mothership")]
+    [SerializeField] private bool confineToShip = true;
+
+    [Tooltip("Volume interieur du hangar (repere monde, vaisseau a l'origine) : " +
+             "entre les nervures des parois (x +-18.85), du pont (y 0) " +
+             "aux traverses du plafond (y 33.7), de la porte arriere (z -20.4) " +
+             "a l'entree du portail avant (z 20.5)")]
+    [SerializeField] private Bounds shipInterior = new Bounds(
+        new Vector3(0f, 16.85f, 0.05f),
+        new Vector3(37.7f, 33.7f, 40.9f));
+
+    [Tooltip("Distance gardee entre la camera et les parois (m)")]
+    [SerializeField] private float wallPadding = 0.8f;
+
 
     // =========================================================
     // DONNEES ACCESSIBLES PAR LA PINCE
@@ -209,6 +224,61 @@ public class PlayerGarageController : MonoBehaviour
 
         transform.position +=
             CurrentVelocity * Time.deltaTime;
+
+        ConfineToShip();
+    }
+
+
+    // =========================================================
+    // LIMITES DU VAISSEAU
+    //
+    // Deplacement libre par transform (pas de physique) : des
+    // colliders ne l'arreteraient pas. On ramene donc la position
+    // dans le volume interieur apres chaque deplacement, et on
+    // annule la vitesse qui pousse contre la paroi (pas d'effet
+    // "colle au mur", la pince ne voit plus de mouvement).
+    // =========================================================
+
+    private void ConfineToShip()
+    {
+        if (!confineToShip)
+            return;
+
+        Vector3 pad = Vector3.one * wallPadding;
+        Vector3 min = shipInterior.min + pad;
+        Vector3 max = shipInterior.max - pad;
+
+        Vector3 position = transform.position;
+        Vector3 clamped = new Vector3(
+            Mathf.Clamp(position.x, min.x, max.x),
+            Mathf.Clamp(position.y, min.y, max.y),
+            Mathf.Clamp(position.z, min.z, max.z)
+        );
+
+        if (clamped == position)
+            return;
+
+        Vector3 velocity = CurrentVelocity;
+        if (clamped.x != position.x) velocity.x = 0f;
+        if (clamped.y != position.y) velocity.y = 0f;
+        if (clamped.z != position.z) velocity.z = 0f;
+        CurrentVelocity = velocity;
+
+        transform.position = clamped;
+    }
+
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!confineToShip)
+            return;
+
+        Gizmos.color = new Color(0.1f, 0.8f, 1f, 0.9f);
+        Gizmos.DrawWireCube(shipInterior.center, shipInterior.size);
+
+        Gizmos.color = new Color(1f, 0.6f, 0.1f, 0.6f);
+        Vector3 inner = shipInterior.size - Vector3.one * (wallPadding * 2f);
+        Gizmos.DrawWireCube(shipInterior.center, Vector3.Max(inner, Vector3.zero));
     }
 
 
