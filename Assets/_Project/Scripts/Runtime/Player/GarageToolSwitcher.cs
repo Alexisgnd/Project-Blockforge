@@ -10,6 +10,8 @@ using UnityEngine.InputSystem;
 // Le systeme de pose de blocs est coupe en mode spray
 // (et retabli en mode pince) : pas de ghost ni de clics de
 // construction pendant la peinture.
+// La barre d'outils (GarageToolbar) reste synchronisee dans les
+// deux sens : un clic sur son bouton change l'outil en main.
 // =========================================================
 
 public class GarageToolSwitcher : MonoBehaviour
@@ -21,6 +23,8 @@ public class GarageToolSwitcher : MonoBehaviour
     public GarageBuildController buildController;
     [Tooltip("Le switch est ignore quand l'inventaire est ouvert")]
     public GarageInventoryController inventory;
+    [Tooltip("Barre d'outils du HUD ; retrouvee dans la scene si vide")]
+    public GarageToolbar toolbar;
 
     [Header("Touches")]
     public Key plierKey = Key.Digit1;
@@ -28,10 +32,35 @@ public class GarageToolSwitcher : MonoBehaviour
 
     public bool PlierIsActive { get; private set; } = true;
 
+    // Abonnement pour toute la vie du composant : le switch est coupe
+    // pendant l'inventaire (disableWhileOpen), c'est justement la que
+    // l'on clique sur la barre d'outils.
+    private void Awake()
+    {
+        if (toolbar == null)
+            toolbar = Object.FindAnyObjectByType<GarageToolbar>(FindObjectsInactive.Include);
+        if (toolbar != null)
+            toolbar.ToolChanged += OnToolChanged;
+    }
+
+    private void OnDestroy()
+    {
+        if (toolbar != null)
+            toolbar.ToolChanged -= OnToolChanged;
+    }
+
     private void Start()
     {
         // Etat par defaut : la pince
         Apply(true);
+    }
+
+    // Outil 0 = pince, 1 = pistolet (barre d'outils, clic ou touche)
+    private void OnToolChanged(int index)
+    {
+        bool plier = index != 1;
+        if (plier != PlierIsActive)
+            Apply(plier);
     }
 
     private void Update()
@@ -61,5 +90,8 @@ public class GarageToolSwitcher : MonoBehaviour
 
         if (buildController != null)
             buildController.enabled = plier;
+
+        if (toolbar != null)
+            toolbar.Select(plier ? 0 : 1);
     }
 }

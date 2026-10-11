@@ -10,6 +10,8 @@ using UnityEngine;
 //   l'impact (ecrase en Y, elargi en XZ) : ~0,28 s.
 // - Retrait : le visuel est detache puis retreci vers son
 //   centre en 0,14 s avant destruction.
+// - Peinture : petite pulsation (104 % puis retour) en 0,18 s
+//   pour marquer le coup de pistolet.
 // Temps non scale ; "reduire les animations" (BlockforgeTheme)
 // rend la pose et le retrait instantanes.
 // =========================================================
@@ -18,9 +20,10 @@ public class BlockPlaceAnimator : MonoBehaviour
 {
     private const float PlaceDuration = 0.28f;
     private const float RemoveDuration = 0.14f;
+    private const float PulseDuration = 0.18f;
     private const float DropCells = 0.5f;
 
-    private enum Mode { Place, Remove }
+    private enum Mode { Place, Remove, Pulse }
 
     private Mode mode;
     private float t;
@@ -64,6 +67,26 @@ public class BlockPlaceAnimator : MonoBehaviour
         anim.baseLocalScale = visual.localScale;
     }
 
+    // Peinture : pulsation du visuel (ignoree si une pose est encore en cours)
+    public static void Pulse(Transform visual)
+    {
+        if (visual == null || BlockforgeTheme.ReduceMotion)
+            return;
+        var existing = visual.GetComponent<BlockPlaceAnimator>();
+        if (existing != null)
+        {
+            if (existing.mode != Mode.Pulse)
+                return;
+            existing.t = 0f;
+            return;
+        }
+        var anim = visual.gameObject.AddComponent<BlockPlaceAnimator>();
+        anim.mode = Mode.Pulse;
+        anim.duration = PulseDuration;
+        anim.baseLocalPos = visual.localPosition;
+        anim.baseLocalScale = visual.localScale;
+    }
+
     private void Update()
     {
         t += Time.unscaledDeltaTime / duration;
@@ -89,6 +112,14 @@ public class BlockPlaceAnimator : MonoBehaviour
             // Retrecit vers le centre, ease-in
             float s = 1f - k * k;
             transform.localScale = baseLocalScale * s;
+            transform.localPosition = baseLocalPos;
+            return;
+        }
+
+        if (mode == Mode.Pulse)
+        {
+            float bump = Mathf.Sin(k * Mathf.PI) * 0.04f;
+            transform.localScale = baseLocalScale * (1f + bump);
             transform.localPosition = baseLocalPos;
             return;
         }

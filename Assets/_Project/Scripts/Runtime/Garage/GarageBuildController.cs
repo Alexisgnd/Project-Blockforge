@@ -29,6 +29,10 @@ using UnityEngine.UI;
 //   miroir vraie : echelle -1 sur l'axe du plan, PlacedBlock.mirrored).
 //   Tant qu'il est actif, la ligne centrale de la grille passe au
 //   jeton danger du design system (coupure entre les deux moities)
+// - Peinture : avec le pistolet (outil 2) ce controleur est coupe
+//   et GaragePaintController (ajoute au demarrage) peint les blocs
+//   via PaintBlock / MirrorTwin ; colorIndex est sauvegarde avec
+//   le bloc et reapplique au chargement (BlockPaint)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
 // =========================================================
@@ -139,6 +143,12 @@ public class GarageBuildController : MonoBehaviour
         robotRoot = new GameObject("RobotRoot").transform;
         LoadBlueprint();
         UpdateStats();
+
+        // Pistolet a peinture : actif quand l'outil 2 est en main (meme quand
+        // ce controleur est coupe par GarageToolSwitcher)
+        if (!TryGetComponent<GaragePaintController>(out var painter))
+            painter = gameObject.AddComponent<GaragePaintController>();
+        painter.build = this;
     }
 
     private void OnDestroy()
@@ -946,7 +956,14 @@ public class GarageBuildController : MonoBehaviour
             var cell = new Vector3Int(placed.x, placed.y, placed.z);
             var def = defsById[placed.blockId];
             if (CanPlace(def, cell, placed.rotation, placed.mirrored))
-                SpawnView(def, cell, placed.rotation, placed.mirrored);
+            {
+                var view = SpawnView(def, cell, placed.rotation, placed.mirrored);
+                if (BlockPalette.IsPaint(placed.colorIndex))
+                {
+                    view.colorIndex = placed.colorIndex;
+                    BlockPaint.Apply(BlockColliders.Visual(view.transform), placed.colorIndex);
+                }
+            }
             else
                 purged.Add(placed);
         }
@@ -963,6 +980,52 @@ public class GarageBuildController : MonoBehaviour
         }
 
         RefreshLift();
+    }
+
+    // =========================================================
+    // PEINTURE (appelee par GaragePaintController)
+    // =========================================================
+
+    public bool MirrorMode => mirrorMode;
+
+    // Touche M : le miroir se bascule aussi pistolet en main
+    public void PollMirrorKey()
+    {
+        HandleMirrorToggle();
+    }
+
+    // Jumeau miroir d'un bloc (meme bloc, ancre sur la case en face), si le
+    // mode miroir est actif ; null sinon (comme pour le retrait)
+    public PlacedBlockView MirrorTwin(PlacedBlockView view)
+    {
+        if (!mirrorMode || view == null)
+            return null;
+        return occupied.TryGetValue(MirrorCell(view.cell), out var twin)
+               && twin != view && twin.definition == view.definition ? twin : null;
+    }
+
+    // Peint un bloc pose (0 = couleurs d'origine) et met a jour le blueprint
+    public bool PaintBlock(PlacedBlockView view, int colorIndex)
+    {
+        if (view == null || !placedViews.Contains(view))
+            return false;
+        if (!BlockPalette.IsPaint(colorIndex))
+            colorIndex = 0;
+        if (view.colorIndex == colorIndex)
+            return false;
+
+        view.colorIndex = colorIndex;
+        var visual = BlockColliders.Visual(view.transform);
+        int slots = BlockPaint.Apply(visual, colorIndex);
+        BlockPlaceAnimator.Pulse(visual);
+        Debug.Log($"[GaragePaint] {view.definition.name} ({view.cell.x},{view.cell.y},{view.cell.z}) " +
+                  (colorIndex == 0 ? "repasse a ses couleurs d'origine." : $"peint en teinte {colorIndex} ({slots} materiau(x)).") );
+
+        var entry = RobotSession.Blueprint.blocks.Find(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
+        if (entry != null)
+            entry.colorIndex = colorIndex;
+        RobotSession.Dirty = true;
+        return true;
     }
 
     // =========================================================

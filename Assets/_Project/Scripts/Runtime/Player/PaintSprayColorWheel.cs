@@ -10,6 +10,9 @@ using UnityEngine.InputSystem;
 // Toute la geometrie (axe de la roue, angles) est calculee
 // depuis les transforms a l'execution : robuste aux
 // rotations bakees de l'export Blender, cf. PlierRotator.
+// La case visee donne aussi la peinture des blocs :
+// SelectedColorIndex (1..12, BlockPalette) est lu par
+// GaragePaintController.
 // =========================================================
 
 public class PaintSprayColorWheel : MonoBehaviour
@@ -48,6 +51,9 @@ public class PaintSprayColorWheel : MonoBehaviour
     private Material surfaceMat;
 
     private int SelectedWedge => angularOrder[orderPos];
+
+    // Teinte de la case visee dans la palette des blocs (1..12)
+    public int SelectedColorIndex { get; private set; } = 1;
 
     private void Awake()
     {
@@ -232,6 +238,7 @@ public class PaintSprayColorWheel : MonoBehaviour
             return;
 
         Color hue = wedgeRenderer.sharedMaterial.GetColor(BaseColorId);
+        SelectedColorIndex = BlockPalette.Nearest(hue);
         Color light = Color.Lerp(hue, Color.white, bubbleLighten);
 
         if (liquidMat != null)

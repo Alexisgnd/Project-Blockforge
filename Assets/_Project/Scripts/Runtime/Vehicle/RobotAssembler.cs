@@ -5,8 +5,8 @@ using UnityEngine;
 // ASSEMBLAGE D'UN ROBOT A PARTIR DE SON BLUEPRINT
 // Transforme un RobotBlueprint (cases + orientations) en
 // hierarchie de GameObjects hors du garage : un enfant par
-// bloc (visuel BlockPreviewFactory + BoxCollider de la boite
-// d'empreinte), pivot de la racine au centre XZ de
+// bloc (visuel BlockPreviewFactory peint selon colorIndex +
+// BoxCollider de la boite d'empreinte), pivot de la racine au centre XZ de
 // l'empreinte, base du bloc le plus bas a y = 0.
 // Les blocs poses en miroir reprennent la recette du garage
 // (echelle -1 + rotation conjuguee, BlockFootprint) avec le
@@ -66,6 +66,8 @@ public static class RobotAssembler
 
             var visual = BlockPreviewFactory.CreateVisual(def, cellSize, out _);
             visual.transform.SetParent(block.transform, false);
+            view.colorIndex = BlockPalette.IsPaint(placed.colorIndex) ? placed.colorIndex : 0;
+            BlockPaint.Apply(visual.transform, view.colorIndex);
 
             // Encombrement : les 8 coins de la boite d'empreinte, ramenes dans
             // le repere de la racine (l'echelle -1 du miroir est prise en compte)
