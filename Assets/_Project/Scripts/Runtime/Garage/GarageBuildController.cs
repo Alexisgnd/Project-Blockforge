@@ -848,7 +848,10 @@ public class GarageBuildController : MonoBehaviour
 
     private void PlaceBlock(BlockDefinition def, Vector3Int cell, int rotation, bool mirrored)
     {
-        SpawnView(def, cell, rotation, mirrored);
+        var view = SpawnView(def, cell, rotation, mirrored);
+        // Animation de pose (visuel seul ; la logique est deja a jour)
+        if (view != null && view.transform.childCount > 0)
+            BlockPlaceAnimator.Place(view.transform.GetChild(0), cellY);
         RobotSession.Blueprint.blocks.Add(new PlacedBlock
         {
             blockId = def.name,
@@ -883,10 +886,13 @@ public class GarageBuildController : MonoBehaviour
             occupied.Remove(c);
         placedViews.Remove(view);
         RobotSession.Blueprint.blocks.RemoveAll(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
+        // Le visuel se retracte quelques images ; la racine (collider) part tout de suite
+        if (view.transform.childCount > 0)
+            BlockPlaceAnimator.Remove(view.transform.GetChild(0), robotRoot);
         Destroy(view.gameObject);
     }
 
-    private void SpawnView(BlockDefinition def, Vector3Int cell, int rotation, bool mirrored)
+    private PlacedBlockView SpawnView(BlockDefinition def, Vector3Int cell, int rotation, bool mirrored)
     {
         var root = new GameObject($"Block_{cell.x}_{cell.y}_{cell.z}");
         root.transform.SetParent(robotRoot, false);
@@ -918,6 +924,7 @@ public class GarageBuildController : MonoBehaviour
         foreach (var c in view.cells)
             occupied[c] = view;
         placedViews.Add(view);
+        return view;
     }
 
     private void LoadBlueprint()
