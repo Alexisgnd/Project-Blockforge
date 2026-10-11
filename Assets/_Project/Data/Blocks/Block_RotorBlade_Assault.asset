@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_RotorBlade_Assault
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ROTOR ASSAULT
-  family: "H\xE9lices"
-  description: "Rotor quadripale surpuissant. Soul\xE8ve les ch\xE2ssis blind\xE9s."
+  blockName: Rotor Assault
+  family: Rotors
+  description: An overpowered four-blade rotor. Lifts armoured chassis.
   category: 1
   costCpu: 18
   weightKg: 230

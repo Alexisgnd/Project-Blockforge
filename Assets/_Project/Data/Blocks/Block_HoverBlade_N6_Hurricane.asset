@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_HoverBlade_N6_Hurricane
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: HOVER BLADE HURRICANE
-  family: Lames de survol
-  description: "Sustentation maximale. R\xE9serv\xE9e aux ch\xE2ssis les plus massifs."
+  blockName: Hover Blade Hurricane
+  family: Hover blades
+  description: Maximum lift. Built for the most massive chassis.
   category: 1
   costCpu: 27
   weightKg: 340

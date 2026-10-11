@@ -31,7 +31,7 @@ public enum BlockAnchor
 public class BlockDefinition : ScriptableObject
 {
     public static readonly string[] CategoryLabels =
-        { "Châssis", "Mouvement", "Armes", "Défense", "Spécial" };
+        { "Chassis", "Mobility", "Weapons", "Defense", "Special" };
 
     [Header("Identite")]
     public string blockName = "CUBE";

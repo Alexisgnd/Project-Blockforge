@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Wheel_N5_Geoterrain
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: WHEEL GEOTERRAIN
-  family: Roues
-  description: "Roue tout-terrain \xE0 flancs \xE9pais. Absorbe les reliefs."
+  blockName: Wheel Geoterrain
+  family: Wheels
+  description: An all-terrain wheel with thick sidewalls. Soaks up bumps.
   category: 1
   costCpu: 14
   weightKg: 310

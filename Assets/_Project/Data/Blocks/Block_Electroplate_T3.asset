@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T3
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T3
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Plaque \xE0 \xE9paulement. Couvre un flanc de ch\xE2ssis l\xE9ger."
+  blockName: Electroplate T3
+  family: Electroplate
+  description: A shouldered plate. Covers the flank of a light chassis.
   category: 3
   costCpu: 6
   weightKg: 160

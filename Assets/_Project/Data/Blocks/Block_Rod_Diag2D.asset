@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rod_Diag2D
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TIGE DIAGONALE 2D
-  family: Tige
-  description: "Barre en biais reliant deux cases d\xE9cal\xE9es sur un m\xEAme plan."
+  blockName: Diagonal Rod 2D
+  family: Rod
+  description: An angled bar linking two offset cells on one plane.
   category: 0
   costCpu: 2
   weightKg: 30

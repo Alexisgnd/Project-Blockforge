@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Plasma_N6_Goliathon
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PLASMA GOLIATHON
-  family: Lanceur de plasma
-  description: "Batterie plasma de si\xE8ge. Pulv\xE9rise tout ce qui reste debout."
+  blockName: Plasma Goliathon
+  family: Plasma launcher
+  description: A siege plasma battery. Pulverizes whatever is still standing.
   category: 2
   costCpu: 44
   weightKg: 580

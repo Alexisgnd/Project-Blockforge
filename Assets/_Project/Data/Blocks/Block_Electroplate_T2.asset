@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T2
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T2
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Plaque ogivale l\xE9g\xE8re. Premi\xE8re protection \xE9lectrod\xE9pos\xE9e."
+  blockName: Electroplate T2
+  family: Electroplate
+  description: A light ogive plate. Your first electroplated armour.
   category: 3
   costCpu: 4
   weightKg: 120

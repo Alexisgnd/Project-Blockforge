@@ -23,6 +23,7 @@ public static class AuthGuard
         Cursor.visible = true;
 
         Debug.Log("[AuthGuard] Aucune session active — retour à l'écran de connexion.");
+        Toast.Warning("Your session has expired. Sign in again.");
         SceneManager.LoadScene(BootSceneName);
         return false;
     }

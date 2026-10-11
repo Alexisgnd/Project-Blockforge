@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,8 +13,6 @@ using UnityEngine.UI;
 
 public class GarageInventoryController : MonoBehaviour
 {
-    private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
-
     [Header("Animation")]
     public RectTransform sheet;
     public float animationDuration = 0.25f;
@@ -36,9 +33,6 @@ public class GarageInventoryController : MonoBehaviour
     public Image[] tabBackgrounds;
     public TMP_Text[] tabLabels;
     public int[] tabCategories;
-    public Color tabActiveBg = new(0.09f, 0.16f, 0.30f, 1f);
-    public Color tabTextActive = new(0.86f, 0.91f, 0.96f);
-    public Color tabTextInactive = new(0.48f, 0.56f, 0.66f);
 
     [Header("Recherche")]
     public TMP_InputField searchField;
@@ -190,11 +184,11 @@ public class GarageInventoryController : MonoBehaviour
     {
         currentCategory = category;
 
+        // Tabs segment (DSElement) : surface-selected + border-accent sur l'onglet actif
         for (int i = 0; i < tabButtons.Length; i++)
         {
-            bool active = tabCategories[i] == category;
-            tabBackgrounds[i].color = active ? tabActiveBg : Color.clear;
-            tabLabels[i].color = active ? tabTextActive : tabTextInactive;
+            if (tabButtons[i] != null && tabButtons[i].TryGetComponent<DSElement>(out var element))
+                element.Selected = tabCategories[i] == category;
         }
 
         ApplyFilter();
@@ -234,16 +228,19 @@ public class GarageInventoryController : MonoBehaviour
         detailDescription.text = def.description;
         detailType.text = def.CategoryLabel;
         detailSize.text = def.SizeLabel;
-        detailWeight.text = $"{def.weightKg.ToString("N0", Fr)} kg";
-        detailResistance.text = $"{def.resistanceHp.ToString("N0", Fr)} HP";
-        detailCost.text = $"{def.costCpu} CPU";
+        detailWeight.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(def.weightKg), "kg");
+        detailResistance.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(def.resistanceHp), "HP");
+        detailCost.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(def.costCpu), "CPU");
 
         BlockSelected?.Invoke(def);
     }
 
     public void RefreshCapacity()
     {
-        capacityText.text = $"CAPACITÉ UTILISÉE : <color=#3B82F6>{capacityUsed.ToString("N0", Fr)} / " +
-                            $"{capacityMax.ToString("N0", Fr)} CPU</color>";
+        // Au-dela du plafond, le chiffre passe en danger-ink (CapacityMeter)
+        string figure = $"{BlockforgeTheme.Num(capacityUsed)} / {BlockforgeTheme.Qty(capacityMax, "CPU")}";
+        if (capacityUsed > capacityMax)
+            figure = $"<color=#{ColorUtility.ToHtmlStringRGB(BlockforgeTheme.DangerInk)}>{figure}</color>";
+        capacityText.text = $"CPU used   {figure}";
     }
 }

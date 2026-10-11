@@ -2,11 +2,10 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 // =========================================================
 // CHEF D'ORCHESTRE DU MENU D'ACCUEIL
-// Relie la selection de robot a l'affichage, gere les
+// Relie la selection de robot du joueur a l'affichage, gere les
 // boutons Jouer / Construire et les infos du joueur.
 // =========================================================
 
@@ -30,12 +29,9 @@ public class MainMenuController : MonoBehaviour
 
     [Header("Onglets (auto-détectés si vide)")]
     public Transform navButtonsRoot;
-    public Color tabActiveBg = new(0.09f, 0.16f, 0.28f, 1f);
-    public Color tabTextActive = new(0.86f, 0.91f, 0.96f);
-    public Color tabTextInactive = new(0.48f, 0.56f, 0.66f);
 
-    // Onglet -> (fond, libelle), construit depuis les enfants "Nav_XXX"
-    private readonly Dictionary<string, (Image bg, TMP_Text label)> navTabs = new();
+    // Onglet -> composant DS (Tabs nav), construit depuis les enfants "Nav_XXX"
+    private readonly Dictionary<string, DSElement> navTabs = new();
 
     private void Awake()
     {
@@ -56,54 +52,70 @@ public class MainMenuController : MonoBehaviour
         foreach (Transform child in navButtonsRoot)
         {
             string section = child.name.StartsWith("Nav_") ? child.name.Substring(4) : child.name;
-            var bg = child.GetComponent<Image>();
-            var label = child.GetComponentInChildren<TMP_Text>();
-            if (bg != null && label != null)
-                navTabs[section] = (bg, label);
+            if (child.TryGetComponent<DSElement>(out var element))
+                navTabs[section] = element;
         }
     }
 
     private void SetActiveTab(string section)
     {
+        // Tabs nav : souligne en accent, jamais de rangee sans selection
         foreach (var pair in navTabs)
-        {
-            bool active = pair.Key == section;
-            pair.Value.bg.color = active ? tabActiveBg : Color.clear;
-            pair.Value.label.color = active ? tabTextActive : tabTextInactive;
-        }
+            pair.Value.Selected = pair.Key == section;
     }
 
     private void OnEnable()
     {
         if (slotManager != null)
+        {
             slotManager.SelectionChanged += OnRobotSelected;
+            slotManager.EmptySlotClicked += OnEmptySlotClicked;
+        }
     }
 
     private void OnDisable()
     {
         if (slotManager != null)
+        {
             slotManager.SelectionChanged -= OnRobotSelected;
+            slotManager.EmptySlotClicked -= OnEmptySlotClicked;
+        }
     }
 
     private void Start()
     {
         // Pseudo du joueur connecte (session PocketBase), sinon invite
         var user = PocketBaseClient.Instance?.User;
-        string pseudo = user != null && !string.IsNullOrEmpty(user.name) ? user.name : "INVITÉ";
+        string pseudo = user != null && !string.IsNullOrEmpty(user.name) ? user.name : "Guest";
         if (playerNameText != null)
-            playerNameText.text = pseudo.ToUpperInvariant();
+            playerNameText.text = pseudo;
 
         SetActiveTab("ACCUEIL");
+
+        // En attendant la reponse de PocketBase (RobotSlotManager.Refresh)
+        if (bayLabelText != null)
+            bayLabelText.text = "Hangar";
+        if (robotNameText != null)
+            robotNameText.text = "Loading…";
+        if (statsUI != null)
+            statsUI.Clear();
     }
 
-    private void OnRobotSelected(RobotPreset preset)
+    // Robot du joueur selectionne dans les slots de l'accueil (null = aucun robot)
+    private void OnRobotSelected(RobotRecord robot, int slotIndex)
     {
         if (bayLabelText != null)
-            bayLabelText.text = preset.bayLabel;
+            bayLabelText.text = robot != null ? $"Bay {slotIndex + 1:00}" : "Empty hangar";
         if (robotNameText != null)
-            robotNameText.text = preset.robotName;
+            robotNameText.text = robot != null ? (robot.name ?? "Robot") : "Build your first robot in a free bay.";
         if (statsUI != null)
-            statsUI.Refresh(preset);
+            statsUI.Refresh(robot);
+    }
+
+    // Slot vide sur l'accueil : la creation se fait depuis l'ecran Construire
+    private void OnEmptySlotClicked(int slotIndex)
+    {
+        ShowBuildMenu();
     }
 
     // ---------- Ecrans ----------
@@ -151,6 +163,10 @@ public class MainMenuController : MonoBehaviour
         if (homeScreen != null)
             homeScreen.SetActive(true);
         SetActiveTab("ACCUEIL");
+
+        // Un robot a pu etre cree ou supprime depuis Construire
+        if (slotManager != null)
+            slotManager.Refresh();
     }
 
     // ---------- Boutons ----------

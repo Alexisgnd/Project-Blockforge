@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Plasma_N2_Disruptor
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PLASMA DISRUPTOR
-  family: Lanceur de plasma
-  description: "Charge plasmique instable. D\xE9s\xE9quilibre les ch\xE2ssis touch\xE9s."
+  blockName: Plasma Disruptor
+  family: Plasma launcher
+  description: An unstable plasma charge. Knocks hit chassis off balance.
   category: 2
   costCpu: 17
   weightKg: 200

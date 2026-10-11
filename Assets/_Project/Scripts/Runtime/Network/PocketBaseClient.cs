@@ -223,10 +223,10 @@ public class PocketBaseClient
 
         // Erreur réseau (serveur injoignable, DNS, TLS...)
         if (request.result != UnityWebRequest.Result.ProtocolError)
-            throw new PocketBaseException(0, "Serveur injoignable. Vérifie ta connexion.");
+            throw new PocketBaseException(0, "Can't reach the server. Check your connection.");
 
         // Erreur API : on extrait le message renvoyé par PocketBase
-        string message = "La requête a échoué.";
+        string message = "The request failed.";
         try
         {
             var error = JsonUtility.FromJson<ErrorResponse>(request.downloadHandler.text);

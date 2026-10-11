@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Chassis_PenteArrondie
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PENTE ARRONDIE
-  family: Pente
-  description: "Pente \xE0 profil courbe pour carrosseries lisses."
+  blockName: Round Slope
+  family: Slope
+  description: A slope with a curved profile for smooth bodywork.
   category: 0
   costCpu: 1
   weightKg: 72

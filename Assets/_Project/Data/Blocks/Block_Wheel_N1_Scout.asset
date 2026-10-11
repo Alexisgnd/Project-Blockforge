@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Wheel_N1_Scout
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: WHEEL SCOUT
-  family: Roues
-  description: "Roue l\xE9g\xE8re de reconnaissance. Vitesse maximale, adh\xE9rence
-    minimale."
+  blockName: Wheel Scout
+  family: Wheels
+  description: A light scout wheel. Top speed, minimal grip.
   category: 1
   costCpu: 4
   weightKg: 90

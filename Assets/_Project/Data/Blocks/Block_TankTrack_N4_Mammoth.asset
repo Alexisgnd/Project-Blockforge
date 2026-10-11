@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_TankTrack_N4_Mammoth
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TANK TRACK MAMMOTH
-  family: Chenilles
-  description: "Chenille de si\xE8ge \xE0 cinq galets. \xC9crase tout sur son passage."
+  blockName: Tank Track Mammoth
+  family: Tank tracks
+  description: A five-wheel siege track. Crushes everything in its path.
   category: 1
   costCpu: 25
   weightKg: 900

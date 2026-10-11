@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T9
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T9
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Aile delta suspendue. Le blindage ultime des ch\xE2ssis massifs."
+  blockName: Electroplate T9
+  family: Electroplate
+  description: A suspended delta wing. The ultimate armour for massive chassis.
   category: 3
   costCpu: 24
   weightKg: 550

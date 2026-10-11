@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N7_Bat
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER BAT
-  family: Ailerons
-  description: "Aileron d'\xE9lite \xE0 double lame et liser\xE9 or. R\xE9serv\xE9
-    aux ch\xE2ssis massifs."
+  blockName: Rudder Bat
+  family: Rudders
+  description: An elite twin-blade rudder with gold trim. Built for massive chassis.
   category: 1
   costCpu: 24
   weightKg: 190

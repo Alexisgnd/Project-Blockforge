@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rail_N2_Penetrator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RAIL PENETRATOR
-  family: "Canon \xE9lectrique"
-  description: "Rail \xE0 double bobine. Perforation nette \xE0 longue port\xE9e."
+  blockName: Rail Penetrator
+  family: Rail cannon
+  description: A twin-coil rail. Clean penetration at long range.
   category: 2
   costCpu: 22
   weightKg: 280

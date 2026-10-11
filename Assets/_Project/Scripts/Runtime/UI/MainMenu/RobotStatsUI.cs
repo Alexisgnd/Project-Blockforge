@@ -1,15 +1,15 @@
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 
 // =========================================================
 // PANNEAU "STATISTIQUES" DU ROBOT SELECTIONNE
-// Purement visuel : recoit un preset, met a jour les textes.
+// Purement visuel : recoit le robot du joueur (stats
+// PocketBase), met a jour les textes.
 // =========================================================
 
 public class RobotStatsUI : MonoBehaviour
 {
-    private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
+    private const string Empty = "–";
 
     [Header("Valeurs (remplies par le setup)")]
     public TMP_Text capacityValue;
@@ -20,17 +20,41 @@ public class RobotStatsUI : MonoBehaviour
     public TMP_Text weightValue;
     public TMP_Text blocksValue;
 
-    public void Refresh(RobotPreset preset)
+    public void Refresh(RobotRecord robot)
     {
-        if (preset == null)
+        if (robot == null)
+        {
+            Clear();
             return;
+        }
 
-        capacityValue.text = preset.capacity.ToString("N0", Fr);
-        offensiveValue.text = preset.offensivePower.ToString("N0", Fr);
-        healthValue.text = preset.health.ToString("N0", Fr);
-        speedValue.text = $"{preset.speedKmh.ToString("N0", Fr)} km/h";
-        energyValue.text = $"{preset.energyPerSec.ToString("N0", Fr)} /s";
-        weightValue.text = $"{preset.weightKg.ToString("N0", Fr)} kg";
-        blocksValue.text = preset.blockCount.ToString("N0", Fr);
+        var stats = robot.stats ?? new RobotStats();
+        int blocks = robot.data?.blocks?.Count ?? 0;
+
+        // StatLine : chiffre en mono, unite a part en ink-muted
+        Set(capacityValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.cpu), "CPU"));
+        Set(offensiveValue, Empty); // pas encore calculee (combat non commence)
+        Set(healthValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.health), "HP"));
+        Set(speedValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.speedKmh), "km/h"));
+        Set(energyValue, BlockforgeTheme.Num(stats.energy));
+        Set(weightValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.weightKg), "kg"));
+        Set(blocksValue, BlockforgeTheme.Num(blocks));
+    }
+
+    public void Clear()
+    {
+        Set(capacityValue, Empty);
+        Set(offensiveValue, Empty);
+        Set(healthValue, Empty);
+        Set(speedValue, Empty);
+        Set(energyValue, Empty);
+        Set(weightValue, Empty);
+        Set(blocksValue, Empty);
+    }
+
+    private static void Set(TMP_Text text, string value)
+    {
+        if (text != null)
+            text.text = value;
     }
 }

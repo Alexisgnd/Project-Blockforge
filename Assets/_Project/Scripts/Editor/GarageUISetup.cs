@@ -47,13 +47,13 @@ public static class GarageControlsPanelOneShot
 
 public static class GarageUISetup
 {
-    private static readonly Color PanelBg = new(0.04f, 0.07f, 0.12f, 0.88f);
-    private static readonly Color CardBg = new(0.06f, 0.10f, 0.16f, 0.95f);
-    private static readonly Color BarBg = new(0.10f, 0.15f, 0.22f, 1f);
-    private static readonly Color Accent = new(0.23f, 0.51f, 0.96f);
-    private static readonly Color ChipBg = new(0.08f, 0.12f, 0.18f, 0.92f);
-    private static readonly Color TextMain = new(0.86f, 0.91f, 0.96f);
-    private static readonly Color TextDim = new(0.55f, 0.63f, 0.72f);
+    private static readonly Color PanelBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.88f);
+    private static readonly Color CardBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.95f);
+    private static readonly Color BarBg = BlockforgeTheme.SurfaceSunken;
+    private static readonly Color Accent = BlockforgeTheme.Accent;
+    private static readonly Color ChipBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.SurfaceSunken, 0.92f);
+    private static readonly Color TextMain = BlockforgeTheme.TextPrimary;
+    private static readonly Color TextDim = BlockforgeTheme.TextSecondary;
 
     [MenuItem("Blockforge/Setup Garage UI")]
     public static void Setup()
@@ -94,6 +94,8 @@ public static class GarageUISetup
         BuildControlsPanel(canvasGo.transform);
 
         EditorSceneManager.MarkSceneDirty(scene);
+        // Design system Blockforge : formes, etats, typo, libelles anglais
+        DesignSystemApply.ApplyToOpenScene();
         EditorSceneManager.SaveScene(scene);
         Debug.Log("[GarageUISetup] HUD du garage genere (stats, outils, commandes).");
     }
@@ -249,6 +251,7 @@ public static class GarageUISetup
 
         var panel = BuildControlsPanel(canvasGo.transform);
         panel.SetSiblingIndex(index);
+        DesignSystemApply.ApplyToOpenScene();
         EditorUtility.SetDirty(canvasGo);
         EditorSceneManager.MarkSceneDirty(canvasGo.scene);
         Debug.Log("[GarageUISetup] Liste des commandes du garage reconstruite. Pense a sauvegarder la scene (Ctrl+S).");

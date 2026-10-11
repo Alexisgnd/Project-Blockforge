@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N5_VampireBat
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER VAMPIRE BAT
-  family: Ailerons
-  description: "D\xE9rive composite \xE0 lame graphite. Corrige les trajectoires
-    des ch\xE2ssis lourds."
+  blockName: Rudder Vampire Bat
+  family: Rudders
+  description: A composite fin with a graphite blade. Corrects the path of heavy
+    chassis.
   category: 1
   costCpu: 16
   weightKg: 135

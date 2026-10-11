@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Thruster_N5_Cheetah
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: THRUSTER CHEETAH
-  family: Propulseurs
-  description: "Pouss\xE9e maximale. Projette les ch\xE2ssis les plus lourds."
+  blockName: Thruster Cheetah
+  family: Thrusters
+  description: Maximum thrust. Launches the heaviest chassis.
   category: 1
   costCpu: 26
   weightKg: 370

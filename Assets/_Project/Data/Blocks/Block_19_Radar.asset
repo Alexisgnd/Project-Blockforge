@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_19_Radar
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RADAR
+  blockName: Radar
   family: Radar
-  description: "R\xE9v\xE8le les ennemis proches sur la minicarte."
+  description: Shows nearby enemies on the minimap.
   category: 4
   costCpu: 18
   weightKg: 140

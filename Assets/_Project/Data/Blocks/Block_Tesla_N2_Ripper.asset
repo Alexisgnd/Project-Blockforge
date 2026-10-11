@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Tesla_N2_Ripper
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TESLA RIPPER
-  family: Lame de Tesla
-  description: "Double lame \xE0 arc \xE9lectrique. D\xE9chire les blindages au corps
-    \xE0 corps."
+  blockName: Tesla Ripper
+  family: Tesla blade
+  description: A twin arc blade. Tears through armour up close.
   category: 2
   costCpu: 19
   weightKg: 210

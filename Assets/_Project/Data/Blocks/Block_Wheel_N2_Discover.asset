@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Wheel_N2_Discover
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: WHEEL DISCOVER
-  family: Roues
-  description: "Roue polyvalente. Bon compromis vitesse / adh\xE9rence."
+  blockName: Wheel Discover
+  family: Wheels
+  description: A versatile wheel. A good balance of speed and grip.
   category: 1
   costCpu: 6
   weightKg: 120

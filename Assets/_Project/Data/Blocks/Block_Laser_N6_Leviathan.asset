@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Laser_N6_Leviathan
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LASER LEVIATHAN
+  blockName: Laser Leviathan
   family: Laser
-  description: "Batterie laser triple. L'arme ultime des ch\xE2ssis lourds."
+  description: A triple laser battery. The ultimate weapon for heavy chassis.
   category: 2
   costCpu: 38
   weightKg: 480

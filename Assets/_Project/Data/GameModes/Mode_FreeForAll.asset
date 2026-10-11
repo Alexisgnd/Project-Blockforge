@@ -12,20 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6e0803aededa1147834201a5add33a8, type: 3}
   m_Name: Mode_FreeForAll
   m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
-  title: FREE FOR ALL
-  tagline: Chacun pour soi. Soyez le dernier robot en vie !
-  description: "Huit robots, une seule r\xE8gle : survivre. Pas d'alli\xE9s, pas
-    de piti\xE9. \xC9liminez tout ce qui bouge et soyez le dernier robot op\xE9rationnel
-    pour remporter la partie."
+  title: 'Free for All'
+  tagline: 'Every robot for itself. Be the last one standing.'
+  description: 'Eight robots, one rule: survive. No allies, no mercy. Take out everything that moves and be the last working robot to win the match.'
   isCustom: 0
-  teamsLabel: 8
-  durationLabel: 10-15 min
-  ticketsLabel: "\u2014"
-  respawnLabel: Non
-  teamSizeLabel: 1
-  objectivePrimary: Soyez le dernier robot en vie sur le champ de bataille.
-  objectiveSecondary: "Chaque \xE9limination vous rapporte des ressources bonus."
-  mapName: Scrapyard
+  teamsLabel: '8'
+  durationLabel: '10–15 min'
+  ticketsLabel: '—'
+  respawnLabel: 'No'
+  teamSizeLabel: '1'
+  objectivePrimary: 'Be the last robot standing on the battlefield.'
+  objectiveSecondary: 'Every takedown earns you bonus resources.'
+  mapName: 'Scrapyard'
   sceneName: Arena
   icon: {fileID: 0}
   coverImage: {fileID: 0}

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T5
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T5
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Aile biseaut\xE9e \xE0 s\xE9parateur. D\xE9vie les tirs obliques."
+  blockName: Electroplate T5
+  family: Electroplate
+  description: A bevelled wing with a splitter. Deflects angled fire.
   category: 3
   costCpu: 10
   weightKg: 250

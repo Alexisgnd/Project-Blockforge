@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N3_Kestrel
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER KESTREL
-  family: Ailerons
-  description: "Gouverne \xE0 charni\xE8re renforc\xE9e. Tient le cap sous le feu."
+  blockName: Rudder Kestrel
+  family: Rudders
+  description: A rudder with a reinforced hinge. Holds course under fire.
   category: 1
   costCpu: 10
   weightKg: 90

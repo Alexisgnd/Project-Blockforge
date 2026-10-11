@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_TankTrack_N3_Elephant
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TANK TRACK ELEPHANT
-  family: Chenilles
-  description: "Chenille longue \xE0 quatre galets. Stabilise les ch\xE2ssis lourds."
+  blockName: Tank Track Elephant
+  family: Tank tracks
+  description: A long four-wheel track. Steadies heavy chassis.
   category: 1
   costCpu: 19
   weightKg: 680

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_02_Pente
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PENTE
-  family: Pente
-  description: "Surface inclin\xE9e pour d\xE9vier les tirs."
+  blockName: Slope
+  family: Slope
+  description: An angled face that deflects incoming fire.
   category: 0
   costCpu: 1
   weightKg: 70

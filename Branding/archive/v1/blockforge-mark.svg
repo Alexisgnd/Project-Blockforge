@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 324 368" role="img" aria-labelledby="title"><title id="title">Blockforge</title><g id="symbol">
+<g fill="#36C4F4">
+<path d="M107 36 169 0 300 76 241 110Z"/>
+<path d="M0 99 79 53 130 83 59 133Z"/>
+<path d="M86 227 104 217 155 246 281 173 300 184 300 193 164 272Z"/>
+</g>
+<g fill="#00ADEA">
+<path d="M0 99 59 133 59 283 0 249Z"/>
+<path d="M86 227 164 272 164 344 86 299Z"/>
+</g>
+<g fill="#006DB5">
+<path d="M241 110 300 76 300 157 241 192Z"/>
+<path d="M164 272 300 193 300 265 164 344Z"/>
+</g>
+<g fill="#004B80">
+<path d="M107 36 241 110 241 192 222 181 222 122 107 45Z"/>
+<path d="M59 133 130 83 130 105 78 142 78 272 59 283Z"/>
+</g>
+<path fill="#FFD34B" d="M104 145 154 116 204 145 154 174Z"/>
+<path fill="#FFB900" d="M104 145 154 174 154 232 104 203Z"/>
+<path fill="#E49600" d="M154 174 204 145 204 203 154 232Z"/>
+</g></svg>

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Wheel_N6_Monster
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: WHEEL MONSTER
-  family: Roues
-  description: "Roue g\xE9ante. \xC9crase les obstacles mais alourdit le ch\xE2ssis."
+  blockName: Wheel Monster
+  family: Wheels
+  description: A giant wheel. Crushes obstacles but weighs the chassis down.
   category: 1
   costCpu: 18
   weightKg: 420

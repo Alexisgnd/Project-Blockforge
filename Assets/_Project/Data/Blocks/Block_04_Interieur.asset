@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_04_Interieur
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: "COIN INT\xC9RIEUR"
-  family: "Coin int\xE9rieur"
-  description: Angle rentrant pour raccorder deux pentes.
+  blockName: Inner Corner
+  family: Inner corner
+  description: A recessed angle that joins two slopes.
   category: 0
   costCpu: 1
   weightKg: 75

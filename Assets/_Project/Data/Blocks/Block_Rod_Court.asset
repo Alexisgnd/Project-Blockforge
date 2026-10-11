@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rod_Court
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TIGE COURTE
-  family: Tige
-  description: "Barre courte pour relier deux points rapproch\xE9s."
+  blockName: Short Rod
+  family: Rod
+  description: A short bar that links two close points.
   category: 0
   costCpu: 1
   weightKg: 18

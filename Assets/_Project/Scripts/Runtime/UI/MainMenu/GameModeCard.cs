@@ -28,7 +28,7 @@ public class GameModeCard : MonoBehaviour
 
         titleText.text = def.title;
         descriptionText.text = def.tagline;
-        footerText.text = $"{def.teamsLabel}   |   {def.durationLabel}";
+        footerText.text = $"{def.teamsLabel}  ·  {def.durationLabel}";
 
         if (def.coverImage != null)
             coverImage.sprite = def.coverImage;

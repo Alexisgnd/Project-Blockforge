@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_HoverBlade_N5_Tornado
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: HOVER BLADE TORNADO
-  family: Lames de survol
-  description: "Turbine de survol large. Soul\xE8ve les carrosseries lourdes."
+  blockName: Hover Blade Tornado
+  family: Hover blades
+  description: A wide hover turbine. Lifts heavy bodywork.
   category: 1
   costCpu: 22
   weightKg: 280

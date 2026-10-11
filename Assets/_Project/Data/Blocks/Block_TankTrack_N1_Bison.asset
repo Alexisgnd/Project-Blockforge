@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_TankTrack_N1_Bison
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TANK TRACK BISON
-  family: Chenilles
-  description: "Chenille compacte \xE0 trois galets. Traction fiable sur tous les
-    terrains."
+  blockName: Tank Track Bison
+  family: Tank tracks
+  description: A compact three-wheel track. Reliable traction on any terrain.
   category: 1
   costCpu: 10
   weightKg: 400

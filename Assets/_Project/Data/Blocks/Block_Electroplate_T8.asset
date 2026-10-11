@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T8
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T8
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Plaque \xE0 d\xE9crochement. Absorbe les impacts lourds."
+  blockName: Electroplate T8
+  family: Electroplate
+  description: A stepped plate. Absorbs heavy impacts.
   category: 3
   costCpu: 20
   weightKg: 460

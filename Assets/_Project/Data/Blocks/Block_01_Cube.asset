@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_01_Cube
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: CUBE
+  blockName: Cube
   family: Cube
-  description: "Bloc de base. Solide et \xE9quilibr\xE9."
+  description: The basic block. Solid and balanced.
   category: 0
   costCpu: 1
   weightKg: 80

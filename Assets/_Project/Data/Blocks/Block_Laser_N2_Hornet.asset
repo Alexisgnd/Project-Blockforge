@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Laser_N2_Hornet
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LASER HORNET
+  blockName: Laser Hornet
   family: Laser
-  description: "Laser \xE0 double condensateur. Bon \xE9quilibre d\xE9g\xE2ts/poids."
+  description: A twin-capacitor laser. A good damage-to-weight balance.
   category: 2
   costCpu: 14
   weightKg: 160

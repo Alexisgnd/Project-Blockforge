@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_TankTrack_N2_Rhino
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TANK TRACK RHINO
-  family: Chenilles
-  description: "Chenille blind\xE9e \xE0 maillons larges. Encaisse les chocs frontaux."
+  blockName: Tank Track Rhino
+  family: Tank tracks
+  description: An armoured track with wide links. Takes head-on hits.
   category: 1
   costCpu: 14
   weightKg: 520

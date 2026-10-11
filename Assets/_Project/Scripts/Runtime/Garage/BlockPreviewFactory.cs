@@ -153,25 +153,25 @@ public static class BlockPreviewFactory
     {
         string n = blockName.ToLowerInvariant();
 
-        if (n.Contains("tige")) return (PrimitiveType.Cylinder, new Vector3(0.12f, 0.6f, 0.12f));
-        if (n.Contains("roue")) return (PrimitiveType.Cylinder, new Vector3(0.9f, 0.1f, 0.9f));
-        if (n.Contains("chenille")) return (PrimitiveType.Cube, new Vector3(1.4f, 0.35f, 0.5f));
-        if (n.Contains("patte")) return (PrimitiveType.Capsule, new Vector3(0.25f, 0.5f, 0.25f));
-        if (n.Contains("survol")) return (PrimitiveType.Cube, new Vector3(1.1f, 0.12f, 0.6f));
+        if (n.Contains("rod") || n.Contains("tige")) return (PrimitiveType.Cylinder, new Vector3(0.12f, 0.6f, 0.12f));
+        if (n.Contains("wheel") || n.Contains("roue")) return (PrimitiveType.Cylinder, new Vector3(0.9f, 0.1f, 0.9f));
+        if (n.Contains("track") || n.Contains("chenille")) return (PrimitiveType.Cube, new Vector3(1.4f, 0.35f, 0.5f));
+        if (n.Contains("leg") || n.Contains("patte")) return (PrimitiveType.Capsule, new Vector3(0.25f, 0.5f, 0.25f));
+        if (n.Contains("hover") || n.Contains("survol")) return (PrimitiveType.Cube, new Vector3(1.1f, 0.12f, 0.6f));
         if (n.Contains("rotor")) return (PrimitiveType.Cylinder, new Vector3(1.2f, 0.05f, 1.2f));
-        if (n.Contains("aile")) return (PrimitiveType.Cube, new Vector3(1.5f, 0.08f, 0.7f));
-        if (n.Contains("propulseur")) return (PrimitiveType.Cylinder, new Vector3(0.35f, 0.45f, 0.35f));
+        if (n.Contains("rudder") || n.Contains("aile")) return (PrimitiveType.Cube, new Vector3(1.5f, 0.08f, 0.7f));
+        if (n.Contains("thruster") || n.Contains("propulseur")) return (PrimitiveType.Cylinder, new Vector3(0.35f, 0.45f, 0.35f));
         if (n.Contains("laser")) return (PrimitiveType.Cube, new Vector3(1.3f, 0.22f, 0.22f));
         if (n.Contains("plasma")) return (PrimitiveType.Capsule, new Vector3(0.3f, 0.55f, 0.3f));
-        if (n.Contains("canon")) return (PrimitiveType.Cube, new Vector3(1.5f, 0.3f, 0.3f));
+        if (n.Contains("rail") || n.Contains("canon")) return (PrimitiveType.Cube, new Vector3(1.5f, 0.3f, 0.3f));
         if (n.Contains("tesla")) return (PrimitiveType.Cube, new Vector3(0.9f, 0.5f, 0.08f));
         if (n.Contains("nano")) return (PrimitiveType.Sphere, new Vector3(0.6f, 0.6f, 0.6f));
-        if (n.Contains("blindage")) return (PrimitiveType.Cube, new Vector3(1f, 0.15f, 1f));
+        if (n.Contains("electroplate") || n.Contains("blindage")) return (PrimitiveType.Cube, new Vector3(1f, 0.15f, 1f));
         if (n.Contains("radar")) return (PrimitiveType.Sphere, new Vector3(0.5f, 0.5f, 0.5f));
-        if (n.Contains("bouclier") || n.Contains("disque")) return (PrimitiveType.Cylinder, new Vector3(0.7f, 0.05f, 0.7f));
-        if (n.Contains("pente")) return (PrimitiveType.Cube, new Vector3(1f, 0.5f, 1f));
-        if (n.Contains("coin")) return (PrimitiveType.Cube, new Vector3(0.55f, 0.55f, 0.55f));
-        if (n.Contains("intérieur") || n.Contains("interieur")) return (PrimitiveType.Cube, new Vector3(0.9f, 0.9f, 0.9f));
+        if (n.Contains("shield") || n.Contains("bouclier") || n.Contains("disque")) return (PrimitiveType.Cylinder, new Vector3(0.7f, 0.05f, 0.7f));
+        if (n.Contains("slope") || n.Contains("pente")) return (PrimitiveType.Cube, new Vector3(1f, 0.5f, 1f));
+        if (n.Contains("inner") || n.Contains("intérieur") || n.Contains("interieur")) return (PrimitiveType.Cube, new Vector3(0.9f, 0.9f, 0.9f));
+        if (n.Contains("corner") || n.Contains("coin")) return (PrimitiveType.Cube, new Vector3(0.55f, 0.55f, 0.55f));
 
         return (PrimitiveType.Cube, Vector3.one); // Cube et defaut
     }

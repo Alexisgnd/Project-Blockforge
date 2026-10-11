@@ -1,4 +1,3 @@
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 
@@ -10,8 +9,6 @@ using UnityEngine;
 
 public class GarageStatsHUD : MonoBehaviour
 {
-    private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
-
     [Header("Valeurs (demo, a brancher sur le gameplay)")]
     public int capacity = 680;
     public int capacityMax = 1000;
@@ -23,7 +20,7 @@ public class GarageStatsHUD : MonoBehaviour
     public int powerMax = 200;
     public float weightT = 8.5f;
     public float weightMaxT = 20f;
-    public string slotLabel = "SLOT 1/3 – PRÉDATEUR MK1";
+    public string slotLabel = "Bay 01 · Predator Mk1";
 
     [Header("References (remplies par le setup)")]
     public RectTransform capacityFill;
@@ -45,12 +42,20 @@ public class GarageStatsHUD : MonoBehaviour
 
     public void Refresh()
     {
-        capacityValue.text = $"{capacity.ToString("N0", Fr)} / {capacityMax.ToString("N0", Fr)}";
-        healthValue.text = health.ToString("N0", Fr);
-        speedValue.text = $"{speedKmh.ToString("N0", Fr)} km/h";
-        powerValue.text = power.ToString("N0", Fr);
-        weightValue.text = $"{weightT.ToString("0.#", Fr)} t / {weightMaxT.ToString("0.#", Fr)} t";
+        // CPU : budget a plafond (CapacityMeter) -> warning des 90 %, danger au-dela
+        float cpuRatio = capacityMax > 0 ? capacity / (float)capacityMax : 0f;
+        string cpu = $"{BlockforgeTheme.Num(capacity)} / {BlockforgeTheme.Num(capacityMax)}";
+        if (cpuRatio > 1f)
+            cpu = $"<color=#{ColorUtility.ToHtmlStringRGB(BlockforgeTheme.DangerInk)}>{cpu}</color>";
+        capacityValue.text = BlockforgeTheme.QtyMuted(cpu, "CPU");
+        healthValue.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(health), "HP");
+        speedValue.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(speedKmh), "km/h");
+        powerValue.text = BlockforgeTheme.Num(power);
+        weightValue.text = BlockforgeTheme.QtyMuted($"{BlockforgeTheme.Num(weightT)} / {BlockforgeTheme.Num(weightMaxT)}", "t");
         slotText.text = slotLabel;
+
+        if (capacityFill != null && capacityFill.TryGetComponent<DSElement>(out var cpuFill))
+            cpuFill.Tone = cpuRatio > 1f ? DSTone.Danger : cpuRatio >= 0.9f ? DSTone.Warning : DSTone.Neutral;
 
         SetFill(capacityFill, capacity / (float)capacityMax);
         SetFill(healthFill, health / (float)healthMax);

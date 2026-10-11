@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N1_Hawk
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER HAWK
-  family: Ailerons
-  description: "Aileron l\xE9ger de reconnaissance. Virages vifs \xE0 faible vitesse."
+  blockName: Rudder Hawk
+  family: Rudders
+  description: A light scout rudder. Sharp turns at low speed.
   category: 1
   costCpu: 6
   weightKg: 60

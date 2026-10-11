@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Thruster_N2_Panther
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: THRUSTER PANTHER
-  family: Propulseurs
-  description: "Pouss\xE9e directionnelle \xE9quilibr\xE9e. Bon rapport poids / puissance."
+  blockName: Thruster Panther
+  family: Thrusters
+  description: Balanced directional thrust. A good power-to-weight ratio.
   category: 1
   costCpu: 12
   weightKg: 190

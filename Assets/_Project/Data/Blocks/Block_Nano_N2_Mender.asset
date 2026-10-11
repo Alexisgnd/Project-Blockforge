@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Nano_N2_Mender
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: NANO MENDER
-  family: Distributeur nano / Healer
-  description: "R\xE9pare progressivement les blocs proches."
+  blockName: Nano Mender
+  family: Nano dispenser
+  description: Gradually repairs nearby blocks.
   category: 3
   costCpu: 18
   weightKg: 300

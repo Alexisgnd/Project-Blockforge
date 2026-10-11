@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Plasma_N4_Ravager
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PLASMA RAVAGER
-  family: Lanceur de plasma
-  description: "Projectiles surchauff\xE9s. Fait fondre les blindages moyens."
+  blockName: Plasma Ravager
+  family: Plasma launcher
+  description: Superheated projectiles. Melts medium armour.
   category: 2
   costCpu: 28
   weightKg: 350

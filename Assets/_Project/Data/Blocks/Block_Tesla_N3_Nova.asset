@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Tesla_N3_Nova
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: TESLA NOVA
-  family: Lame de Tesla
-  description: "Lame \xE0 d\xE9charge en \xE9toile. Frappe tous les blocs adjacents."
+  blockName: Tesla Nova
+  family: Tesla blade
+  description: A star-discharge blade. Hits every adjacent block.
   category: 2
   costCpu: 28
   weightKg: 300

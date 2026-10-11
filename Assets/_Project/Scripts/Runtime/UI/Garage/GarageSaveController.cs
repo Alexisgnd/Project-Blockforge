@@ -195,7 +195,9 @@ public class GarageSaveController : MonoBehaviour
         }
 
         saving = true;
-        SetSlotText("SAUVEGARDE EN COURS...");
+        string robotName = RobotSession.Blueprint.name;
+        SetSlotText($"Saving {robotName}…");
+        var toast = Toast.Loading($"Saving {robotName}…");
 
         // Stats actuelles du HUD (calculees par le gameplay plus tard)
         var stats = new RobotStats
@@ -212,20 +214,23 @@ public class GarageSaveController : MonoBehaviour
             var record = await client.SaveRobotAsync(
                 RobotSession.RecordId, RobotSession.Blueprint.name, RobotSession.Slot,
                 RobotSession.Blueprint, stats);
+            // Resolu avant le test "this == null" : le toast survit a une sortie du garage
+            toast.Success($"{robotName} saved to bay {RobotSession.Slot + 1:00}.");
             if (this == null)
                 return;
 
             RobotSession.RecordId = record.id;
             RobotSession.Dirty = false;
-            SetSlotText("ROBOT SAUVEGARDÉ !");
+            SetSlotText($"{robotName} saved");
             await Awaitable.WaitForSecondsAsync(1.5f);
         }
         catch (PocketBaseException e)
         {
             Debug.LogWarning($"[GarageSave] Échec de la sauvegarde : {e.Message}");
+            toast.Error($"Couldn't save {robotName}. {e.Message}");
             if (this == null)
                 return;
-            SetSlotText("ERREUR DE SAUVEGARDE");
+            SetSlotText("Save failed");
             await Awaitable.WaitForSecondsAsync(2.5f);
         }
         finally
@@ -259,7 +264,7 @@ public class GarageSaveController : MonoBehaviour
 
     private void RefreshSlotLabel()
     {
-        SetSlotText($"SLOT {RobotSession.Slot + 1}/3 – {RobotSession.Blueprint.name}");
+        SetSlotText($"Bay {RobotSession.Slot + 1:00} · {RobotSession.Blueprint.name}");
     }
 
     private void SetSlotText(string text)

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_InsectLeg_N1_Walker
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: INSECT LEG WALKER
-  family: Pattes d'insecte
-  description: "Patte articul\xE9e l\xE9g\xE8re. Escalade souple et silencieuse."
+  blockName: Insect Leg Walker
+  family: Insect legs
+  description: A light jointed leg. Climbs smoothly and quietly.
   category: 1
   costCpu: 10
   weightKg: 190

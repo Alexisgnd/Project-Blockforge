@@ -1,12 +1,11 @@
 using System;
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 // =========================================================
 // CARTE D'UN SLOT DE CONSTRUCTION
-// Deux etats : robot existant (stats + MODIFIER)
+// Deux etats : robot existant (stats + MODIFIER / SUPPRIMER)
 // ou slot vide (+ CREER).
 // =========================================================
 
@@ -24,8 +23,6 @@ public struct BuildSlotData
 
 public class BuildSlotCard : MonoBehaviour
 {
-    private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
-
     [Header("Commun (rempli par le setup)")]
     public TMP_Text numberText;
     public TMP_Text titleText;
@@ -39,6 +36,7 @@ public class BuildSlotCard : MonoBehaviour
     public TMP_Text energyValue;
     public TMP_Text massValue;
     public Button modifyButton;
+    public Button deleteButton;
 
     [Header("Etat slot vide")]
     public GameObject emptyGroup;
@@ -47,14 +45,17 @@ public class BuildSlotCard : MonoBehaviour
     private int slotIndex;
     private Action<int> onModify;
     private Action<int> onCreate;
+    private Action<int> onDelete;
 
-    public void Bind(int index, BuildSlotData data, Action<int> modifyCallback, Action<int> createCallback)
+    public void Bind(int index, BuildSlotData data, Action<int> modifyCallback, Action<int> createCallback,
+                     Action<int> deleteCallback = null)
     {
         slotIndex = index;
         onModify = modifyCallback;
         onCreate = createCallback;
+        onDelete = deleteCallback;
 
-        numberText.text = (index + 1).ToString();
+        numberText.text = $"Bay {index + 1:00}";
 
         filledGroup.SetActive(data.occupied);
         emptyGroup.SetActive(!data.occupied);
@@ -63,19 +64,26 @@ public class BuildSlotCard : MonoBehaviour
         {
             titleText.text = data.robotName;
             tierText.text = data.tierLabel;
-            healthValue.text = data.health.ToString("N0", Fr);
-            speedValue.text = $"{data.speedKmh.ToString("N0", Fr)} km/h";
-            energyValue.text = data.energy.ToString("N0", Fr);
-            massValue.text = $"{data.massT.ToString("0.#", Fr)} t";
+            healthValue.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(data.health), "HP");
+            speedValue.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(data.speedKmh), "km/h");
+            energyValue.text = BlockforgeTheme.Num(data.energy);
+            massValue.text = BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(data.massT), "t");
         }
         else
         {
-            titleText.text = "SLOT DISPONIBLE";
+            titleText.text = "Free bay";
         }
 
         modifyButton.onClick.RemoveAllListeners();
         modifyButton.onClick.AddListener(() => onModify?.Invoke(slotIndex));
         createButton.onClick.RemoveAllListeners();
         createButton.onClick.AddListener(() => onCreate?.Invoke(slotIndex));
+
+        if (deleteButton != null)
+        {
+            deleteButton.gameObject.SetActive(data.occupied && onDelete != null);
+            deleteButton.onClick.RemoveAllListeners();
+            deleteButton.onClick.AddListener(() => onDelete?.Invoke(slotIndex));
+        }
     }
 }

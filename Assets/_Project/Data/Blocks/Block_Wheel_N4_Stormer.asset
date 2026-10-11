@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Wheel_N4_Stormer
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: WHEEL STORMER
-  family: Roues
-  description: "Roue de course renforc\xE9e. Acc\xE9l\xE9ration brutale sur terrain
-    dur."
+  blockName: Wheel Stormer
+  family: Wheels
+  description: A reinforced racing wheel. Brutal acceleration on hard ground.
   category: 1
   costCpu: 11
   weightKg: 230

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Thruster_N4_Puma
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: THRUSTER PUMA
-  family: Propulseurs
-  description: "Propulseur lourd \xE0 postcombustion. Consomme beaucoup."
+  blockName: Thruster Puma
+  family: Thrusters
+  description: A heavy afterburning thruster. Uses a lot of energy.
   category: 1
   costCpu: 21
   weightKg: 300

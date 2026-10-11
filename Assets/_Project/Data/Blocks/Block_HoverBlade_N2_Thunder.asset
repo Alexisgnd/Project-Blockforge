@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_HoverBlade_N2_Thunder
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: HOVER BLADE THUNDER
-  family: Lames de survol
-  description: "Lame de survol \xE9quilibr\xE9e. Portance stable \xE0 vitesse moyenne."
+  blockName: Hover Blade Thunder
+  family: Hover blades
+  description: A balanced hover blade. Steady lift at medium speed.
   category: 1
   costCpu: 11
   weightKg: 160

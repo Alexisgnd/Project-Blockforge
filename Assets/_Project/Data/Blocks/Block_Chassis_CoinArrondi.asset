@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Chassis_CoinArrondi
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: COIN ARRONDI
-  family: Coin
-  description: "Coin bomb\xE9 pour arrondir les angles ext\xE9rieurs."
+  blockName: Round Corner
+  family: Corner
+  description: A domed corner that rounds off outer edges.
   category: 0
   costCpu: 1
   weightKg: 60

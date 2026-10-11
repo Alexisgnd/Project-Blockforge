@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N2_Falcon
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER FALCON
-  family: Ailerons
-  description: "D\xE9rive polyvalente \xE0 rail titane. Bon compromis stabilit\xE9
-    / r\xE9activit\xE9."
+  blockName: Rudder Falcon
+  family: Rudders
+  description: A versatile fin on a titanium rail. Balances stability and response.
   category: 1
   costCpu: 8
   weightKg: 75

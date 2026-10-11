@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_InsectLeg_N2_Soldier
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: INSECT LEG SOLDIER
-  family: Pattes d'insecte
-  description: "Patte de combat renforc\xE9e. Stabilise les ch\xE2ssis lourds en
-    pente."
+  blockName: Insect Leg Soldier
+  family: Insect legs
+  description: A reinforced combat leg. Steadies heavy chassis on slopes.
   category: 1
   costCpu: 15
   weightKg: 280

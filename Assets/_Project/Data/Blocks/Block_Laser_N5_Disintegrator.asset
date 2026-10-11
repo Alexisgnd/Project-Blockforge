@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Laser_N5_Disintegrator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LASER DISINTEGRATOR
+  blockName: Laser Disintegrator
   family: Laser
-  description: "Faisceau \xE0 d\xE9sint\xE9gration soutenue. D\xE9g\xE2ts continus
-    massifs."
+  description: A sustained disintegration beam. Massive continuous damage.
   category: 2
   costCpu: 30
   weightKg: 360

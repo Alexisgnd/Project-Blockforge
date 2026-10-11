@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Chassis_CoinConcave
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: COIN CONCAVE
-  family: Coin
-  description: "Coin \xE9vid\xE9, ultra l\xE9ger, pour les finitions fines."
+  blockName: Concave Corner
+  family: Corner
+  description: A hollow, ultra-light corner for fine finishing.
   category: 0
   costCpu: 1
   weightKg: 35

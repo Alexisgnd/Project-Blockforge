@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Electroplate_T7
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: ELECTROPLATE T7
-  family: "Blindage \xE9lectrod\xE9pos\xE9"
-  description: "Grand panneau renforc\xE9. Blindage principal des ch\xE2ssis moyens."
+  blockName: Electroplate T7
+  family: Electroplate
+  description: A large reinforced panel. The main armour of medium chassis.
   category: 3
   costCpu: 16
   weightKg: 380

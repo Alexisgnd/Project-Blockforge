@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Events;
@@ -20,15 +18,14 @@ using UnityEngine.UI;
 public static class MainMenuUISetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
-    private const string RobotDataDir = "Assets/_Project/Data/Robots";
 
     // Palette
-    private static readonly Color NavBg = new(0.03f, 0.05f, 0.09f, 0.92f);
-    private static readonly Color PanelBg = new(0.05f, 0.08f, 0.13f, 0.85f);
-    private static readonly Color CardBg = new(0.06f, 0.10f, 0.16f, 0.92f);
-    private static readonly Color Accent = new(0.23f, 0.51f, 0.96f);
-    private static readonly Color TextMain = new(0.86f, 0.91f, 0.96f);
-    private static readonly Color TextDim = new(0.48f, 0.56f, 0.66f);
+    private static readonly Color NavBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Background, 0.92f);
+    private static readonly Color PanelBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.85f);
+    private static readonly Color CardBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.92f);
+    private static readonly Color Accent = BlockforgeTheme.Accent;
+    private static readonly Color TextMain = BlockforgeTheme.TextPrimary;
+    private static readonly Color TextDim = BlockforgeTheme.TextSecondary;
 
     [MenuItem("Blockforge/Setup MainMenu UI")]
     public static void Setup()
@@ -39,8 +36,6 @@ public static class MainMenuUISetup
                            "Fais d'abord : Window > TextMeshPro > Import TMP Essential Resources, puis relance ce menu.");
             return;
         }
-
-        var presets = EnsureRobotPresets();
 
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             return;
@@ -73,7 +68,6 @@ public static class MainMenuUISetup
         var managerGo = new GameObject("MenuManager");
         var controller = managerGo.AddComponent<MainMenuController>();
         var slotManager = managerGo.AddComponent<RobotSlotManager>();
-        slotManager.presets = presets;
 
         // ---------- Top navigation ----------
         var nav = CreatePanel(canvasGo.transform, "TopNavigation", NavBg);
@@ -106,7 +100,7 @@ public static class MainMenuUISetup
         {
             bool isHome = i == 0;
             var (btn, label) = CreateButton(navContainer, $"Nav_{navButtons[i].label}", navButtons[i].label, 16,
-                                            isHome ? new Color(0.09f, 0.16f, 0.28f, 1f) : Color.clear,
+                                            isHome ? BlockforgeTheme.AccentMuted : Color.clear,
                                             isHome ? TextMain : TextDim);
             btn.gameObject.AddComponent<LayoutElement>().preferredWidth = navButtons[i].width;
             UnityEventTools.AddStringPersistentListener(btn.onClick, controller.OnNavClicked, navButtons[i].label);
@@ -127,12 +121,12 @@ public static class MainMenuUISetup
         StretchFull(home);
 
         // Titre robot (gauche)
-        var bayLabel = CreateText(home, "BayLabel", "BAY 07", 64, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
+        var bayLabel = CreateText(home, "BayLabel", "BAY 01", 64, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
         SetAnchors(bayLabel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
         bayLabel.sizeDelta = new Vector2(560, 80);
         bayLabel.anchoredPosition = new Vector2(80, -150);
 
-        var robotName = CreateText(home, "RobotName", "FALCON MK.II", 30, Accent, TextAlignmentOptions.Left, FontStyles.Bold);
+        var robotName = CreateText(home, "RobotName", "ROBOT", 30, Accent, TextAlignmentOptions.Left, FontStyles.Bold);
         SetAnchors(robotName, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
         robotName.sizeDelta = new Vector2(560, 40);
         robotName.anchoredPosition = new Vector2(82, -228);
@@ -212,7 +206,7 @@ public static class MainMenuUISetup
             SetAnchors(badge, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
             badge.sizeDelta = new Vector2(130, 28);
             badge.anchoredPosition = new Vector2(-12, -12);
-            var badgeText = CreateText(badge, "Text", "SÉLECTIONNÉ", 12, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
+            var badgeText = CreateText(badge, "Text", "SÉLECTIONNÉ", 12, BlockforgeTheme.OnAccent, TextAlignmentOptions.Center, FontStyles.Bold);
             StretchFull(badgeText);
             slotBadges[i] = badge.gameObject;
             badge.gameObject.SetActive(false);
@@ -229,7 +223,7 @@ public static class MainMenuUISetup
         bottomBar.sizeDelta = new Vector2(0, 72);
         bottomBar.anchoredPosition = Vector2.zero;
 
-        var (playBtn, _) = CreateButton(bottomBar, "PlayButton", "JOUER", 18, Accent, Color.white);
+        var (playBtn, _) = CreateButton(bottomBar, "PlayButton", "JOUER", 18, Accent, BlockforgeTheme.OnAccent);
         SetAnchors(playBtn.GetComponent<RectTransform>(), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
         playBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(220, 48);
         playBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(60, 0);
@@ -257,51 +251,11 @@ public static class MainMenuUISetup
         AddScenesToBuild();
 
         EditorSceneManager.MarkSceneDirty(scene);
+        // Design system Blockforge : formes, etats, typo, libelles anglais
+        DesignSystemApply.ApplyToOpenScene();
         EditorSceneManager.SaveScene(scene);
         Selection.activeGameObject = canvasGo;
         Debug.Log("[MainMenuUISetup] UI du menu generee. Elle est a toi : retouche-la dans la hierarchie.");
-    }
-
-    // =========================================================
-    // DONNEES
-    // =========================================================
-
-    private static RobotPreset[] EnsureRobotPresets()
-    {
-        EnsureFolder(RobotDataDir);
-
-        var defs = new (string file, string bay, string name, string tier, int[] stats)[]
-        {
-            ("Robot_Scout",  "BAY 01", "SCOUT",        "DÉBUTANT", new[] { 850, 1200, 2100, 240, 340, 4200, 74 }),
-            ("Robot_Falcon", "BAY 07", "FALCON MK.II", "VÉTÉRAN",  new[] { 1520, 2480, 3350, 210, 580, 9420, 152 }),
-            ("Robot_Titan",  "BAY 12", "TITAN",        "GUERRIER", new[] { 2100, 3600, 5200, 140, 760, 14300, 218 }),
-        };
-
-        var result = new List<RobotPreset>();
-        foreach (var d in defs)
-        {
-            string path = $"{RobotDataDir}/{d.file}.asset";
-            var preset = AssetDatabase.LoadAssetAtPath<RobotPreset>(path);
-            if (preset == null)
-            {
-                preset = ScriptableObject.CreateInstance<RobotPreset>();
-                preset.bayLabel = d.bay;
-                preset.robotName = d.name;
-                preset.tier = d.tier;
-                preset.capacity = d.stats[0];
-                preset.offensivePower = d.stats[1];
-                preset.health = d.stats[2];
-                preset.speedKmh = d.stats[3];
-                preset.energyPerSec = d.stats[4];
-                preset.weightKg = d.stats[5];
-                preset.blockCount = d.stats[6];
-                AssetDatabase.CreateAsset(preset, path);
-            }
-            result.Add(preset);
-        }
-
-        AssetDatabase.SaveAssets();
-        return result.ToArray();
     }
 
     // =========================================================
@@ -373,15 +327,5 @@ public static class MainMenuUISetup
     private static void AddScenesToBuild()
     {
         BlockforgeScenes.RegisterAllInBuildSettings();
-    }
-
-    private static void EnsureFolder(string path)
-    {
-        if (AssetDatabase.IsValidFolder(path))
-            return;
-        string parent = System.IO.Path.GetDirectoryName(path).Replace('\\', '/');
-        string leaf = System.IO.Path.GetFileName(path);
-        EnsureFolder(parent);
-        AssetDatabase.CreateFolder(parent, leaf);
     }
 }

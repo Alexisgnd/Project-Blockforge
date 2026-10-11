@@ -115,7 +115,7 @@ public class BootAuthController : MonoBehaviour
 
         if (string.IsNullOrEmpty(config.password))
         {
-            ShowInfo("Auto-login dev : renseigne \"password\" dans dev_autologin.json.");
+            ShowInfo("Dev auto sign-in: add your \"password\" to dev_autologin.json.");
             return;
         }
 
@@ -156,30 +156,36 @@ public class BootAuthController : MonoBehaviour
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
         {
-            ShowError("Entre ton email et ton mot de passe.");
+            ShowError("Enter your email and password.");
             return;
         }
 
         SetBusy(true);
-        ShowInfo("Connexion...");
+        ShowInfo("Signing in…");
+        var toast = Toast.Loading("Signing in…");
 
         try
         {
             var auth = await client.LoginAsync(email, password);
+            // Le toast survit au changement de scene : affiche en arrivant au menu
+            toast.Success($"Signed in. Welcome back, {DisplayName(auth.record)}.");
             if (this == null) return;
 
-            ShowSuccess($"Bon retour, {DisplayName(auth.record)} !");
+            ShowSuccess($"Welcome back, {DisplayName(auth.record)}.");
             LoadNextScene();
         }
         catch (PocketBaseException e)
         {
+            string message = e.StatusCode == 400 ? "Wrong email or password." : e.Message;
+            toast.Error($"Couldn't sign in. {message}");
             if (this == null) return;
             SetBusy(false);
-            ShowError(e.StatusCode == 400 ? "Email ou mot de passe incorrect." : e.Message);
+            ShowError(message);
         }
         catch (System.Exception e)
         {
             Debug.LogException(e);
+            toast.Error("Couldn't sign in. Something went wrong; see the Console.");
             if (this == null) return;
             SetBusy(false);
             ShowError("Erreur inattendue — voir la Console.");
@@ -195,26 +201,27 @@ public class BootAuthController : MonoBehaviour
 
         if (string.IsNullOrEmpty(email) || !email.Contains('@'))
         {
-            ShowError("Entre une adresse email valide.");
+            ShowError("Enter a valid email address.");
             return;
         }
         if (username.Length < 3)
         {
-            ShowError("Le pseudo doit faire au moins 3 caractères.");
+            ShowError("Your username needs at least 3 characters.");
             return;
         }
         if (password.Length < 8)
         {
-            ShowError("Le mot de passe doit faire au moins 8 caractères.");
+            ShowError("Your password needs at least 8 characters.");
             return;
         }
         if (password != passwordConfirm)
         {
-            ShowError("Les mots de passe ne correspondent pas.");
+            ShowError("The passwords don't match.");
             return;
         }
         SetBusy(true);
-        ShowInfo("Création du compte...");
+        ShowInfo("Creating your account…");
+        var toast = Toast.Loading("Creating your account…");
 
         try
         {
@@ -222,14 +229,17 @@ public class BootAuthController : MonoBehaviour
             if (this == null) return;
 
             // Connexion directe apres l'inscription
+            toast.Info("Account created. Signing in…");
             var auth = await client.LoginAsync(email, password);
+            toast.Success($"Account created. Welcome, {DisplayName(auth.record)}.");
             if (this == null) return;
 
-            ShowSuccess($"Compte créé. Bienvenue, {DisplayName(auth.record)} !");
+            ShowSuccess($"Account created. Welcome, {DisplayName(auth.record)}.");
             LoadNextScene();
         }
         catch (PocketBaseException e)
         {
+            toast.Error($"Couldn't create your account. {e.Message}");
             if (this == null) return;
             SetBusy(false);
             ShowError(e.Message);
@@ -237,6 +247,7 @@ public class BootAuthController : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogException(e);
+            toast.Error("Couldn't create your account. Something went wrong; see the Console.");
             if (this == null) return;
             SetBusy(false);
             ShowError("Erreur inattendue — voir la Console.");
@@ -248,27 +259,31 @@ public class BootAuthController : MonoBehaviour
         string email = loginEmail.value.Trim();
         if (string.IsNullOrEmpty(email))
         {
-            ShowError("Entre d'abord ton email ci-dessus.");
+            ShowError("Enter your email above first.");
             return;
         }
 
         SetBusy(true);
-        ShowInfo("Envoi de l'email de réinitialisation...");
+        ShowInfo("Sending the reset email…");
+        var toast = Toast.Loading("Sending the reset email…");
 
         try
         {
             await client.RequestPasswordResetAsync(email);
+            toast.Success("Reset email sent. Check your inbox.");
             if (this == null) return;
-            ShowSuccess("Email de réinitialisation envoyé. Vérifie ta boîte mail.");
+            ShowSuccess("Reset email sent. Check your inbox.");
         }
         catch (PocketBaseException e)
         {
+            toast.Error($"Couldn't send the reset email. {e.Message}");
             if (this == null) return;
             ShowError(e.Message);
         }
         catch (System.Exception e)
         {
             Debug.LogException(e);
+            toast.Error("Couldn't send the reset email. Something went wrong; see the Console.");
             if (this == null) return;
             ShowError("Erreur inattendue — voir la Console.");
         }
@@ -282,7 +297,7 @@ public class BootAuthController : MonoBehaviour
     private void OnGuestClicked()
     {
         // La sauvegarde des robots exige un compte : pas d'acces invite pour l'instant
-        ShowError("Un compte est requis pour jouer (sauvegarde en ligne des robots).");
+        ShowError("You need an account to play: your robots are saved online.");
     }
 
     // =========================================================
@@ -295,8 +310,12 @@ public class BootAuthController : MonoBehaviour
         button.clicked += () =>
         {
             field.isPasswordField = !field.isPasswordField;
-            button.text = field.isPasswordField ? "VOIR" : "CACHER";
+            // IconButton du DS : pictogramme visible / hidden, nom accessible dans le tooltip
+            button.EnableInClassList("is-visible", !field.isPasswordField);
+            button.tooltip = field.isPasswordField ? "Show password" : "Hide password";
         };
+        button.text = "";
+        button.tooltip = "Show password";
     }
 
     private static string DisplayName(PocketBaseUser user)
@@ -322,10 +341,13 @@ public class BootAuthController : MonoBehaviour
 
     private void SetStatus(string message, string ussClass)
     {
+        // Notice du DS : fond *-soft, bord et texte de la tonalite, pictogramme
         statusLabel.text = message;
         statusLabel.RemoveFromClassList("status--error");
         statusLabel.RemoveFromClassList("status--ok");
-        if (!string.IsNullOrEmpty(ussClass))
-            statusLabel.AddToClassList(ussClass);
+        statusLabel.RemoveFromClassList("status--info");
+        statusLabel.EnableInClassList("status--hidden", string.IsNullOrEmpty(message));
+        if (!string.IsNullOrEmpty(message))
+            statusLabel.AddToClassList(string.IsNullOrEmpty(ussClass) ? "status--info" : ussClass);
     }
 }

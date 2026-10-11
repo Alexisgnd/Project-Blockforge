@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Thruster_N1_Lynx
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: THRUSTER LYNX
-  family: Propulseurs
-  description: "Propulseur d'appoint. Pouss\xE9e courte, consommation faible."
+  blockName: Thruster Lynx
+  family: Thrusters
+  description: A booster thruster. Short thrust, low consumption.
   category: 1
   costCpu: 9
   weightKg: 150

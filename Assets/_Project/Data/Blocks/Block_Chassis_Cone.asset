@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Chassis_Cone
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: "C\xD4NE"
-  family: "C\xF4ne"
-  description: Pointe conique pour nez et pare-chocs.
+  blockName: Cone
+  family: Cone
+  description: A conical tip for noses and bumpers.
   category: 0
   costCpu: 1
   weightKg: 45

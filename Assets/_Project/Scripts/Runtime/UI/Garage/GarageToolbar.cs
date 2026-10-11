@@ -19,10 +19,6 @@ public class GarageToolbar : MonoBehaviour
     public Image[] backgrounds = new Image[2];
     public Outline[] outlines = new Outline[2];
 
-    [Header("Couleurs")]
-    public Color normalBg = new(0.06f, 0.10f, 0.16f, 0.95f);
-    public Color selectedBg = new(0.09f, 0.16f, 0.30f, 1f);
-
     public event Action<int> ToolChanged;
     public int SelectedIndex { get; private set; } = -1;
 
@@ -64,12 +60,18 @@ public class GarageToolbar : MonoBehaviour
 
         SelectedIndex = index;
 
+        // ToolRail : l'outil courant est un IconButton "active" (DSElement)
         for (int i = 0; i < buttons.Length; i++)
         {
             bool selected = i == index;
+            if (buttons[i] != null && buttons[i].TryGetComponent<DSElement>(out var element))
+            {
+                element.Selected = selected;
+                continue;
+            }
             if (backgrounds[i] != null)
-                backgrounds[i].color = selected ? selectedBg : normalBg;
-            if (outlines[i] != null)
+                backgrounds[i].color = selected ? BlockforgeTheme.SurfaceSelected : BlockforgeTheme.SurfaceRaised;
+            if (outlines != null && i < outlines.Length && outlines[i] != null)
                 outlines[i].enabled = selected;
         }
 

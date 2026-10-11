@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Thruster_N3_Leopard
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: THRUSTER LEOPARD
-  family: Propulseurs
-  description: "Tuy\xE8re renforc\xE9e. Acc\xE9l\xE9ration soutenue en ligne droite."
+  blockName: Thruster Leopard
+  family: Thrusters
+  description: A reinforced nozzle. Sustained acceleration in a straight line.
   category: 1
   costCpu: 16
   weightKg: 240

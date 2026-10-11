@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Plasma_N3_Bombarder
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PLASMA BOMBARDER
-  family: Lanceur de plasma
-  description: "Tir en cloche \xE0 zone d'impact large. Id\xE9al contre les groupes."
+  blockName: Plasma Bombarder
+  family: Plasma launcher
+  description: Lobbed shots with a wide blast area. Ideal against groups.
   category: 2
   costCpu: 22
   weightKg: 270

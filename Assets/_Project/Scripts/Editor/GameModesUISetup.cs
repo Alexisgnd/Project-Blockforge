@@ -17,16 +17,16 @@ public static class GameModesUISetup
     private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
     private const string ModeDataDir = "Assets/_Project/Data/GameModes";
 
-    private static readonly Color ScreenBg = new(0.016f, 0.035f, 0.065f, 0.985f);
-    private static readonly Color CardBg = new(0.06f, 0.10f, 0.16f, 0.95f);
-    private static readonly Color PanelBg = new(0.05f, 0.08f, 0.13f, 0.9f);
-    private static readonly Color CoverPlaceholder = new(0.10f, 0.16f, 0.24f, 1f);
-    private static readonly Color Accent = new(0.23f, 0.51f, 0.96f);
-    private static readonly Color BlueBoxBg = new(0.09f, 0.16f, 0.30f, 0.95f);
-    private static readonly Color RedBoxBg = new(0.30f, 0.09f, 0.10f, 0.95f);
-    private static readonly Color TextMain = new(0.86f, 0.91f, 0.96f);
-    private static readonly Color TextDim = new(0.48f, 0.56f, 0.66f);
-    private static readonly Color TextBody = new(0.70f, 0.77f, 0.85f);
+    private static readonly Color ScreenBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Background, 0.985f);
+    private static readonly Color CardBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.95f);
+    private static readonly Color PanelBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.9f);
+    private static readonly Color CoverPlaceholder = BlockforgeTheme.SurfaceRaised;
+    private static readonly Color Accent = BlockforgeTheme.Accent;
+    private static readonly Color BlueBoxBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.AccentMuted, 0.95f);
+    private static readonly Color RedBoxBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.DangerMuted, 0.95f);
+    private static readonly Color TextMain = BlockforgeTheme.TextPrimary;
+    private static readonly Color TextDim = BlockforgeTheme.TextSecondary;
+    private static readonly Color TextBody = BlockforgeTheme.TextSecondary;
 
     [MenuItem("Blockforge/Setup MainMenu Play Screens")]
     public static void Setup()
@@ -76,7 +76,7 @@ public static class GameModesUISetup
         title.anchoredPosition = new Vector2(0, -50);
 
         var subtitle = CreateText(modesView, "Subtitle", "Choisissez votre mode de jeu", 16,
-                                  new Color(0.45f, 0.62f, 0.85f), TextAlignmentOptions.Center, FontStyles.Normal);
+                                  BlockforgeTheme.Accent, TextAlignmentOptions.Center, FontStyles.Normal);
         SetAnchors(subtitle, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         subtitle.sizeDelta = new Vector2(800, 30);
         subtitle.anchoredPosition = new Vector2(0, -108);
@@ -218,7 +218,7 @@ public static class GameModesUISetup
         backRect.anchoredPosition = new Vector2(80, 36);
         playMenu.backButton = backBtn;
 
-        var (playBtn, _) = CreateButton(details, "PlayButton", "JOUER", 18, Accent, Color.white);
+        var (playBtn, _) = CreateButton(details, "PlayButton", "JOUER", 18, Accent, BlockforgeTheme.OnAccent);
         var playRect = playBtn.GetComponent<RectTransform>();
         SetAnchors(playRect, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
         playRect.sizeDelta = new Vector2(340, 54);
@@ -240,6 +240,8 @@ public static class GameModesUISetup
         }
 
         EditorSceneManager.MarkSceneDirty(scene);
+        // Design system Blockforge : formes, etats, typo, libelles anglais
+        DesignSystemApply.ApplyToOpenScene();
         EditorSceneManager.SaveScene(scene);
         Debug.Log("[GameModesUISetup] Ecrans Modes de jeu + Details generes et cables.");
     }
@@ -265,7 +267,7 @@ public static class GameModesUISetup
         cover.offsetMax = new Vector2(-12, -12);
         widget.coverImage = cover.GetComponent<Image>();
 
-        var icon = CreatePanel(cover, "Icon", new Color(0.09f, 0.16f, 0.28f, 0.95f));
+        var icon = CreatePanel(cover, "Icon", BlockforgeTheme.WithAlpha(BlockforgeTheme.AccentMuted, 0.95f));
         SetAnchors(icon, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
         icon.sizeDelta = new Vector2(46, 46);
         icon.anchoredPosition = new Vector2(14, -14);
@@ -290,7 +292,7 @@ public static class GameModesUISetup
         widget.footerText = footer.GetComponent<TMP_Text>();
 
         var (configureBtn, _) = CreateButton(card, "ConfigureButton", "CONFIGURER", 13,
-                                             new Color(0.10f, 0.16f, 0.25f, 1f), TextMain);
+                                             BlockforgeTheme.SurfaceRaised, TextMain);
         var cfgRect = configureBtn.GetComponent<RectTransform>();
         SetAnchors(cfgRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
         cfgRect.sizeDelta = new Vector2(190, 42);
@@ -321,52 +323,49 @@ public static class GameModesUISetup
         {
             EnsureMode("Mode_TeamClash", m =>
             {
-                m.title = "TEAM CLASH";
-                m.tagline = "Deux équipes s'affrontent pour détruire tous les robots ennemis.";
-                m.description = "Deux équipes de quatre robots s'affrontent en combat direct. " +
-                                "Éliminez tous les robots adverses pour remporter la manche. " +
-                                "La première équipe à remporter trois manches gagne la partie.";
-                m.teamsLabel = "4v4"; m.durationLabel = "10-15 min"; m.ticketsLabel = "—";
-                m.respawnLabel = "Non"; m.teamSizeLabel = "4"; m.mapName = "Dust Arena";
-                m.objectivePrimary = "Détruisez tous les robots de l'équipe adverse.";
-                m.objectiveSecondary = "Protégez vos alliés : aucune réapparition en cours de manche.";
+                m.title = "Team Clash";
+                m.tagline = "Two teams fight to destroy every enemy robot.";
+                m.description = "Two teams of four robots meet head-on. Destroy every enemy robot to win " +
+                                "the round. The first team to win three rounds wins the match.";
+                m.teamsLabel = "4v4"; m.durationLabel = "10–15 min"; m.ticketsLabel = "—";
+                m.respawnLabel = "No"; m.teamSizeLabel = "4"; m.mapName = "Dust Arena";
+                m.objectivePrimary = "Destroy every robot on the enemy team.";
+                m.objectiveSecondary = "Protect your allies: there is no respawn during a round.";
             }),
             EnsureMode("Mode_Control", m =>
             {
-                m.title = "CONTROL";
-                m.tagline = "Contrôlez et conservez les points stratégiques pour gagner.";
-                m.description = "Deux équipes s'affrontent pour prendre le contrôle de points stratégiques " +
-                                "répartis sur la carte. Plus votre équipe contrôle de points, plus l'ennemi " +
-                                "perd des tickets. L'équipe qui réduit les tickets adverses à zéro remporte la partie.";
-                m.teamsLabel = "4v4"; m.durationLabel = "10-15 min"; m.ticketsLabel = "1 000";
-                m.respawnLabel = "Oui"; m.teamSizeLabel = "4"; m.mapName = "Outpost Valley";
-                m.objectivePrimary = "Contrôlez plus de points que l'ennemi pour le priver de tickets.";
-                m.objectiveSecondary = "Détruisez les robots ennemis pour réduire leur force.";
+                m.title = "Control";
+                m.tagline = "Capture and hold strategic points to win.";
+                m.description = "Two teams fight for strategic points spread across the map. The more points " +
+                                "your team holds, the more tickets the enemy loses. The first team to drain " +
+                                "the other's tickets to zero wins.";
+                m.teamsLabel = "4v4"; m.durationLabel = "10–15 min"; m.ticketsLabel = "1 000";
+                m.respawnLabel = "Yes"; m.teamSizeLabel = "4"; m.mapName = "Outpost Valley";
+                m.objectivePrimary = "Hold more points than the enemy to drain their tickets.";
+                m.objectiveSecondary = "Destroy enemy robots to weaken their team.";
             }),
             EnsureMode("Mode_FreeForAll", m =>
             {
-                m.title = "FREE FOR ALL";
-                m.tagline = "Chacun pour soi. Soyez le dernier robot en vie !";
-                m.description = "Huit robots, une seule règle : survivre. Pas d'alliés, pas de pitié. " +
-                                "Éliminez tout ce qui bouge et soyez le dernier robot opérationnel " +
-                                "pour remporter la partie.";
-                m.teamsLabel = "8"; m.durationLabel = "10-15 min"; m.ticketsLabel = "—";
-                m.respawnLabel = "Non"; m.teamSizeLabel = "1"; m.mapName = "Scrapyard";
-                m.objectivePrimary = "Soyez le dernier robot en vie sur le champ de bataille.";
-                m.objectiveSecondary = "Chaque élimination vous rapporte des ressources bonus.";
+                m.title = "Free for All";
+                m.tagline = "Every robot for itself. Be the last one standing.";
+                m.description = "Eight robots, one rule: survive. No allies, no mercy. Take out everything " +
+                                "that moves and be the last working robot to win the match.";
+                m.teamsLabel = "8"; m.durationLabel = "10–15 min"; m.ticketsLabel = "—";
+                m.respawnLabel = "No"; m.teamSizeLabel = "1"; m.mapName = "Scrapyard";
+                m.objectivePrimary = "Be the last robot standing on the battlefield.";
+                m.objectiveSecondary = "Every takedown earns you bonus resources.";
             }),
             EnsureMode("Mode_Custom", m =>
             {
-                m.title = "CUSTOM MATCH";
-                m.tagline = "Créez ou rejoignez une partie personnalisée.";
-                m.description = "Configurez votre propre partie : choisissez la carte, le mode, " +
-                                "le nombre de joueurs et les règles. Invitez vos amis ou ouvrez " +
-                                "la partie à tous.";
+                m.title = "Custom Match";
+                m.tagline = "Create or join a custom match.";
+                m.description = "Set up your own match: pick the map, the mode, the number of players and " +
+                                "the rules. Invite your friends or open the match to everyone.";
                 m.isCustom = true;
-                m.teamsLabel = "Libre"; m.durationLabel = "Libre"; m.ticketsLabel = "Configurable";
-                m.respawnLabel = "Configurable"; m.teamSizeLabel = "Libre"; m.mapName = "Au choix";
-                m.objectivePrimary = "Définissez vos propres règles de partie.";
-                m.objectiveSecondary = "Invitez vos amis avec un code de partie privée.";
+                m.teamsLabel = "Any"; m.durationLabel = "Any"; m.ticketsLabel = "Custom";
+                m.respawnLabel = "Custom"; m.teamSizeLabel = "Any"; m.mapName = "Your choice";
+                m.objectivePrimary = "Set your own match rules.";
+                m.objectiveSecondary = "Invite your friends with a private match code.";
             }),
         };
 

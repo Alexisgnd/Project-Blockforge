@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Plasma_N5_Devastator
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PLASMA DEVASTATOR
-  family: Lanceur de plasma
-  description: "Mortier plasma lourd. D\xE9g\xE2ts de zone d\xE9vastateurs."
+  blockName: Plasma Devastator
+  family: Plasma launcher
+  description: A heavy plasma mortar. Devastating area damage.
   category: 2
   costCpu: 35
   weightKg: 450

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Chassis_PenteConcave
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: PENTE CONCAVE
-  family: Pente
-  description: "Pente creus\xE9e pour gorges et prises d'air."
+  blockName: Concave Slope
+  family: Slope
+  description: A hollowed slope for channels and air intakes.
   category: 0
   costCpu: 1
   weightKg: 50

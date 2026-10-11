@@ -1,20 +1,38 @@
 /* =========================================================
-   BOOT AUTH — Style sombre sci-fi (login / register)
+   BOOT AUTH — design system Blockforge (Sign-in)
+   "The same tokens at one panel width, centred, control-lg
+   fields." Valeurs = tokens.json, theme dark (voir
+   BlockforgeTheme.cs) :
+   surface-base #171b24  surface-raised #1f2531
+   surface-panel #242b36 surface-inset #11151c
+   surface-hover #2c3441 border-subtle #303948
+   border-strong #74829a focus-ring #7fdcff
+   ink-primary #f2f5f7   ink-secondary #b3bdcb  ink-muted #959fb0
+   accent #39b8e8 / hover #63cdf5 / press #1f97c6 / soft #16394b
+   ink-on-accent #04121a
+   success #7fe8b8 / soft #133326   danger-ink #f5756d / soft #3a1614
+   Rayons : radius-sm 3px (champs, boutons), radius-lg 10px
+   (panneau = dialogue centre), radius-md 6px (notice).
+   Typo : Barlow (sans), Barlow Condensed (titres).
+   UI Toolkit n'a pas de text-transform : les textes en
+   capitales (titres, boutons) sont ecrits en capitales.
    ========================================================= */
 
 .screen {
     flex-grow: 1;
     justify-content: center;
     align-items: center;
-    background-color: rgb(9, 14, 22);
+    background-color: rgb(23, 27, 36);
+    -unity-font-definition: url("../Fonts/Barlow-Regular.ttf");
 }
 
-.game-title {
-    font-size: 42px;
-    letter-spacing: 12px;
-    color: rgb(220, 232, 245);
-    -unity-font-style: bold;
-    margin-bottom: 40px;
+/* Lockup horizontal : jamais sous 180 px de large */
+.game-logo {
+    width: 280px;
+    height: 76px;
+    margin-bottom: 32px;
+    background-image: url("../DesignSystem/Resources/DesignSystem/Logo/logo-horizontal.png");
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .auth-container {
@@ -23,60 +41,72 @@
     align-items: flex-start;
 }
 
-/* ------------------ Panneaux ------------------ */
+/* ------------------ Panneau (une seule largeur, centre) ------------------ */
 
 .panel {
-    width: 360px;
+    width: 400px;
     padding: 24px;
-    margin-left: 14px;
-    margin-right: 14px;
-    background-color: rgba(13, 21, 32, 0.92);
+    margin: 0 12px;
+    background-color: rgb(36, 43, 54);
     border-width: 1px;
-    border-color: rgb(42, 59, 82);
-    border-radius: 6px;
+    border-color: rgb(48, 57, 72);
+    border-radius: 10px;
 }
 
+/* display-md : Barlow Condensed 600, 24 px, capitales, 0.02em */
 .panel-title {
-    font-size: 20px;
-    letter-spacing: 3px;
-    color: rgb(220, 232, 245);
-    -unity-font-style: bold;
-    margin-bottom: 18px;
+    -unity-font-definition: url("../Fonts/BarlowCondensed-SemiBold.ttf");
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    color: rgb(242, 245, 247);
+    margin-bottom: 20px;
+    padding: 0;
 }
 
-/* ------------------ Champs texte ------------------ */
+/* ------------------ Champs (control-lg) ------------------ */
 
 .field {
-    height: 42px;
-    margin-bottom: 12px;
+    height: 44px;
+    margin: 0 0 12px 0;
     flex-grow: 1;
 }
 
 .field > .unity-text-field__input {
-    background-color: rgb(16, 26, 40);
+    background-color: rgb(17, 21, 28);
     border-width: 1px;
-    border-color: rgb(42, 59, 82);
-    border-radius: 4px;
-    color: rgb(220, 232, 245);
+    border-color: rgb(116, 130, 154);
+    border-radius: 3px;
+    color: rgb(242, 245, 247);
     padding-left: 12px;
     padding-right: 12px;
-    font-size: 14px;
-    --unity-cursor-color: rgb(90, 156, 220);
+    font-size: 15px;
+    --unity-cursor-color: rgb(57, 184, 232);
+}
+
+.field > .unity-text-field__input:hover {
+    background-color: rgb(17, 21, 28);
+    border-color: rgb(116, 130, 154);
 }
 
 .field > .unity-text-field__input:focus {
-    border-color: rgb(59, 130, 246);
+    border-color: rgb(57, 184, 232);
 }
 
 .field .unity-text-element--inner-input-field-component {
-    color: rgb(220, 232, 245);
+    color: rgb(242, 245, 247);
 }
 
-/* ------------------ Ligne mot de passe + bouton oeil ------------------ */
+/* Texte indicatif : ink-muted */
+.field .unity-base-text-field__placeholder,
+.field > .unity-text-field__input > .unity-text-element--placeholder {
+    color: rgb(149, 159, 176);
+}
+
+/* ------------------ Mot de passe + IconButton (visible / hidden) ------------------ */
 
 .password-row {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .password-field {
@@ -85,73 +115,127 @@
 }
 
 .eye-button {
-    height: 42px;
-    width: 58px;
-    margin-left: 6px;
-    margin-bottom: 12px;
-    background-color: rgb(16, 26, 40);
+    height: 44px;
+    width: 44px;
+    margin: 0 0 12px 8px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
     border-width: 1px;
-    border-color: rgb(42, 59, 82);
-    border-radius: 4px;
-    color: rgb(122, 143, 168);
-    font-size: 10px;
-    letter-spacing: 1px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 3px;
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/visible.png");
+    -unity-background-image-tint-color: rgb(179, 189, 203);
+    background-size: 20px 20px;
+    background-repeat: no-repeat no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    transition-property: background-color, -unity-background-image-tint-color;
+    transition-duration: 0.08s;
+    transition-timing-function: ease-out;
+}
+
+.eye-button.is-visible {
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/hidden.png");
 }
 
 .eye-button:hover {
-    color: rgb(220, 232, 245);
-    border-color: rgb(59, 130, 246);
+    background-color: rgb(44, 52, 65);
+    -unity-background-image-tint-color: rgb(242, 245, 247);
+}
+
+.eye-button:focus {
+    border-color: rgb(127, 220, 255);
 }
 
 /* ------------------ Boutons ------------------ */
 
+/* Button primary, taille lg : accent + ink-on-accent */
 .primary-button {
     height: 44px;
-    margin-top: 6px;
-    background-color: rgb(37, 99, 190);
-    border-width: 0;
-    border-radius: 4px;
-    color: rgb(235, 243, 252);
+    margin: 8px 0 0 0;
+    background-color: rgb(57, 184, 232);
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 3px;
+    color: rgb(4, 18, 26);
+    -unity-font-definition: url("../Fonts/Barlow-SemiBold.ttf");
     font-size: 14px;
-    letter-spacing: 2px;
-    -unity-font-style: bold;
+    letter-spacing: 0.6px;
+    transition-property: background-color, border-color;
+    transition-duration: 0.08s;
+    transition-timing-function: ease-out;
 }
 
 .primary-button:hover {
-    background-color: rgb(59, 130, 246);
+    background-color: rgb(99, 205, 245);
 }
 
 .primary-button:active {
-    background-color: rgb(29, 78, 152);
+    background-color: rgb(31, 151, 198);
 }
 
+/* Anneau de focus clavier (focus-ring) */
+.primary-button:focus {
+    border-color: rgb(127, 220, 255);
+}
+
+.primary-button:disabled {
+    opacity: 0.38;
+}
+
+/* Button secondary : accent-soft dans un bord border-strong */
 .secondary-button {
     height: 44px;
-    background-color: rgba(16, 26, 40, 0.6);
+    margin: 0;
+    background-color: rgb(22, 57, 75);
     border-width: 1px;
-    border-color: rgb(72, 96, 128);
-    border-radius: 4px;
-    color: rgb(200, 214, 230);
-    font-size: 13px;
-    letter-spacing: 2px;
+    border-color: rgb(116, 130, 154);
+    border-radius: 3px;
+    color: rgb(242, 245, 247);
+    -unity-font-definition: url("../Fonts/Barlow-SemiBold.ttf");
+    font-size: 14px;
+    letter-spacing: 0.6px;
+    transition-property: background-color, border-color;
+    transition-duration: 0.08s;
+    transition-timing-function: ease-out;
 }
 
 .secondary-button:hover {
-    border-color: rgb(59, 130, 246);
-    color: rgb(235, 243, 252);
+    border-color: rgb(57, 184, 232);
+    background-color: rgb(44, 52, 65);
 }
 
+.secondary-button:focus {
+    border-color: rgb(127, 220, 255);
+}
+
+.secondary-button:disabled {
+    opacity: 0.38;
+}
+
+/* Button ghost : texte seul, ink-secondary -> ink-primary au survol */
 .link-button {
     background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    padding: 0;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 3px;
+    padding: 4px 8px;
     margin: 0;
-    color: rgb(90, 156, 220);
-    font-size: 12px;
+    color: rgb(179, 189, 203);
+    -unity-font-definition: url("../Fonts/Barlow-SemiBold.ttf");
+    font-size: 13px;
+    transition-property: background-color, color;
+    transition-duration: 0.08s;
+    transition-timing-function: ease-out;
 }
 
 .link-button:hover {
-    color: rgb(140, 190, 240);
+    color: rgb(242, 245, 247);
+    background-color: rgb(44, 52, 65);
+}
+
+.link-button:focus {
+    border-color: rgb(127, 220, 255);
 }
 
 /* ------------------ Divers ------------------ */
@@ -159,7 +243,7 @@
 .forgot-row {
     flex-direction: row;
     justify-content: flex-end;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .or-row {
@@ -172,43 +256,69 @@
 .or-line {
     flex-grow: 1;
     height: 1px;
-    background-color: rgb(42, 59, 82);
+    background-color: rgb(48, 57, 72);
 }
 
+/* label : 11 px, 600, capitales, 0.09em */
 .or-label {
-    margin-left: 10px;
-    margin-right: 10px;
-    color: rgb(122, 143, 168);
+    margin-left: 12px;
+    margin-right: 12px;
+    color: rgb(149, 159, 176);
+    -unity-font-definition: url("../Fonts/Barlow-SemiBold.ttf");
     font-size: 11px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
 }
 
 .register-hint {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    margin-top: 18px;
+    margin-top: 16px;
 }
 
 .hint-label {
-    color: rgb(122, 143, 168);
-    font-size: 12px;
+    color: rgb(179, 189, 203);
+    font-size: 13px;
     margin-right: 4px;
 }
 
-/* ------------------ Label de statut ------------------ */
+/* ------------------ Notice de statut (icone + mot + couleur) ------------------ */
 
 .status-label {
+    width: 400px;
     margin-top: 24px;
-    min-height: 20px;
+    padding: 12px 12px 12px 40px;
+    border-width: 1px;
+    border-radius: 6px;
     font-size: 13px;
-    color: rgb(122, 143, 168);
+    white-space: normal;
+    background-size: 16px 16px;
+    background-repeat: no-repeat no-repeat;
+    background-position-x: left 12px;
+    background-position-y: center;
+    background-color: rgb(22, 57, 75);
+    border-color: rgb(57, 184, 232);
+    color: rgb(57, 184, 232);
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/info.png");
+    -unity-background-image-tint-color: rgb(57, 184, 232);
+}
+
+.status--hidden {
+    display: none;
 }
 
 .status--error {
-    color: rgb(240, 100, 100);
+    background-color: rgb(58, 22, 20);
+    border-color: rgb(245, 117, 109);
+    color: rgb(245, 117, 109);
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/danger.png");
+    -unity-background-image-tint-color: rgb(245, 117, 109);
 }
 
 .status--ok {
-    color: rgb(110, 200, 140);
+    background-color: rgb(19, 51, 38);
+    border-color: rgb(127, 232, 184);
+    color: rgb(127, 232, 184);
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/success-circle.png");
+    -unity-background-image-tint-color: rgb(127, 232, 184);
 }

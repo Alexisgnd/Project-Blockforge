@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rail_N4_Erazer
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RAIL ERAZER
-  family: "Canon \xE9lectrique"
-  description: "Rail de si\xE8ge. Un tir, une ligne enti\xE8re effac\xE9e."
+  blockName: Rail Erazer
+  family: Rail cannon
+  description: A siege rail. One shot erases a whole line.
   category: 2
   costCpu: 40
   weightKg: 500

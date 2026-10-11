@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Nano_N3_Constructor
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: NANO CONSTRUCTOR
-  family: Distributeur nano / Healer
-  description: "Reconstruit les blocs d\xE9truits en pleine bataille."
+  blockName: Nano Constructor
+  family: Nano dispenser
+  description: Rebuilds destroyed blocks mid-battle.
   category: 3
   costCpu: 24
   weightKg: 380

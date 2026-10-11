@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N4_Eagle
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER EAGLE
-  family: Ailerons
-  description: "Aileron blind\xE9 \xE0 longeron relev\xE9. Stabilise les ch\xE2ssis
-    moyens."
+  blockName: Rudder Eagle
+  family: Rudders
+  description: An armoured rudder with a raised spar. Steadies medium chassis.
   category: 1
   costCpu: 13
   weightKg: 110

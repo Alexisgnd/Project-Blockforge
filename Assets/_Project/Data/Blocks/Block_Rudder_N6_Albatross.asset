@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Rudder_N6_Albatross
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: RUDDER ALBATROSS
-  family: Ailerons
-  description: "Grande d\xE9rive \xE0 pointe dor\xE9e. Contr\xF4le pr\xE9cis \xE0
-    haute vitesse."
+  blockName: Rudder Albatross
+  family: Rudders
+  description: A large fin with a golden tip. Precise control at high speed.
   category: 1
   costCpu: 20
   weightKg: 160

@@ -12,20 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6e0803aededa1147834201a5add33a8, type: 3}
   m_Name: Mode_Custom
   m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
-  title: CUSTOM MATCH
-  tagline: "Cr\xE9ez ou rejoignez une partie personnalis\xE9e."
-  description: "Configurez votre propre partie : choisissez la carte, le mode, le
-    nombre de joueurs et les r\xE8gles. Invitez vos amis ou ouvrez la partie \xE0
-    tous."
+  title: 'Custom Match'
+  tagline: 'Create or join a custom match.'
+  description: 'Set up your own match: pick the map, the mode, the number of players and the rules. Invite your friends or open the match to everyone.'
   isCustom: 1
-  teamsLabel: Libre
-  durationLabel: Libre
-  ticketsLabel: Configurable
-  respawnLabel: Configurable
-  teamSizeLabel: Libre
-  objectivePrimary: "D\xE9finissez vos propres r\xE8gles de partie."
-  objectiveSecondary: "Invitez vos amis avec un code de partie priv\xE9e."
-  mapName: Au choix
+  teamsLabel: 'Any'
+  durationLabel: 'Any'
+  ticketsLabel: 'Custom'
+  respawnLabel: 'Custom'
+  teamSizeLabel: 'Any'
+  objectivePrimary: 'Set your own match rules.'
+  objectiveSecondary: 'Invite your friends with a private match code.'
+  mapName: 'Your choice'
   sceneName: Arena
   icon: {fileID: 0}
   coverImage: {fileID: 0}

@@ -13,13 +13,11 @@ public class InventoryItemCard : MonoBehaviour
     public Button button;
     public Image background;
     public Outline outline;
+    [Tooltip("Barre de grade de 3 px a gauche (grade-raw par defaut)")]
+    public Image gradeBar;
     public Image iconImage;
     public TMP_Text nameText;
     public TMP_Text costText;
-
-    [Header("Couleurs")]
-    public Color normalBg = new(0.06f, 0.10f, 0.16f, 0.95f);
-    public Color selectedBg = new(0.09f, 0.16f, 0.30f, 1f);
 
     public BlockDefinition Definition { get; private set; }
 
@@ -27,7 +25,7 @@ public class InventoryItemCard : MonoBehaviour
     {
         Definition = def;
         nameText.text = def.blockName;
-        costText.text = $"{def.costCpu} CPU";
+        costText.text = BlockforgeTheme.Qty(def.costCpu, "CPU");
         if (def.icon != null)
         {
             // Blanc : la couleur de fond de la case teinterait le sprite
@@ -40,9 +38,16 @@ public class InventoryItemCard : MonoBehaviour
         button.onClick.AddListener(() => onSelect?.Invoke(Definition));
     }
 
+    // PartCard : surface-selected + border-accent (porte par DSElement)
     public void SetSelected(bool selected)
     {
-        background.color = selected ? selectedBg : normalBg;
-        outline.enabled = selected;
+        if (TryGetComponent<DSElement>(out var element))
+        {
+            element.Selected = selected;
+            return;
+        }
+        background.color = selected ? BlockforgeTheme.SurfaceSelected : BlockforgeTheme.SurfacePanel;
+        if (outline != null)
+            outline.enabled = selected;
     }
 }

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02e4b547648df3d45b1ee5c817bd22cd, type: 3}
   m_Name: Block_Laser_N4_Vaporizer
   m_EditorClassIdentifier: Blockforge.Runtime::BlockDefinition
-  blockName: LASER VAPORIZER
+  blockName: Laser Vaporizer
   family: Laser
-  description: "\xC9metteur haute \xE9nergie. Vaporise les surfaces expos\xE9es."
+  description: A high-energy emitter. Vaporizes exposed surfaces.
   category: 2
   costCpu: 24
   weightKg: 280
