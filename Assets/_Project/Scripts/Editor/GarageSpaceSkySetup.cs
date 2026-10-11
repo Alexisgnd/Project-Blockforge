@@ -22,10 +22,14 @@ using UnityEngine.Rendering.HighDefinition;
 //   equirectangulaire generee par script), poids
 //   d'exposition 0 : les etoiles gardent leur eclat quelle
 //   que soit l'exposition automatique ;
-// - "GarageExposureVolume" : l'exposition auto mesurait la
-//   moyenne de l'image, fond noir compris, et surexposait
-//   tout. Mode histogramme : les pixels les plus sombres
-//   (l'espace) sont ignores, et l'exposition est bornee.
+// - "GarageExposureVolume" : exposition FIXE (EV100 11,5).
+//   L'exposition automatique (histogramme) se calait sur les
+//   neons et la grille emissive : en regardant le sol elle
+//   montait a sa borne haute et tout le hangar devenait noir,
+//   puis restait bloquee la (cible a 0 dans le debug HDRP,
+//   seul un redemarrage d'Unity la debloquait). L'eclairage du
+//   hangar ne change pas : une valeur fixe suffit et ne
+//   "pompe" plus.
 // Relancable : met a jour texture, materiau, dome, camera,
 // exposition (les valeurs se retouchent ensuite dans
 // Art/Garage/GarageExposureProfile).
@@ -42,9 +46,7 @@ public static class GarageSpaceSkySetup
     // Exposition (EV100) : bornes autour de l'exposition du garage avec le
     // ciel du projet (soleil ~18 000 lux) ; histogramme = part des pixels
     // pris en compte, du plus sombre au plus clair (0-50 % ignores).
-    private const float ExposureMin = 11.5f;
-    private const float ExposureMax = 14f;
-    private static readonly Vector2 HistogramPercentages = new(50f, 90f);
+    private const float FixedExposure = 11.5f;
     private const float DomeRadius = 2000f; // camera : far clip 1 000 km
 
     // Eclat des etoiles (emissif lineaire, hors exposition) : 1 = blanc,
@@ -79,7 +81,7 @@ public static class GarageSpaceSkySetup
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[GarageSpaceSky] Ciel spatial applique au Garage : dome '{DomeName}' (rayon {DomeRadius} m), " +
-                  $"fond noir sur {cameras} camera(s), exposition histogramme [{ExposureMin} ; {ExposureMax}] EV, " +
+                  $"fond noir sur {cameras} camera(s), exposition fixe {FixedExposure} EV, " +
                   "eclairage du ciel du projet conserve. Scene sauvegardee.");
     }
 
@@ -194,13 +196,17 @@ public static class GarageSpaceSkySetup
             profile = ScriptableObject.CreateInstance<VolumeProfile>();
             AssetDatabase.CreateAsset(profile, ExposureProfilePath);
 
-            var exposure = profile.Add<Exposure>(false);
-            exposure.name = nameof(Exposure);
-            AssetDatabase.AddObjectToAsset(exposure, profile);
-            exposure.mode.Override(ExposureMode.AutomaticHistogram);
-            exposure.limitMin.Override(ExposureMin);
-            exposure.limitMax.Override(ExposureMax);
-            exposure.histogramPercentages.Override(HistogramPercentages);
+            var created = profile.Add<Exposure>(false);
+            created.name = nameof(Exposure);
+            AssetDatabase.AddObjectToAsset(created, profile);
+        }
+
+        // Exposition fixe, reappliquee a chaque setup
+        if (profile.TryGet<Exposure>(out var exposure))
+        {
+            exposure.mode.Override(ExposureMode.Fixed);
+            exposure.fixedExposure.Override(FixedExposure);
+            EditorUtility.SetDirty(exposure);
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
         }
