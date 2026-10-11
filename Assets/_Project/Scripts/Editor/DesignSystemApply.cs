@@ -304,11 +304,20 @@ public static class DesignSystemApply
         return x + width + BlockforgeTheme.Space2;
     }
 
-    private static readonly (string card, string icon)[] ModeIcons =
+    // Pictogramme de chaque mode, par nom d'asset (Data/GameModes)
+    private static readonly Dictionary<string, string> ModeIcons = new()
     {
-        ("Card_TEAM CLASH", "group"), ("Card_CONTROL", "objective"), ("Card_FREE FOR ALL", "skull"), ("Card_CUSTOM MATCH", "settings"),
+        { "Mode_TeamClash", "group" }, { "Mode_Control", "objective" },
+        { "Mode_FreeForAll", "skull" }, { "Mode_Custom", "settings" },
     };
 
+    private static string ModeIcon(GameModeDefinition def)
+    {
+        return def != null && ModeIcons.TryGetValue(def.name, out var icon) ? icon : "objective";
+    }
+
+    // Ecran Modes de jeu, sans apercu : cartes = pictogramme dans un puits,
+    // titre, accroche, chiffres ; fiche = en-tete + panneaux Details / Objectives
     private static void ApplyPlayScreen()
     {
         var screen = F("PlayScreen");
@@ -319,19 +328,25 @@ public static class DesignSystemApply
         Txt(T("PlayScreen/ModesView/Title"), DSTextStyle.DisplayXL, BlockforgeTheme.InkPrimary, "Game modes");
         Txt(T("PlayScreen/ModesView/Subtitle"), DSTextStyle.Body, BlockforgeTheme.InkSecondary, "Choose how you want to play.");
 
-        foreach (var (cardName, icon) in ModeIcons)
+        var playMenu = screen.GetComponent<PlayMenuController>();
+        var cards = playMenu != null && playMenu.cards != null ? playMenu.cards : new GameModeCard[0];
+        for (int i = 0; i < cards.Length; i++)
         {
-            var card = F($"PlayScreen/ModesView/{cardName}");
-            if (card == null)
+            if (cards[i] == null)
                 continue;
+            var card = cards[i].transform;
+            var def = playMenu.definitions != null && i < playMenu.definitions.Length ? playMenu.definitions[i] : null;
+
             El(card, DSRole.Card);
-            var cover = card.Find("Cover");
-            El(cover, DSRole.Inset);
-            var iconImage = cover != null ? cover.Find("Icon")?.GetComponent<Image>() : null;
-            SetIcon(iconImage, icon, BlockforgeTheme.InkSecondary, 40f);
-            Txt(card.Find("Title")?.GetComponent<TMP_Text>(), DSTextStyle.TitleMD, BlockforgeTheme.InkPrimary);
-            Txt(card.Find("Description")?.GetComponent<TMP_Text>(), DSTextStyle.BodySM, BlockforgeTheme.InkSecondary);
-            Txt(card.Find("Footer")?.GetComponent<TMP_Text>(), DSTextStyle.ReadoutSM, BlockforgeTheme.InkMuted);
+            El(card.Find("IconFrame"), DSRole.Inset);
+            SetIcon(card.Find("IconFrame/Icon")?.GetComponent<Image>(), ModeIcon(def), BlockforgeTheme.InkSecondary, 0f);
+            Txt(card.Find("Title")?.GetComponent<TMP_Text>(), DSTextStyle.TitleLG, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.Left);
+            Txt(card.Find("Description")?.GetComponent<TMP_Text>(), DSTextStyle.BodySM, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.TopLeft);
+            for (int r = 0; r < 2; r++)
+            {
+                Txt(card.Find($"Stats/Row_{r}_Label")?.GetComponent<TMP_Text>(), DSTextStyle.Caption, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.Left);
+                Txt(card.Find($"Stats/Row_{r}_Value")?.GetComponent<TMP_Text>(), DSTextStyle.ReadoutMD, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.Right);
+            }
             var configure = card.Find("ConfigureButton");
             if (configure != null)
             {
@@ -342,21 +357,22 @@ public static class DesignSystemApply
             }
         }
 
-        // Fiche d'un mode
+        // Fiche d'un mode (le pictogramme est repris de la carte a l'ouverture)
         const string d = "PlayScreen/DetailsView/";
-        SetIcon(F(d + "Icon")?.GetComponent<Image>(), "objective", BlockforgeTheme.InkSecondary, 0f);
+        El(F(d + "IconFrame"), DSRole.Inset);
+        SetIcon(F(d + "IconFrame/Icon")?.GetComponent<Image>(), "objective", BlockforgeTheme.InkSecondary, 0f);
         Txt(T(d + "Title"), DSTextStyle.DisplayXL, BlockforgeTheme.InkPrimary);
         Txt(T(d + "Tagline"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
         Txt(T(d + "Description"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
-        El(F(d + "Cover"), DSRole.Inset);
 
         El(F(d + "DetailsPanel"), DSRole.Panel);
         Txt(T(d + "DetailsPanel/SectionTitle"), DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, "Details");
-        string[] rows = { "Teams", "Duration", "Tickets", "Respawn", "Team size" };
+        string[] rows = { "Teams", "Duration", "Tickets", "Respawn", "Team size", "Map" };
         for (int i = 0; i < rows.Length; i++)
         {
             Txt(T($"{d}DetailsPanel/Row_{i}_Label"), DSTextStyle.Caption, BlockforgeTheme.InkSecondary, rows[i]);
-            Txt(T($"{d}DetailsPanel/Row_{i}_Value"), DSTextStyle.ReadoutMD, BlockforgeTheme.InkPrimary);
+            // Le nom de carte est du texte : style titre plutot que chiffres
+            Txt(T($"{d}DetailsPanel/Row_{i}_Value"), i == 5 ? DSTextStyle.TitleSM : DSTextStyle.ReadoutMD, BlockforgeTheme.InkPrimary);
         }
 
         El(F(d + "ObjectivesPanel"), DSRole.Panel);
@@ -365,11 +381,6 @@ public static class DesignSystemApply
         Txt(T(d + "ObjectivesPanel/ObjectivePrimary/Text"), DSTextStyle.Body, BlockforgeTheme.InkPrimary);
         El(F(d + "ObjectivesPanel/ObjectiveSecondary"), DSRole.Inset);
         Txt(T(d + "ObjectivesPanel/ObjectiveSecondary/Text"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
-
-        El(F(d + "MapPanel"), DSRole.Panel);
-        Txt(T(d + "MapPanel/SectionTitle"), DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, "Sample map");
-        El(F(d + "MapPanel/MapImage"), DSRole.Inset);
-        Txt(T(d + "MapPanel/MapImage/MapName"), DSTextStyle.TitleMD, BlockforgeTheme.InkPrimary);
 
         DialogButton(F(d + "BackButton"), DSRole.ButtonGhost, DSTextStyle.ButtonMD, "Back", BlockforgeTheme.ControlMd);
         DialogButton(F(d + "PlayButton"), DSRole.ButtonPrimary, DSTextStyle.ButtonLG, "Play", BlockforgeTheme.ControlLg);

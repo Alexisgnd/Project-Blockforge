@@ -8,6 +8,9 @@ using UnityEngine.UI;
 // =========================================================
 // SETUP DES ECRANS "MODES DE JEU" + "DETAILS D'UN MODE"
 // Menu : Blockforge > Setup MainMenu Play Screens
+// Pas d'apercu : les cartes et la fiche n'ont plus d'image de
+// couverture ni de carte (pictogramme du mode a la place, carte
+// d'exemple en ligne de texte dans le panneau Details).
 // A lancer APRES "Setup MainMenu UI" (il a besoin du
 // MainCanvas et du MenuManager existants).
 // =========================================================
@@ -27,6 +30,15 @@ public static class GameModesUISetup
     private static readonly Color TextMain = BlockforgeTheme.TextPrimary;
     private static readonly Color TextDim = BlockforgeTheme.TextSecondary;
     private static readonly Color TextBody = BlockforgeTheme.TextSecondary;
+
+    // Gabarits (px, canvas de reference) : cartes compactes, fiche en colonne
+    private const float CardWidth = 320f;
+    private const float CardHeight = 340f;
+    private const float CardGap = 24f;
+    private const float DetailWidth = 1200f;
+    private const float DetailsPanelWidth = 460f;
+    private const float PanelGap = 24f;
+    private const float PanelHeight = 400f;
 
     [MenuItem("Blockforge/Setup MainMenu Play Screens")]
     public static void Setup()
@@ -65,97 +77,88 @@ public static class GameModesUISetup
         playMenu.definitions = definitions;
 
         // =====================================================
-        // VUE 1 : LISTE DES MODES
+        // VUE 1 : LISTE DES MODES (cartes sans apercu)
         // =====================================================
         var modesView = CreateUI(screen, "ModesView");
         StretchFull(modesView);
 
-        var title = CreateText(modesView, "Title", "MODES DE JEU", 42, TextMain, TextAlignmentOptions.Center, FontStyles.Bold);
+        var title = CreateText(modesView, "Title", "Game modes", 42, TextMain, TextAlignmentOptions.Center, FontStyles.Bold);
         SetAnchors(title, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         title.sizeDelta = new Vector2(800, 60);
         title.anchoredPosition = new Vector2(0, -50);
 
-        var subtitle = CreateText(modesView, "Subtitle", "Choisissez votre mode de jeu", 16,
-                                  BlockforgeTheme.Accent, TextAlignmentOptions.Center, FontStyles.Normal);
+        var subtitle = CreateText(modesView, "Subtitle", "Choose how you want to play.", 16,
+                                  TextDim, TextAlignmentOptions.Center, FontStyles.Normal);
         SetAnchors(subtitle, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
         subtitle.sizeDelta = new Vector2(800, 30);
         subtitle.anchoredPosition = new Vector2(0, -108);
 
         var cards = new GameModeCard[definitions.Length];
-        float cardW = 300f, spacing = 40f;
-        float totalW = definitions.Length * cardW + (definitions.Length - 1) * spacing;
+        float totalW = definitions.Length * CardWidth + (definitions.Length - 1) * CardGap;
         for (int i = 0; i < definitions.Length; i++)
         {
-            float x = -totalW / 2f + cardW / 2f + i * (cardW + spacing);
-            cards[i] = BuildModeCard(modesView, $"Card_{definitions[i].title}", x);
+            float x = -totalW / 2f + CardWidth / 2f + i * (CardWidth + CardGap);
+            cards[i] = BuildModeCard(modesView, $"Card_{i}", x);
         }
         playMenu.cards = cards;
 
         // =====================================================
-        // VUE 2 : FICHE DETAIL
+        // VUE 2 : FICHE DETAIL (colonne de 1200 px centree)
+        // En-tete (pictogramme, titre, accroche, description)
+        // puis deux panneaux : Details (dont la carte d'exemple)
+        // et Objectives. Plus d'image de couverture ni de carte.
         // =====================================================
         var details = CreateUI(screen, "DetailsView");
         StretchFull(details);
+        const float left = -DetailWidth / 2f;
 
-        // Header gauche
-        var icon = CreatePanel(details, "Icon", Accent);
-        SetAnchors(icon, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        icon.sizeDelta = new Vector2(56, 56);
-        icon.anchoredPosition = new Vector2(80, -50);
+        var iconFrame = CreatePanel(details, "IconFrame", CoverPlaceholder);
+        TopCenter(iconFrame, left, -40, 72, 72);
+        var icon = CreatePanel(iconFrame, "Icon", TextDim);
+        SetAnchors(icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        icon.sizeDelta = new Vector2(40, 40);
+        icon.anchoredPosition = Vector2.zero;
+        icon.GetComponent<Image>().raycastTarget = false;
         playMenu.detailIcon = icon.GetComponent<Image>();
 
-        var dTitle = CreateText(details, "Title", "CONTROL", 40, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
-        SetAnchors(dTitle, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        dTitle.sizeDelta = new Vector2(560, 50);
-        dTitle.anchoredPosition = new Vector2(160, -46);
+        var dTitle = CreateText(details, "Title", "Mode", 40, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
+        TopCenter(dTitle, left + 96, -36, DetailWidth - 96, 50);
         playMenu.detailTitle = dTitle.GetComponent<TMP_Text>();
 
         var dTagline = CreateText(details, "Tagline", "Tagline", 15, TextDim, TextAlignmentOptions.TopLeft, FontStyles.Normal);
-        SetAnchors(dTagline, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        dTagline.sizeDelta = new Vector2(540, 44);
-        dTagline.anchoredPosition = new Vector2(162, -100);
+        TopCenter(dTagline, left + 96, -86, DetailWidth - 96, 28);
         playMenu.detailTagline = dTagline.GetComponent<TMP_Text>();
 
         var dDesc = CreateText(details, "Description", "Description", 15, TextBody, TextAlignmentOptions.TopLeft, FontStyles.Normal);
-        SetAnchors(dDesc, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        dDesc.sizeDelta = new Vector2(640, 150);
-        dDesc.anchoredPosition = new Vector2(80, -165);
+        TopCenter(dDesc, left, -140, 760, 90);
         playMenu.detailDescription = dDesc.GetComponent<TMP_Text>();
-
-        // Grande image (droite)
-        var cover = CreatePanel(details, "Cover", CoverPlaceholder);
-        SetAnchors(cover, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
-        cover.sizeDelta = new Vector2(640, 300);
-        cover.anchoredPosition = new Vector2(-80, -40);
-        playMenu.detailCover = cover.GetComponent<Image>();
 
         // ---------- Panneau DETAILS ----------
         var detailsPanel = CreatePanel(details, "DetailsPanel", PanelBg);
-        SetAnchors(detailsPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        detailsPanel.sizeDelta = new Vector2(430, 390);
-        detailsPanel.anchoredPosition = new Vector2(80, -370);
+        TopCenter(detailsPanel, left, -250, DetailsPanelWidth, PanelHeight);
 
-        CreateSectionTitle(detailsPanel, "DÉTAILS");
+        CreateSectionTitle(detailsPanel, "Details");
 
         var rows = new (string label, string field)[]
         {
-            ("ÉQUIPES", nameof(PlayMenuController.detailTeams)),
-            ("DURÉE", nameof(PlayMenuController.detailDuration)),
-            ("NOMBRE DE TICKETS", nameof(PlayMenuController.detailTickets)),
-            ("RÉAPPARITION", nameof(PlayMenuController.detailRespawn)),
-            ("TAILLE DE L'ÉQUIPE", nameof(PlayMenuController.detailTeamSize)),
+            ("Teams", nameof(PlayMenuController.detailTeams)),
+            ("Duration", nameof(PlayMenuController.detailDuration)),
+            ("Tickets", nameof(PlayMenuController.detailTickets)),
+            ("Respawn", nameof(PlayMenuController.detailRespawn)),
+            ("Team size", nameof(PlayMenuController.detailTeamSize)),
+            ("Map", nameof(PlayMenuController.detailMapName)),
         };
         for (int i = 0; i < rows.Length; i++)
         {
-            float y = -64f - i * 60f;
+            float y = -64f - i * 52f;
             var label = CreateText(detailsPanel, $"Row_{i}_Label", rows[i].label, 14, TextDim, TextAlignmentOptions.Left, FontStyles.Normal);
             SetAnchors(label, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             label.offsetMin = new Vector2(24, y - 44);
-            label.offsetMax = new Vector2(-150, y);
+            label.offsetMax = new Vector2(-200, y);
 
             var value = CreateText(detailsPanel, $"Row_{i}_Value", "—", 15, TextMain, TextAlignmentOptions.Right, FontStyles.Bold);
             SetAnchors(value, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            value.offsetMin = new Vector2(24, y - 44);
+            value.offsetMin = new Vector2(140, y - 44);
             value.offsetMax = new Vector2(-24, y);
 
             typeof(PlayMenuController).GetField(rows[i].field)
@@ -164,17 +167,16 @@ public static class GameModesUISetup
 
         // ---------- Panneau OBJECTIFS ----------
         var objectivesPanel = CreatePanel(details, "ObjectivesPanel", PanelBg);
-        SetAnchors(objectivesPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        objectivesPanel.sizeDelta = new Vector2(510, 390);
-        objectivesPanel.anchoredPosition = new Vector2(560, -370);
+        TopCenter(objectivesPanel, left + DetailsPanelWidth + PanelGap, -250,
+                  DetailWidth - DetailsPanelWidth - PanelGap, PanelHeight);
 
-        CreateSectionTitle(objectivesPanel, "OBJECTIFS");
+        CreateSectionTitle(objectivesPanel, "Objectives");
 
         var blueBox = CreatePanel(objectivesPanel, "ObjectivePrimary", BlueBoxBg);
         SetAnchors(blueBox, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        blueBox.offsetMin = new Vector2(24, -184);
+        blueBox.offsetMin = new Vector2(24, -210);
         blueBox.offsetMax = new Vector2(-24, -64);
-        var blueText = CreateText(blueBox, "Text", "Objectif principal", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
+        var blueText = CreateText(blueBox, "Text", "Primary objective", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
         StretchFull(blueText);
         blueText.offsetMin = new Vector2(18, 12);
         blueText.offsetMax = new Vector2(-18, -12);
@@ -182,47 +184,27 @@ public static class GameModesUISetup
 
         var redBox = CreatePanel(objectivesPanel, "ObjectiveSecondary", RedBoxBg);
         SetAnchors(redBox, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        redBox.offsetMin = new Vector2(24, -324);
-        redBox.offsetMax = new Vector2(-24, -204);
-        var redText = CreateText(redBox, "Text", "Objectif secondaire", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
+        redBox.offsetMin = new Vector2(24, -372);
+        redBox.offsetMax = new Vector2(-24, -226);
+        var redText = CreateText(redBox, "Text", "Secondary objective", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
         StretchFull(redText);
         redText.offsetMin = new Vector2(18, 12);
         redText.offsetMax = new Vector2(-18, -12);
         playMenu.detailObjectiveSecondary = redText.GetComponent<TMP_Text>();
 
-        // ---------- Panneau CARTE EXEMPLE ----------
-        var mapPanel = CreatePanel(details, "MapPanel", PanelBg);
-        SetAnchors(mapPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        mapPanel.sizeDelta = new Vector2(430, 390);
-        mapPanel.anchoredPosition = new Vector2(1120, -370);
-
-        CreateSectionTitle(mapPanel, "CARTE EXEMPLE");
-
-        var mapImage = CreatePanel(mapPanel, "MapImage", CoverPlaceholder);
-        SetAnchors(mapImage, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        mapImage.offsetMin = new Vector2(24, -344);
-        mapImage.offsetMax = new Vector2(-24, -64);
-        playMenu.detailMapImage = mapImage.GetComponent<Image>();
-
-        var mapName = CreateText(mapImage, "MapName", "Outpost Valley", 16, TextMain, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
-        StretchFull(mapName);
-        mapName.offsetMin = new Vector2(16, 12);
-        mapName.offsetMax = new Vector2(-16, -12);
-        playMenu.detailMapName = mapName.GetComponent<TMP_Text>();
-
-        // ---------- Boutons bas ----------
-        var (backBtn, _) = CreateButton(details, "BackButton", "RETOUR", 15, CardBg, TextMain);
+        // ---------- Boutons bas (alignes sur la colonne) ----------
+        var (backBtn, _) = CreateButton(details, "BackButton", "Back", 15, CardBg, TextMain);
         var backRect = backBtn.GetComponent<RectTransform>();
-        SetAnchors(backRect, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
+        SetAnchors(backRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 0));
         backRect.sizeDelta = new Vector2(160, 48);
-        backRect.anchoredPosition = new Vector2(80, 36);
+        backRect.anchoredPosition = new Vector2(left, 36);
         playMenu.backButton = backBtn;
 
-        var (playBtn, _) = CreateButton(details, "PlayButton", "JOUER", 18, Accent, BlockforgeTheme.OnAccent);
+        var (playBtn, _) = CreateButton(details, "PlayButton", "Play", 18, Accent, BlockforgeTheme.OnAccent);
         var playRect = playBtn.GetComponent<RectTransform>();
-        SetAnchors(playRect, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
+        SetAnchors(playRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(1, 0));
         playRect.sizeDelta = new Vector2(340, 54);
-        playRect.anchoredPosition = new Vector2(-80, 34);
+        playRect.anchoredPosition = new Vector2(-left, 34);
         playMenu.playButton = playBtn;
 
         // ---------- Etats initiaux + cablage ----------
@@ -250,57 +232,87 @@ public static class GameModesUISetup
     // CARTE DE MODE
     // =========================================================
 
+    // Carte sans apercu : pictogramme dans un puits, titre, accroche,
+    // lignes de chiffres en bas (alignees d'une carte a l'autre)
     private static GameModeCard BuildModeCard(RectTransform parent, string name, float x)
     {
         var card = CreatePanel(parent, name, CardBg);
         SetAnchors(card, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        card.sizeDelta = new Vector2(300, 480);
-        card.anchoredPosition = new Vector2(x, -30);
+        card.sizeDelta = new Vector2(CardWidth, CardHeight);
+        card.anchoredPosition = new Vector2(x, -20);
 
         var widget = card.gameObject.AddComponent<GameModeCard>();
         widget.button = card.gameObject.AddComponent<Button>();
         widget.button.targetGraphic = card.GetComponent<Image>();
 
-        var cover = CreatePanel(card, "Cover", CoverPlaceholder);
-        SetAnchors(cover, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        cover.offsetMin = new Vector2(12, -222);
-        cover.offsetMax = new Vector2(-12, -12);
-        widget.coverImage = cover.GetComponent<Image>();
+        var iconFrame = CreatePanel(card, "IconFrame", CoverPlaceholder);
+        SetAnchors(iconFrame, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+        iconFrame.sizeDelta = new Vector2(64, 64);
+        iconFrame.anchoredPosition = new Vector2(24, -24);
+        iconFrame.GetComponent<Image>().raycastTarget = false;
 
-        var icon = CreatePanel(cover, "Icon", BlockforgeTheme.WithAlpha(BlockforgeTheme.AccentMuted, 0.95f));
-        SetAnchors(icon, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        icon.sizeDelta = new Vector2(46, 46);
-        icon.anchoredPosition = new Vector2(14, -14);
+        var icon = CreatePanel(iconFrame, "Icon", TextDim);
+        SetAnchors(icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        icon.sizeDelta = new Vector2(36, 36);
+        icon.anchoredPosition = Vector2.zero;
+        icon.GetComponent<Image>().raycastTarget = false;
         widget.iconImage = icon.GetComponent<Image>();
 
-        var title = CreateText(card, "Title", "MODE", 21, TextMain, TextAlignmentOptions.Center, FontStyles.Bold);
+        var title = CreateText(card, "Title", "Mode", 21, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
         SetAnchors(title, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        title.offsetMin = new Vector2(12, -272);
-        title.offsetMax = new Vector2(-12, -234);
+        title.offsetMin = new Vector2(24, -140);
+        title.offsetMax = new Vector2(-24, -108);
         widget.titleText = title.GetComponent<TMP_Text>();
 
-        var desc = CreateText(card, "Description", "Description", 13, TextDim, TextAlignmentOptions.Top, FontStyles.Normal);
+        var desc = CreateText(card, "Description", "Description", 13, TextDim, TextAlignmentOptions.TopLeft, FontStyles.Normal);
         SetAnchors(desc, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        desc.offsetMin = new Vector2(20, -386);
-        desc.offsetMax = new Vector2(-20, -282);
+        desc.offsetMin = new Vector2(24, -216);
+        desc.offsetMax = new Vector2(-24, -146);
         widget.descriptionText = desc.GetComponent<TMP_Text>();
 
-        var footer = CreateText(card, "Footer", "4v4   |   10-15 min", 14, TextDim, TextAlignmentOptions.Center, FontStyles.Normal);
-        SetAnchors(footer, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
-        footer.offsetMin = new Vector2(12, 18);
-        footer.offsetMax = new Vector2(-12, 52);
-        widget.footerText = footer.GetComponent<TMP_Text>();
+        // Chiffres du mode : deux lignes libelle / valeur
+        var stats = CreateUI(card, "Stats");
+        SetAnchors(stats, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
+        stats.offsetMin = new Vector2(24, 20);
+        stats.offsetMax = new Vector2(-24, 84);
+        widget.statsGroup = stats.gameObject;
+        widget.teamsText = StatRow(stats, 0, "Teams");
+        widget.durationText = StatRow(stats, 1, "Duration");
 
-        var (configureBtn, _) = CreateButton(card, "ConfigureButton", "CONFIGURER", 13,
+        var (configureBtn, _) = CreateButton(card, "ConfigureButton", "Configure", 13,
                                              BlockforgeTheme.SurfaceRaised, TextMain);
         var cfgRect = configureBtn.GetComponent<RectTransform>();
-        SetAnchors(cfgRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-        cfgRect.sizeDelta = new Vector2(190, 42);
-        cfgRect.anchoredPosition = new Vector2(0, 18);
+        SetAnchors(cfgRect, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
+        cfgRect.sizeDelta = new Vector2(150, 36);
+        cfgRect.anchoredPosition = new Vector2(24, 24);
         widget.configureButton = configureBtn;
         configureBtn.gameObject.SetActive(false);
 
         return widget;
+    }
+
+    // Ligne "libelle ........ valeur" dans le pied de carte (index 0 = haut)
+    private static TMP_Text StatRow(RectTransform stats, int index, string label)
+    {
+        float top = -index * 32f;
+        var labelRect = CreateText(stats, $"Row_{index}_Label", label, 13, TextDim, TextAlignmentOptions.Left, FontStyles.Normal);
+        SetAnchors(labelRect, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        labelRect.offsetMin = new Vector2(0, top - 32);
+        labelRect.offsetMax = new Vector2(-120, top);
+
+        var valueRect = CreateText(stats, $"Row_{index}_Value", "—", 14, TextMain, TextAlignmentOptions.Right, FontStyles.Bold);
+        SetAnchors(valueRect, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        valueRect.offsetMin = new Vector2(100, top - 32);
+        valueRect.offsetMax = new Vector2(0, top);
+        return valueRect.GetComponent<TMP_Text>();
+    }
+
+    // Ancre haut-centre, position du coin haut-gauche relative au centre
+    private static void TopCenter(RectTransform rect, float x, float y, float width, float height)
+    {
+        SetAnchors(rect, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1));
+        rect.sizeDelta = new Vector2(width, height);
+        rect.anchoredPosition = new Vector2(x, y);
     }
 
     private static void CreateSectionTitle(RectTransform panel, string text)

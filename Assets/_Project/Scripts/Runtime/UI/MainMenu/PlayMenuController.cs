@@ -6,6 +6,9 @@ using UnityEngine.UI;
 // =========================================================
 // ECRAN "MODES DE JEU" + ECRAN DETAILS D'UN MODE
 // Liste les modes, ouvre la fiche detail, lance la partie.
+// Pas d'apercu (image de couverture / de carte) : la fiche
+// reprend le pictogramme de la carte cliquee, et la carte
+// d'exemple est une ligne du panneau Details.
 // =========================================================
 
 public class PlayMenuController : MonoBehaviour
@@ -25,16 +28,14 @@ public class PlayMenuController : MonoBehaviour
     public TMP_Text detailTitle;
     public TMP_Text detailTagline;
     public TMP_Text detailDescription;
-    public Image detailCover;
     public TMP_Text detailTeams;
     public TMP_Text detailDuration;
     public TMP_Text detailTickets;
     public TMP_Text detailRespawn;
     public TMP_Text detailTeamSize;
+    public TMP_Text detailMapName;
     public TMP_Text detailObjectivePrimary;
     public TMP_Text detailObjectiveSecondary;
-    public Image detailMapImage;
-    public TMP_Text detailMapName;
     public Button backButton;
     public Button playButton;
 
@@ -76,30 +77,34 @@ public class PlayMenuController : MonoBehaviour
         detailsView.SetActive(false);
     }
 
-    public void OpenDetails(GameModeDefinition def)
+    public void OpenDetails(GameModeDefinition def, GameModeCard card)
     {
         current = def;
         modesView.SetActive(false);
         detailsView.SetActive(true);
 
-        detailTitle.text = def.title;
-        detailTagline.text = def.tagline;
-        detailDescription.text = def.description;
-        detailTeams.text = def.teamsLabel;
-        detailDuration.text = def.durationLabel;
-        detailTickets.text = def.ticketsLabel;
-        detailRespawn.text = def.respawnLabel;
-        detailTeamSize.text = def.teamSizeLabel;
-        detailObjectivePrimary.text = def.objectivePrimary;
-        detailObjectiveSecondary.text = def.objectiveSecondary;
-        detailMapName.text = def.mapName;
+        Set(detailTitle, def.title);
+        Set(detailTagline, def.tagline);
+        Set(detailDescription, def.description);
+        Set(detailTeams, def.teamsLabel);
+        Set(detailDuration, def.durationLabel);
+        Set(detailTickets, def.ticketsLabel);
+        Set(detailRespawn, def.respawnLabel);
+        Set(detailTeamSize, def.teamSizeLabel);
+        Set(detailMapName, def.mapName);
+        Set(detailObjectivePrimary, def.objectivePrimary);
+        Set(detailObjectiveSecondary, def.objectiveSecondary);
 
-        if (def.icon != null)
-            detailIcon.sprite = def.icon;
-        if (def.coverImage != null)
-            detailCover.sprite = def.coverImage;
-        if (def.mapImage != null)
-            detailMapImage.sprite = def.mapImage;
+        // Meme pictogramme que la carte cliquee
+        Sprite icon = def.icon != null ? def.icon : card != null ? card.IconSprite : null;
+        if (detailIcon != null && icon != null)
+            detailIcon.sprite = icon;
+    }
+
+    private static void Set(TMP_Text text, string value)
+    {
+        if (text != null)
+            text.text = value;
     }
 
     private void LaunchCurrentMode()
