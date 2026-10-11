@@ -26,7 +26,9 @@ using UnityEngine.UI;
 // - Molette : quart de tour autour de la face visee (ou de Y)
 // - M : mode miroir, le symetrique du bloc par le plan de la ligne
 //   centrale est affiche, pose et retire en meme temps (image
-//   miroir vraie : echelle -1 sur l'axe du plan, PlacedBlock.mirrored)
+//   miroir vraie : echelle -1 sur l'axe du plan, PlacedBlock.mirrored).
+//   Tant qu'il est actif, la ligne centrale de la grille passe au
+//   jeton danger du design system (coupure entre les deux moities)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
 // =========================================================
@@ -84,12 +86,18 @@ public class GarageBuildController : MonoBehaviour
     public Image mirrorChip;
     [Tooltip("Libelle MIROIR de la legende (Ctrl_MIROIR) ; retrouve par son nom si vide")]
     public TMP_Text mirrorLabel;
-    public Color mirrorOnColor = new(0.23f, 0.51f, 0.96f);
+    [Tooltip("Couleur de la ligne centrale quand le miroir est actif (design system : danger, marqueur de limite)")]
+    public Color mirrorLineColor = BlockforgeTheme.Danger;
+    [Tooltip("Part de l'emission d'origine gardee par la ligne rouge : trop lumineuse, le tone mapping la delave en rose")]
+    [Range(0.05f, 1f)] public float mirrorLineEmission = 0.35f;
 
     private bool mirrorAlongX = true; // la ligne centrale court le long de Z : le miroir inverse X
     private GameObject mirrorGhost;
     private string mirrorGhostBlockId;
     private Color mirrorChipOffColor;
+    private Renderer centerLine;           // ligne centrale de la grille (trouvee par DetectMirrorAxis)
+    private Material centerLineMaterial;   // son materiau d'origine (partage avec le perimetre : jamais modifie)
+    private Material centerLineMirrorMaterial; // copie teintee, affichee seulement en mode miroir
     private readonly List<Vector3Int> mirrorBuffer = new();
 
     private BlockDefinition Selected => inventory != null ? inventory.CurrentBlock : null;
@@ -139,6 +147,8 @@ public class GarageBuildController : MonoBehaviour
             Destroy(ghost);
         if (mirrorGhost != null)
             Destroy(mirrorGhost);
+        if (centerLineMirrorMaterial != null)
+            Destroy(centerLineMirrorMaterial);
     }
 
     // Coupe par GarageToolSwitcher quand le spray est en main :
@@ -516,6 +526,8 @@ public class GarageBuildController : MonoBehaviour
             if (r.gameObject.name.IndexOf("center", System.StringComparison.OrdinalIgnoreCase) < 0)
                 continue;
             mirrorAlongX = r.bounds.size.x <= r.bounds.size.z;
+            centerLine = r;
+            centerLineMaterial = r.sharedMaterial;
             RobotSession.MirrorAlongX = mirrorAlongX;
             Debug.Log($"[GarageBuild] Ligne centrale '{r.gameObject.name}' : miroir sur l'axe {(mirrorAlongX ? "X" : "Z")}.");
             return;
@@ -595,13 +607,67 @@ public class GarageBuildController : MonoBehaviour
         Debug.Log($"[GarageBuild] Mode miroir {(mirrorMode ? "active" : "desactive")} (axe {(mirrorAlongX ? "X" : "Z")}).");
     }
 
-    // Legende : puce de la touche coloree et libelle "MIROIR  [ON]" quand actif
+    // Legende : touche M selectionnee et libelle "Mirror on" quand actif
     private void RefreshMirrorIndicator()
     {
         if (mirrorLabel != null)
-            mirrorLabel.text = mirrorMode ? "MIROIR  [ON]" : "MIROIR";
-        if (mirrorChip != null)
-            mirrorChip.color = mirrorMode ? mirrorOnColor : mirrorChipOffColor;
+            mirrorLabel.text = mirrorMode ? "Mirror on" : "Mirror";
+        // KeyHint du DS : la touche passe en surface-selected + border-accent
+        if (mirrorChip != null && mirrorChip.TryGetComponent<DSElement>(out var chip))
+            chip.Selected = mirrorMode;
+        else if (mirrorChip != null)
+            mirrorChip.color = mirrorMode ? BlockforgeTheme.Accent : mirrorChipOffColor;
+        RefreshCenterLine();
+    }
+
+    // Ligne centrale : rouge (danger) en mode miroir, couleur d'origine sinon.
+    // Le materiau d'origine est partage avec le perimetre de la zone de
+    // construction : on bascule vers une COPIE teintee au lieu de le modifier.
+    private void RefreshCenterLine()
+    {
+        if (centerLine == null || centerLineMaterial == null)
+            return;
+
+        if (mirrorMode && centerLineMirrorMaterial == null)
+            centerLineMirrorMaterial = CreateTintedCopy(centerLineMaterial, mirrorLineColor, mirrorLineEmission);
+
+        centerLine.sharedMaterial = mirrorMode ? centerLineMirrorMaterial : centerLineMaterial;
+    }
+
+    // Copie du materiau dont toutes les couleurs connues (HDRP Lit/Unlit,
+    // glTFast, standard) prennent la teinte ; l'emission garde une part de son
+    // intensite d'origine (assez pour rester lisible, pas assez pour virer au rose).
+    private static Material CreateTintedCopy(Material source, Color color, float emissionScale)
+    {
+        var copy = new Material(source) { name = source.name + " (miroir)" };
+        foreach (var property in new[] { "_BaseColor", "_UnlitColor", "_Color", "baseColorFactor" })
+        {
+            if (copy.HasProperty(property))
+                copy.SetColor(property, WithAlphaOf(color, copy.GetColor(property)));
+        }
+        // Mat : sans reflets speculaires des plafonniers, qui la delavent en rose
+        foreach (var property in new[] { "roughnessFactor", "_Roughness" })
+            if (copy.HasProperty(property)) copy.SetFloat(property, 1f);
+        foreach (var property in new[] { "metallicFactor", "_Metallic" })
+            if (copy.HasProperty(property)) copy.SetFloat(property, 0f);
+        if (copy.HasProperty("_Smoothness"))
+            copy.SetFloat("_Smoothness", 0f);
+        foreach (var property in new[] { "_EmissiveColor", "_EmissionColor", "emissiveFactor" })
+        {
+            if (!copy.HasProperty(property))
+                continue;
+            var emissive = copy.GetColor(property);
+            float intensity = Mathf.Max(emissive.r, Mathf.Max(emissive.g, emissive.b));
+            if (intensity > 0f)
+                copy.SetColor(property, color.linear * (intensity * emissionScale));
+        }
+        return copy;
+    }
+
+    private static Color WithAlphaOf(Color color, Color alphaSource)
+    {
+        color.a = alphaSource.a;
+        return color;
     }
 
     private bool CapacityAllows(BlockDefinition def)
