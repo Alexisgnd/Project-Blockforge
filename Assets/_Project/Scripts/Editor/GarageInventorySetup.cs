@@ -231,10 +231,10 @@ public static class GarageInventorySetup
         sheet.SetAsLastSibling();
 
         var toDisable = new List<MonoBehaviour>();
-        var player = Object.FindFirstObjectByType<PlayerGarageController>();
+        var player = Object.FindAnyObjectByType<PlayerGarageController>();
         if (player != null)
             toDisable.Add(player);
-        foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+        foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
         {
             if (mb != null && mb.GetType().Name.Contains("Plier") && mb is not PlierBlockPreview)
                 toDisable.Add(mb);
@@ -296,7 +296,7 @@ public static class GarageInventorySetup
         }
 
         // ---------- Sauvegarde du robot (touche T) + popups ----------
-        var statsHud = Object.FindFirstObjectByType<GarageStatsHUD>();
+        var statsHud = Object.FindAnyObjectByType<GarageStatsHUD>();
         if (statsHud != null)
         {
             if (!canvasGo.TryGetComponent<GarageSaveController>(out var saveController))

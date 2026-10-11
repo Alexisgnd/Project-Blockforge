@@ -850,8 +850,8 @@ public class GarageBuildController : MonoBehaviour
     {
         var view = SpawnView(def, cell, rotation, mirrored);
         // Animation de pose (visuel seul ; la logique est deja a jour)
-        if (view != null && view.transform.childCount > 0)
-            BlockPlaceAnimator.Place(view.transform.GetChild(0), cellY);
+        if (view != null)
+            BlockPlaceAnimator.Place(BlockColliders.Visual(view.transform), cellY);
         RobotSession.Blueprint.blocks.Add(new PlacedBlock
         {
             blockId = def.name,
@@ -887,8 +887,7 @@ public class GarageBuildController : MonoBehaviour
         placedViews.Remove(view);
         RobotSession.Blueprint.blocks.RemoveAll(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
         // Le visuel se retracte quelques images ; la racine (collider) part tout de suite
-        if (view.transform.childCount > 0)
-            BlockPlaceAnimator.Remove(view.transform.GetChild(0), robotRoot);
+        BlockPlaceAnimator.Remove(BlockColliders.Visual(view.transform), robotRoot);
         Destroy(view.gameObject);
     }
 
@@ -907,9 +906,8 @@ public class GarageBuildController : MonoBehaviour
         // Collider a la taille de la boite d'empreinte, dans le repere local de la
         // racine (il tourne avec elle) : la case visee est a l'origine.
         var box = BlockFootprint.LocalBox(def);
-        var collider = root.AddComponent<BoxCollider>();
-        collider.center = box.center * cellY;
-        collider.size = box.size * (cellY * 0.98f);
+        // (bloc miroir : sur un enfant, un BoxCollider refuse l'echelle negative)
+        BlockColliders.AddFootprint(root.transform, box.center * cellY, box.size * (cellY * 0.98f));
 
         var view = root.AddComponent<PlacedBlockView>();
         view.cell = cell;

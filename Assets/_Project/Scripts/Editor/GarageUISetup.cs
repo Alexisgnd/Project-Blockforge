@@ -72,7 +72,7 @@ public static class GarageUISetup
         if (oldCanvas != null)
             Object.DestroyImmediate(oldCanvas);
 
-        if (Object.FindFirstObjectByType<EventSystem>() == null)
+        if (Object.FindAnyObjectByType<EventSystem>() == null)
         {
             var es = new GameObject("EventSystem");
             es.AddComponent<EventSystem>();

@@ -44,7 +44,7 @@ public static class BootAuthSceneSetup
 
         // Camera : la scene Boot n'affiche que l'UI, mais sans camera
         // Unity affiche "No cameras rendering" au milieu de l'ecran.
-        if (Object.FindFirstObjectByType<Camera>() == null)
+        if (Object.FindAnyObjectByType<Camera>() == null)
         {
             var cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";

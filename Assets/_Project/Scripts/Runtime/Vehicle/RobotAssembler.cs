@@ -53,9 +53,8 @@ public static class RobotAssembler
             // Collider = boite d'empreinte dans le repere local (tourne et se
             // reflechit avec la racine), meme marge de 2 % que le garage
             var box = BlockFootprint.LocalBox(def);
-            var collider = block.AddComponent<BoxCollider>();
-            collider.center = box.center * cellSize;
-            collider.size = box.size * (cellSize * 0.98f);
+            // (bloc miroir : sur un enfant, un BoxCollider refuse l'echelle negative)
+            BlockColliders.AddFootprint(block.transform, box.center * cellSize, box.size * (cellSize * 0.98f));
 
             // Marqueur pour le futur gameplay (degats, stats) ; hors du garage
             // seule la case d'ancrage est connue.

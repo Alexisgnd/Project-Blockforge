@@ -338,7 +338,7 @@ public static class PaintSprayMaterialSetup
             return false;
         }
 
-        var inventory = Object.FindFirstObjectByType<GarageInventoryController>();
+        var inventory = Object.FindAnyObjectByType<GarageInventoryController>();
         var parent = plierRoot.transform.parent;
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
         if (prefab == null)
@@ -515,7 +515,7 @@ public static class PaintSprayMaterialSetup
         switcher.plierRoot = plierRoot;
         switcher.sprayRoot = wrapper;
         switcher.inventory = inventory;
-        switcher.buildController = Object.FindFirstObjectByType<GarageBuildController>();
+        switcher.buildController = Object.FindAnyObjectByType<GarageBuildController>();
         if (switcher.buildController == null)
         {
             Debug.LogWarning("[PaintSprayMaterialSetup] GarageBuildController introuvable : la pose de " +
@@ -540,7 +540,7 @@ public static class PaintSprayMaterialSetup
 
             // GarageSaveController partage le meme tableau : le remplacer
             // ici aussi, sinon les popups gardent l'ancienne liste.
-            var saveController = Object.FindFirstObjectByType<GarageSaveController>();
+            var saveController = Object.FindAnyObjectByType<GarageSaveController>();
             if (saveController != null)
             {
                 saveController.disableWhileOpen = inventory.disableWhileOpen;
