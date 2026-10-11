@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,9 +9,12 @@ using UnityEngine.InputSystem;
 // grille, le blueprint et le miroir) ; actif seulement quand le
 // pistolet est en main, le curseur verrouille et l'inventaire
 // ferme.
-// - Viseur sur un bloc : apercu de la teinte de la roue
-// - Clic gauche (maintenu = balayage) : peint le bloc
-// - Clic droit (maintenu = balayage) : rend ses couleurs d'origine
+// - Clic gauche maintenu : un jet de peinture part de la buse vers
+//   le point vise ; le bloc touche change de couleur quand le jet
+//   l'atteint (temps de vol PaintSprayFX.TravelTime), avec une
+//   eclaboussure. Balayer en tenant le clic peint au passage.
+// - Clic droit maintenu : jet de diluant, le bloc touche reprend ses
+//   couleurs d'origine a l'arrivee du jet
 // - Molette : change la teinte (PaintSprayColorWheel)
 // - M : miroir, le jumeau du bloc est peint en meme temps
 // La legende des commandes passe aux libelles du pistolet
@@ -22,13 +26,21 @@ public class GaragePaintController : MonoBehaviour
     [HideInInspector] public GarageBuildController build;
 
     private const int SprayToolIndex = 1;
+    private const float FreeJetDistance = 8f; // jet dans le vide : portee affichee
 
     private readonly RaycastHit[] hitBuffer = new RaycastHit[32];
     private PaintSprayColorWheel wheel;
 
-    private PlacedBlockView hover, hoverTwin;
-    private int previewColor;
-    private PlacedBlockView suppressed; // bloc qu'on vient de peindre : pas d'apercu tant qu'on reste dessus
+    // Blocs vises par un jet en vol : peints a l'arrivee
+    private struct Pending
+    {
+        public PlacedBlockView twin;
+        public float arrival;
+        public int color;
+        public Vector3 point;
+    }
+    private readonly Dictionary<PlacedBlockView, Pending> pending = new();
+    private readonly List<PlacedBlockView> arrived = new();
 
     // Legende des commandes (Ctrl_AJOUTER / SUPPRIMER / PIVOTER)
     private TMP_Text placeLabel, removeLabel, rotateLabel;
@@ -37,15 +49,16 @@ public class GaragePaintController : MonoBehaviour
 
     private void OnDisable()
     {
-        ClearPreview();
         SetPaintLabels(false);
     }
 
     private void Update()
     {
+        // Les jets deja partis arrivent meme si l'outil est range
+        ResolvePending();
+
         if (!IsActive())
         {
-            ClearPreview();
             SetPaintLabels(false);
             return;
         }
@@ -57,50 +70,67 @@ public class GaragePaintController : MonoBehaviour
             wheel = Object.FindAnyObjectByType<PaintSprayColorWheel>(FindObjectsInactive.Include);
         int color = wheel != null ? wheel.SelectedColorIndex : 1;
 
-        var view = Raycast();
-        var twin = build.MirrorTwin(view);
-        if (view != suppressed)
-            suppressed = null;
-
         var mouse = Mouse.current;
-        if (view != null && mouse != null)
-        {
-            int target = -1;
-            if (mouse.leftButton.isPressed)
-                target = color;
-            else if (mouse.rightButton.isPressed)
-                target = 0;
+        if (mouse == null)
+            return;
+        int target = mouse.leftButton.isPressed ? color : mouse.rightButton.isPressed ? 0 : -1;
+        if (target < 0)
+            return;
 
-            if (target >= 0)
+        var ray = build.viewCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        var view = Raycast(ray, out Vector3 point);
+        var fx = SprayFX();
+        if (view == null)
+            point = AnyHit(ray, out var p) ? p : ray.GetPoint(FreeJetDistance);
+
+        fx?.Fire(point, Time.deltaTime, target == 0);
+
+        // Bloc touche : peint quand le jet l'atteint
+        if (view != null && view.colorIndex != target && !pending.ContainsKey(view))
+        {
+            float travel = fx != null ? fx.TravelTime(point) : 0f;
+            pending[view] = new Pending
             {
-                ClearPreview();
-                bool painted = build.PaintBlock(view, target);
-                painted |= twin != null && build.PaintBlock(twin, target);
-                if (painted)
-                {
-                    suppressed = view;
-                    if (target > 0)
-                        SprayFX()?.Spray(build.viewCamera.transform.forward);
-                }
-                return;
+                twin = build.MirrorTwin(view),
+                arrival = Time.time + travel,
+                color = target,
+                point = point,
+            };
+        }
+    }
+
+    private void ResolvePending()
+    {
+        if (pending.Count == 0)
+            return;
+        arrived.Clear();
+        foreach (var kv in pending)
+            if (kv.Key == null || Time.time >= kv.Value.arrival)
+                arrived.Add(kv.Key);
+        foreach (var view in arrived)
+        {
+            var p = pending[view];
+            pending.Remove(view);
+            if (view == null)
+                continue;
+            bool painted = build.PaintBlock(view, p.color);
+            painted |= p.twin != null && build.PaintBlock(p.twin, p.color);
+            if (painted)
+            {
+                var cam = build.viewCamera != null ? build.viewCamera.transform.position : p.point + Vector3.up;
+                SprayFX()?.Splash(p.point, cam - p.point);
             }
         }
+    }
 
-        // Apercu : le bloc vise (et son jumeau) prend la teinte de la roue
-        if (view == null || view == suppressed)
-        {
-            ClearPreview();
-            return;
-        }
-        if (view != hover || twin != hoverTwin || color != previewColor)
-        {
-            ClearPreview();
-            hover = view;
-            hoverTwin = twin;
-            previewColor = color;
-            Preview(hover, color);
-            Preview(hoverTwin, color);
-        }
+    private bool AnyHit(Ray ray, out Vector3 point)
+    {
+        point = default;
+        if (!Physics.Raycast(ray, out var hit, build.maxReach, ~0, QueryTriggerInteraction.Ignore))
+            return false;
+        // pas sur le pistolet lui-meme (colliders eventuels de la main)
+        point = hit.point;
+        return hit.distance > 0.5f;
     }
 
     // Effets du pistolet (gouttelettes, gerbe de bulles) ; null sans le modele v3
@@ -130,13 +160,14 @@ public class GaragePaintController : MonoBehaviour
     // plus grosses que le modele (une roue de 2 cases deborde devant le
     // chassis). Parmi les blocs dont la boite est traversee, on garde celui
     // dont une piece visible (bounds de ses renderers) est touchee la
-    // premiere ; a defaut, la boite la plus proche.
-    private PlacedBlockView Raycast()
+    // premiere ; a defaut, la boite la plus proche. 'point' = impact.
+    private PlacedBlockView Raycast(Ray ray, out Vector3 point)
     {
-        var ray = build.viewCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        point = default;
         int count = Physics.RaycastNonAlloc(ray, hitBuffer, build.maxReach, ~0, QueryTriggerInteraction.Ignore);
         PlacedBlockView nearestBox = null, nearestVisual = null;
         float boxDist = float.MaxValue, visualDist = float.MaxValue;
+        Vector3 boxPoint = default;
         for (int i = 0; i < count; i++)
         {
             var candidate = hitBuffer[i].collider.GetComponentInParent<PlacedBlockView>();
@@ -146,6 +177,7 @@ public class GaragePaintController : MonoBehaviour
             {
                 boxDist = hitBuffer[i].distance;
                 nearestBox = candidate;
+                boxPoint = hitBuffer[i].point;
             }
             float d = VisualDistance(candidate, ray);
             if (d < visualDist)
@@ -154,7 +186,13 @@ public class GaragePaintController : MonoBehaviour
                 nearestVisual = candidate;
             }
         }
-        return nearestVisual != null ? nearestVisual : nearestBox;
+        if (nearestVisual != null)
+        {
+            point = ray.GetPoint(visualDist);
+            return nearestVisual;
+        }
+        point = boxPoint;
+        return nearestBox;
     }
 
     private static float VisualDistance(PlacedBlockView view, Ray ray)
@@ -169,31 +207,6 @@ public class GaragePaintController : MonoBehaviour
                 best = d;
         }
         return best;
-    }
-
-    // =========================================================
-    // APERCU
-    // =========================================================
-
-    private static void Preview(PlacedBlockView view, int color)
-    {
-        if (view != null && view.colorIndex != color)
-            BlockPaint.Apply(BlockColliders.Visual(view.transform), color);
-    }
-
-    private static void Restore(PlacedBlockView view)
-    {
-        if (view != null)
-            BlockPaint.Apply(BlockColliders.Visual(view.transform), view.colorIndex);
-    }
-
-    private void ClearPreview()
-    {
-        Restore(hover);
-        Restore(hoverTwin);
-        hover = null;
-        hoverTwin = null;
-        previewColor = 0;
     }
 
     // =========================================================

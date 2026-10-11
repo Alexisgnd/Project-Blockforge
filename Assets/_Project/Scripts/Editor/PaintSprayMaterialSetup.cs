@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
@@ -14,12 +13,13 @@ using UnityEngine.SceneManagement;
 // - Cree les materiaux HDRP/Lit du spray (corps + verre/
 //   liquide/bulles transparents + les 12 teintes de la roue)
 //   dans Art/Materials/Garage et les remappe sur le FBX
-// - Renomme le clip "Scene" en "PaintSpray_Bubbles", active
-//   Loop Time, cree l'AnimatorController et l'assigne
+// - v3 (Tools/Blender/paintspray_v3_pipeline.py) : plus d'animation
+//   bakee, les bulles et la houle sont jouees par PaintSprayFX
 // - Integre le spray dans la scene Garage : wrapper
 //   "PaintSpray_Garage" a cote de la pince, memes effets de
 //   mouvement (PlierGarageController copie), molette de
-//   couleur (PaintSprayColorWheel) et switch 1/2
+//   couleur crantee (PaintSprayColorWheel), effets (PaintSprayFX :
+//   bulles, houle, teinte, pulverisation) et switch 1/2
 //   (GarageToolSwitcher, pince par defaut)
 // S'execute automatiquement apres compilation tant que le
 // cablage scene n'a pas reussi (marqueur dans Library/),
@@ -32,14 +32,15 @@ public static class PaintSprayMaterialSetup
     private const string FbxPath = "Assets/_Project/Art/Models/PaintSpray_Garage.fbx";
     private const string MaterialParentDir = "Assets/_Project/Art/Materials";
     private const string MaterialDir = "Assets/_Project/Art/Materials/Garage";
-    private const string AnimParentDir = "Assets/_Project/Art";
-    private const string AnimDir = "Assets/_Project/Art/Animations";
-    private const string ControllerPath = AnimDir + "/PaintSpray_Garage.controller";
-    private const string FilteredClipPath = AnimDir + "/PaintSpray_Bubbles.anim";
-    private const string ClipName = "PaintSpray_Bubbles";
+    // Animation bakee des bulles de la v2, remplacee par PaintSprayFX
+    private static readonly string[] ObsoleteAnimAssets =
+    {
+        "Assets/_Project/Art/Animations/PaintSpray_Garage.controller",
+        "Assets/_Project/Art/Animations/PaintSpray_Bubbles.anim",
+    };
     private const string WrapperName = "PaintSpray_Garage";
     private const string ModelName = "PaintSpray_Model";
-    private const string AutoRunMarker = "Library/BlockforgePaintSpray.done";
+    private const string AutoRunMarker = "Library/BlockforgePaintSpray.v3.done";
 
     // Intensite emissive, en nits (exposition fixe EV 9.5 dans les scenes).
     private const float GlowNits = 800f;
@@ -69,11 +70,12 @@ public static class PaintSprayMaterialSetup
 
     // Noms des noeuds du FBX utilises par la molette de couleur
     private const string WheelCenterNode = "Colour_Wheel";          // axe des 2 palettes
-    private const string NeedleNode = "Colour_Marker_Pivot";        // pivot des 2 marqueurs
-    private const string NeedleArrowNode = "Selected_Colour_Marker"; // marqueur : direction courante
-    private const string WedgeNodeFormat = "Colour_Swatch_1_{0:00}"; // 12 swatches d'une palette
-    private const string LiquidNode = "Paint_Liquid";               // liquide (shape key houle)
-    private const string BubbleNodeFormat = "Bubble_{0:00}";        // 14 bulles animees
+    private const string NeedleNode = "Colour_Ring_Pivot";          // bague crantee (tourne)
+    private const string NeedleArrowNode = "Selected_Colour_Marker"; // index fixe au-dessus de la bague
+    private const string WedgeNodeFormat = "Colour_Swatch_1_{0:00}"; // 12 pastilles d'une face
+    private const string LiquidNode = "Paint_Liquid";               // liquide (shape keys Slosh_*)
+    private const string OutletNode = "Paint_Outlet";               // sortie de buse
+    private static readonly string[] GlowNodes = { "Nozzle_Glow", "Status_Strip", "Status_Strip_2", "Marker_Led", "Marker_Led_2" };
 
     private static Dictionary<string, SprayMat> BuildMaterialTable()
     {
@@ -84,8 +86,11 @@ public static class PaintSprayMaterialSetup
             { "Graphite",          new SprayMat { AssetName = "Spray_Graphite",         BaseColor = new Color(0.035f, 0.045f, 0.055f), Metallic = 0.50f, Smoothness = 0.65f, EmissiveColor = Color.black } },
             { "Accent_Red",        new SprayMat { AssetName = "Spray_AccentRed",        BaseColor = new Color(0.650f, 0.035f, 0.020f), Metallic = 0.25f, Smoothness = 0.65f, EmissiveColor = Color.black } },
             { "Reservoir_Clear",   new SprayMat { AssetName = "Spray_ReservoirClear",   BaseColor = new Color(0.650f, 0.850f, 0.950f, 0.14f), Metallic = 0f, Smoothness = 0.88f, EmissiveColor = Color.black, Transparent = true, SortPriority = 3, DoubleSided = true } },
-            { "Liquid_Red",        new SprayMat { AssetName = "Spray_LiquidRed",        BaseColor = new Color(0.800f, 0.035f, 0.025f, 0.62f), Metallic = 0.05f, Smoothness = 0.80f, EmissiveColor = Color.black, Transparent = true, SortPriority = 1 } },
-            { "Bubbles_Pearl",     new SprayMat { AssetName = "Spray_BubblesPearl",     BaseColor = new Color(1.000f, 0.480f, 0.320f), Metallic = 0.15f, Smoothness = 0.85f, EmissiveColor = Color.black } },
+            { "Liquid_Red",        new SprayMat { AssetName = "Spray_LiquidRed",        BaseColor = new Color(0.800f, 0.035f, 0.025f, 0.80f), Metallic = 0.05f, Smoothness = 0.85f, EmissiveColor = Color.black, Transparent = true, SortPriority = 1 } },
+            { "Bubbles_Pearl",     new SprayMat { AssetName = "Spray_BubblesPearl",     BaseColor = new Color(1.000f, 0.700f, 0.600f, 0.55f), Metallic = 0.0f, Smoothness = 0.95f, EmissiveColor = Color.black, Transparent = true, SortPriority = 2 } },
+            { "Rubber_Grip",       new SprayMat { AssetName = "Spray_RubberGrip",       BaseColor = new Color(0.018f, 0.022f, 0.028f), Metallic = 0.00f, Smoothness = 0.25f, EmissiveColor = Color.black } },
+            // Elements lumineux (anneau de buse, bandeaux, LED) : teintes en jeu par PaintSprayFX
+            { "Glow_Accent",       new SprayMat { AssetName = "Spray_GlowAccent",       BaseColor = new Color(0.200f, 0.850f, 1.000f), Metallic = 0.00f, Smoothness = 0.70f, EmissiveColor = new Color(0.200f, 0.850f, 1.000f) } },
         };
 
         // Les 12 teintes des palettes (memes valeurs que le .blend)
@@ -139,9 +144,7 @@ public static class PaintSprayMaterialSetup
     {
         var materials = CreateMaterials();
         ConfigureImporter(materials);
-        var clip = BuildFilteredClip();
-        var controller = EnsureAnimatorController(clip);
-        bool sceneOk = WireScene(controller);
+        bool sceneOk = WireScene();
 
         Debug.Log("[PaintSprayMaterialSetup] Materiaux HDRP crees et remappes sur PaintSpray_Garage.fbx" +
                   (sceneOk ? ", spray integre dans la scene Garage." : " (cablage scene en attente de la scene Garage)."));
@@ -195,6 +198,12 @@ public static class PaintSprayMaterialSetup
                 Debug.Log($"[PaintSprayMaterialSetup] Materiau de l'ancien spray supprime : {path}");
         }
 
+        foreach (var path in ObsoleteAnimAssets)
+        {
+            if (AssetDatabase.LoadMainAssetAtPath(path) != null && AssetDatabase.DeleteAsset(path))
+                Debug.Log($"[PaintSprayMaterialSetup] Animation de l'ancien spray supprimee : {path}");
+        }
+
         AssetDatabase.SaveAssets();
         return result;
     }
@@ -225,110 +234,22 @@ public static class PaintSprayMaterialSetup
         foreach (var (matName, mat) in materials)
             importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), matName), mat);
 
-        // Rig en Generic (Animator) : en Legacy, le clip jouerait une seule
-        // fois via un composant Animation en ecrasant toute la hierarchie.
+        // v3 : aucune animation bakee (bulles et houle jouees par PaintSprayFX)
+        // Rig Generic : avec 'None', Unity importe le liquide sans ses blend shapes
         importer.animationType = ModelImporterAnimationType.Generic;
-        importer.importAnimation = true;
-
-        // Clip "Scene" (nom de la scene Blender) -> "PaintSpray_Bubbles", en boucle.
-        // Toujours reconstruit depuis les clips par defaut : la plage de frames
-        // suit celle du FBX (v1 : 96 frames @ 24 fps, v2 : 121 frames @ 30 fps).
-        var clips = importer.defaultClipAnimations;
-        for (int i = 0; i < clips.Length; i++)
-        {
-            clips[i].name = i == 0 ? ClipName : $"{ClipName}_{i}";
-            clips[i].loopTime = true;
-            // Pas de frame de bouclage ajoutee : la boucle est deja sans
-            // couture (frame 96 -> 1), une frame dupliquee ferait un a-coup.
-            clips[i].loop = false;
-        }
-        importer.clipAnimations = clips;
+        importer.importAnimation = false;
+        importer.importBlendShapes = true;
+        // PaintSprayFX lit les blend shapes du liquide (sens de la houle)
+        importer.isReadable = true;
 
         importer.SaveAndReimport();
-    }
-
-    // Le FBX bake des courbes statiques pour TOUS les noeuds (90 objets).
-    // Jouees telles quelles, elles ecraseraient chaque frame le pivot des
-    // marqueurs de couleur et la racine (inertie). On ne garde que ce qui
-    // bouge vraiment : les bulles et le blendshape de la houle du liquide.
-    private static AnimationClip BuildFilteredClip()
-    {
-        var source = AssetDatabase.LoadAllAssetRepresentationsAtPath(FbxPath)
-            .OfType<AnimationClip>()
-            .FirstOrDefault(c => c.name == ClipName);
-        if (source == null)
-        {
-            Debug.LogWarning("[PaintSprayMaterialSetup] Clip " + ClipName + " introuvable dans le FBX.");
-            return null;
-        }
-
-        if (!AssetDatabase.IsValidFolder(AnimDir))
-            AssetDatabase.CreateFolder(AnimParentDir, "Animations");
-
-        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(FilteredClipPath);
-        if (clip == null)
-        {
-            clip = new AnimationClip();
-            AssetDatabase.CreateAsset(clip, FilteredClipPath);
-        }
-
-        clip.ClearCurves();
-        clip.frameRate = source.frameRate;
-
-        int kept = 0;
-        foreach (var binding in AnimationUtility.GetCurveBindings(source))
-        {
-            bool isBubble = binding.path.IndexOf("bubble_", System.StringComparison.OrdinalIgnoreCase) >= 0;
-            bool isBlendShape = binding.propertyName.StartsWith("blendShape.");
-            if (!isBubble && !isBlendShape)
-                continue;
-
-            AnimationUtility.SetEditorCurve(clip, binding,
-                AnimationUtility.GetEditorCurve(source, binding));
-            kept++;
-        }
-
-        var settings = AnimationUtility.GetAnimationClipSettings(source);
-        settings.loopTime = true;
-        AnimationUtility.SetAnimationClipSettings(clip, settings);
-
-        EditorUtility.SetDirty(clip);
-        AssetDatabase.SaveAssets();
-
-        if (kept == 0)
-            Debug.LogWarning("[PaintSprayMaterialSetup] Aucune courbe bulle/blendshape trouvee dans le clip.");
-        return clip;
-    }
-
-    private static AnimatorController EnsureAnimatorController(AnimationClip clip)
-    {
-        if (clip == null)
-            return null;
-
-        var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
-        if (controller == null)
-            return AnimatorController.CreateAnimatorControllerAtPathWithClip(ControllerPath, clip);
-
-        var stateMachine = controller.layers[0].stateMachine;
-        if (stateMachine.defaultState == null)
-        {
-            var state = stateMachine.AddState(ClipName);
-            state.motion = clip;
-            stateMachine.defaultState = state;
-        }
-        else
-        {
-            stateMachine.defaultState.motion = clip;
-        }
-        EditorUtility.SetDirty(controller);
-        return controller;
     }
 
     // =====================================================
     // INTEGRATION SCENE GARAGE
     // =====================================================
 
-    private static bool WireScene(AnimatorController controller)
+    private static bool WireScene()
     {
         var plierRoot = GameObject.Find("Plier_Garage");
         if (plierRoot == null)
@@ -438,34 +359,32 @@ public static class PaintSprayMaterialSetup
             Object.DestroyImmediate(stray);
         }
 
-        // Un composant Animation legacy residuel bloquerait l'Animator
+        // v2 : Animation legacy / Animator des bulles bakees, inutiles en v3
         if (modelTr.TryGetComponent<Animation>(out var legacyAnim))
             Object.DestroyImmediate(legacyAnim);
+        if (modelTr.TryGetComponent<Animator>(out var oldAnimator))
+            oldAnimator.runtimeAnimatorController = null;
 
         // Calage sur la pince uniquement pour une creation "neuve"
         if (created && !poseCaptured)
             FitToPlier(wrapper, plierRoot);
+
+        // ---------- Pose du modele v3 a l'ecran ----------
+        PoseModel(modelTr, plierRoot);
 
         // ---------- Memes effets de mouvement que la pince ----------
         var sprayMove = GetOrAdd<PlierGarageController>(wrapper);
         if (plierRoot.TryGetComponent<PlierGarageController>(out var plierMove))
             EditorUtility.CopySerialized(plierMove, sprayMove);
 
-        // ---------- Animator (bulles + houle du liquide) ----------
-        var animator = GetOrAdd<Animator>(modelTr.gameObject);
-        if (controller != null)
-            animator.runtimeAnimatorController = controller;
-        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-
-        // ---------- Molette de couleur ----------
-        // Les deux palettes (gauche/droite) partagent l'axe Colour_Wheel ; les
-        // deux marqueurs sont sous le meme pivot, donc une seule palette
-        // suffit pour l'ordre angulaire et la couleur.
+        // ---------- Molette de couleur crantee ----------
+        // Les deux faces de la bague tournent ensemble (meme pivot) : les
+        // pastilles d'une seule face suffisent pour l'ordre et la couleur.
         var wheel = GetOrAdd<PaintSprayColorWheel>(wrapper);
         wheel.wheelCenter = FindDeep(modelTr, WheelCenterNode);
         wheel.needle = FindDeep(modelTr, NeedleNode);
         wheel.needleArrow = FindDeep(modelTr, NeedleArrowNode);
-
+        wheel.kickTarget = modelTr;
         var wedges = new List<Transform>();
         for (int i = 0; i < 12; i++)
         {
@@ -474,29 +393,34 @@ public static class PaintSprayMaterialSetup
                 wedges.Add(wedge);
         }
         wheel.wedges = wedges.ToArray();
-
-        wheel.liquidRenderer = FindDeep(modelTr, LiquidNode)?.GetComponent<Renderer>();
-        wheel.surfaceRenderer = null; // v2 : la houle est un blendshape du liquide lui-meme
-        var bubbles = new List<Renderer>();
-        for (int i = 0; i < 16; i++)
-        {
-            var bubble = FindDeep(modelTr, string.Format(BubbleNodeFormat, i));
-            if (bubble == null)
-                break;
-            var r = bubble.GetComponent<Renderer>();
-            if (r != null)
-                bubbles.Add(r);
-        }
-        wheel.bubbleRenderers = bubbles.ToArray();
         wheel.inventory = inventory;
 
-        if (wheel.wheelCenter == null || wheel.needle == null || wheel.needleArrow == null ||
-            wedges.Count != 12 || wheel.liquidRenderer == null || bubbles.Count == 0)
+        // ---------- Effets : bulles, houle, teinte, pulverisation ----------
+        var fx = GetOrAdd<PaintSprayFX>(wrapper);
+        fx.wheel = wheel;
+        fx.liquid = FindDeep(modelTr, LiquidNode)?.GetComponent<SkinnedMeshRenderer>();
+        fx.outlet = FindDeep(modelTr, OutletNode)?.GetComponent<Renderer>();
+        fx.glows = GlowNodes.Select(n => FindDeep(modelTr, n)?.GetComponent<Renderer>()).Where(r => r != null).ToArray();
+        fx.bubbleTemplate = FindDeep(modelTr, "Bubble_Template");
+        fx.bubbleSpawn = FindDeep(modelTr, "Bubble_Spawn");
+        fx.bubbleRadius = FindDeep(modelTr, "Bubble_Radius");
+        fx.liquidTop = FindDeep(modelTr, "Liquid_Top");
+        // Reglages du jet (reappliques : les valeurs de la scene priment sinon)
+        fx.jetSpeed = 14f;
+        fx.jetRate = 24f;
+        fx.jetRadius = 0.025f;
+        fx.jetSpread = 0.05f;
+        fx.streamSides = 10;
+        fx.jetGravity = 0.35f;
+
+        if (wheel.wheelCenter == null || wheel.needle == null || wheel.needleArrow == null || wedges.Count != 12 ||
+            fx.liquid == null || fx.bubbleTemplate == null || fx.bubbleSpawn == null || fx.liquidTop == null)
         {
             Debug.LogWarning("[PaintSprayMaterialSetup] Noeuds du spray introuvables dans le FBX " +
-                             $"(wheel={wheel.wheelCenter != null}, pivot={wheel.needle != null}, " +
+                             $"(wheel={wheel.wheelCenter != null}, ring={wheel.needle != null}, " +
                              $"marker={wheel.needleArrow != null}, swatches={wedges.Count}, " +
-                             $"liquid={wheel.liquidRenderer != null}, bubbles={bubbles.Count}).");
+                             $"liquid={fx.liquid != null}, bubble={fx.bubbleTemplate != null}, " +
+                             $"reperes={fx.bubbleSpawn != null && fx.liquidTop != null}, glows={fx.glows.Length}).");
         }
 
         // ---------- Switch pince/spray (1 = pince, 2 = spray) ----------
@@ -530,7 +454,7 @@ public static class PaintSprayMaterialSetup
             var toDisable = (inventory.disableWhileOpen ?? new MonoBehaviour[0])
                 .Where(mb => mb != null)
                 .ToList();
-            foreach (var mb in new MonoBehaviour[] { sprayMove, wheel, switcher })
+            foreach (var mb in new MonoBehaviour[] { sprayMove, wheel, fx, switcher })
             {
                 if (!toDisable.Contains(mb))
                     toDisable.Add(mb);
@@ -582,6 +506,63 @@ public static class PaintSprayMaterialSetup
 
         if (BlockPreviewFactory.TryGetBounds(wrapper, out sprayBounds))
             wrapper.transform.position += plierBounds.center - sprayBounds.center;
+    }
+
+    // Pose du pistolet dans la main, recalculee a chaque setup (idempotente) :
+    // en bas a droite comme la pince, meme encombrement, reservoir vers le
+    // haut, et le canon DROIT DEVANT (parallele au regard de la camera, sans
+    // inclinaison ni roulis), exactement comme la pince. Seul le modele
+    // (enfant du wrapper) est oriente : le wrapper garde la pose et les
+    // effets de mouvement de la pince.
+    private static readonly Vector3 PoseShift = new(0.02f, 0.05f, 0f);    // x taille de la pince, repere camera
+    private const float PoseRoll = 0f;                                    // degres
+    private const float PoseSize = 0.60f;                                 // x taille de la pince
+
+    private static void PoseModel(Transform model, GameObject plierRoot)
+    {
+        var cam = Object.FindAnyObjectByType<Camera>();
+        var outlet = FindDeep(model, OutletNode);
+        var wheel = FindDeep(model, WheelCenterNode);
+        var top = FindDeep(model, "Liquid_Top");
+        var spawn = FindDeep(model, "Bubble_Spawn");
+        if (cam == null || outlet == null || wheel == null || top == null || spawn == null)
+            return;
+
+        model.localScale = Vector3.one;
+        model.localRotation = Quaternion.identity;
+        model.localPosition = Vector3.zero;
+
+        // 1) buse vers l'avant de la camera, reservoir vers le haut
+        AimModel(model, outlet, wheel, top, spawn, cam.transform.forward, cam, null);
+
+        // 2) taille et position de la pince
+        if (BlockPreviewFactory.TryGetBounds(plierRoot, out var plier) &&
+            BlockPreviewFactory.TryGetBounds(model.gameObject, out var spray))
+        {
+            float s = MaxDimension(plier) * PoseSize / Mathf.Max(MaxDimension(spray), 1e-4f);
+            model.localScale = Vector3.one * s;
+            if (BlockPreviewFactory.TryGetBounds(model.gameObject, out spray))
+                model.position += plier.center - spray.center
+                                  + cam.transform.TransformDirection(PoseShift) * MaxDimension(plier);
+        }
+
+        // Pas de visee vers le viseur : comme la pince, le canon reste
+        // parallele au regard, droit devant, sans inclinaison.
+    }
+
+    // Tourne le modele (autour de 'pivot' si donne) pour que l'axe buse pointe
+    // 'forward' et que le reservoir reste vers le haut de la camera
+    private static void AimModel(Transform model, Transform outlet, Transform wheel, Transform top, Transform spawn,
+                                 Vector3 forward, Camera cam, Vector3? pivot)
+    {
+        Vector3 nozzle = (outlet.position - wheel.position).normalized;
+        Vector3 up = Vector3.ProjectOnPlane(top.position - spawn.position, nozzle).normalized;
+        var current = Quaternion.LookRotation(nozzle, up);
+        Vector3 u = Quaternion.AngleAxis(PoseRoll, forward) * cam.transform.up;
+        var delta = Quaternion.LookRotation(forward, u) * Quaternion.Inverse(current);
+        if (pivot.HasValue)
+            model.position = pivot.Value + delta * (model.position - pivot.Value);
+        model.rotation = delta * model.rotation;
     }
 
     private static float MaxDimension(Bounds b)
