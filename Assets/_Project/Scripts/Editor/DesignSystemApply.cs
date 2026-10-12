@@ -618,6 +618,7 @@ public static class DesignSystemApply
         ("AVANCER", "Forward", "Z", 0), ("RECULER", "Backward", "S", 0), ("GAUCHE", "Left", "Q", 0), ("DROITE", "Right", "D", 0),
         ("INVENTAIRE", "Inventory", "Tab", 1), ("AJOUTER", "Place part", "Left click", 1), ("SUPPRIMER", "Remove part", "Right click", 1),
         ("PIVOTER", "Rotate", "Wheel", 1), ("MIROIR", "Mirror", "M", 1),
+        ("ANNULER", "Undo", "Ctrl+Z", 1), ("RETABLIR", "Redo", "Ctrl+Y", 1),
         ("MONTER", "Up", "Space", 2), ("DESCENDRE", "Down", "Ctrl", 2),
         ("SAUVER", "Save", "T", 3), ("TESTER", "Test", "P", 3), ("RENOMMER", "Rename", "R", 3), ("RETOUR", "Leave garage", "Esc", 3),
     };
@@ -731,8 +732,10 @@ public static class DesignSystemApply
             var label = panel.Find("Ctrl_" + key)?.GetComponent<TMP_Text>();
             if (label == null)
             {
-                missing.Add("ControlsPanel/Ctrl_" + key);
-                continue;
+                // Commande ajoutee apres la generation du panneau : la ligne est creee ici
+                var created = GetOrAdd<TextMeshProUGUI>(Child(panel, "Ctrl_" + key).gameObject);
+                created.raycastTarget = false;
+                label = created;
             }
             if (group != lastGroup)
             {

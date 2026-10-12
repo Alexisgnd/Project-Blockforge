@@ -33,6 +33,8 @@ using UnityEngine.UI;
 //   et GaragePaintController (ajoute au demarrage) peint les blocs
 //   via PaintBlock / MirrorTwin ; colorIndex est sauvegarde avec
 //   le bloc et reapplique au chargement (BlockPaint)
+// - Ctrl+Z / Ctrl+Y (ou Ctrl+Maj+Z) : annuler / retablir les
+//   poses, retraits et traits de peinture (GarageHistory)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
 // =========================================================
@@ -149,6 +151,13 @@ public class GarageBuildController : MonoBehaviour
         if (!TryGetComponent<GaragePaintController>(out var painter))
             painter = gameObject.AddComponent<GaragePaintController>();
         painter.build = this;
+
+        // Annuler / retablir (Ctrl+Z, Ctrl+Y) : composant toujours actif, meme
+        // quand ce controleur est coupe (pistolet en main, inventaire ouvert)
+        if (!TryGetComponent<GarageHistory>(out var history))
+            history = gameObject.AddComponent<GarageHistory>();
+        history.build = this;
+        history.painter = painter;
     }
 
     private void OnDestroy()
@@ -200,6 +209,7 @@ public class GarageBuildController : MonoBehaviour
         // Retrait au clic droit (independant de la validite du ghost)
         if (hasTarget && hoverBlock != null && mouse != null && mouse.rightButton.wasPressedThisFrame)
         {
+            RecordHistory();
             RemoveBlock(hoverBlock);
             HideGhost();
             return;
@@ -244,6 +254,7 @@ public class GarageBuildController : MonoBehaviour
 
         if (valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
+            RecordHistory();
             PlaceBlock(def, placeCell, rotation, false);
             if (placeMirror)
                 PlaceBlock(def, mirrorCell, rotation, true);
@@ -1014,6 +1025,12 @@ public class GarageBuildController : MonoBehaviour
         if (view.colorIndex == colorIndex)
             return false;
 
+        // Premier bloc repeint du trait : une etape d'historique pour tout le trait
+        if (!paintStrokeOpen)
+        {
+            RecordHistory();
+            paintStrokeOpen = true;
+        }
         view.colorIndex = colorIndex;
         var visual = BlockColliders.Visual(view.transform);
         int slots = BlockPaint.Apply(visual, colorIndex);
@@ -1026,6 +1043,140 @@ public class GarageBuildController : MonoBehaviour
             entry.colorIndex = colorIndex;
         RobotSession.Dirty = true;
         return true;
+    }
+
+    // =========================================================
+    // HISTORIQUE (annuler / retablir, GarageHistory)
+    // Avant chaque action (pose, retrait, trait de peinture) une
+    // copie de la liste des blocs est empilee. Annuler / retablir
+    // remet le robot dans l'etat d'une copie : seuls les blocs
+    // qui different sont retires (animation de retrait), poses
+    // (animation de pose) ou repeints (pulse).
+    // =========================================================
+
+    public const int HistoryLimit = 100;
+
+    private readonly List<List<PlacedBlock>> undoStack = new();
+    private readonly List<List<PlacedBlock>> redoStack = new();
+    private bool paintStrokeOpen;
+
+    public bool CanUndo => undoStack.Count > 0;
+    public bool CanRedo => redoStack.Count > 0;
+    public bool PaintStrokeOpen => paintStrokeOpen;
+
+    private static List<PlacedBlock> Snapshot()
+    {
+        var copy = new List<PlacedBlock>(RobotSession.Blueprint.blocks.Count);
+        foreach (var b in RobotSession.Blueprint.blocks)
+        {
+            copy.Add(new PlacedBlock
+            {
+                blockId = b.blockId, x = b.x, y = b.y, z = b.z,
+                rotation = b.rotation, mirrored = b.mirrored, colorIndex = b.colorIndex,
+            });
+        }
+        return copy;
+    }
+
+    // Etat AVANT une action : la pile "retablir" est perdue (nouvelle branche)
+    private void RecordHistory()
+    {
+        undoStack.Add(Snapshot());
+        if (undoStack.Count > HistoryLimit)
+            undoStack.RemoveAt(0);
+        redoStack.Clear();
+    }
+
+    // Un trait de peinture (bouton tenu, jets en vol compris) = une seule etape
+    public void EndPaintStroke()
+    {
+        paintStrokeOpen = false;
+    }
+
+    public bool Undo() => StepHistory(undoStack, redoStack);
+    public bool Redo() => StepHistory(redoStack, undoStack);
+
+    private bool StepHistory(List<List<PlacedBlock>> from, List<List<PlacedBlock>> to)
+    {
+        if (from.Count == 0)
+            return false;
+        paintStrokeOpen = false;
+        to.Add(Snapshot());
+        var state = from[from.Count - 1];
+        from.RemoveAt(from.Count - 1);
+        RestoreBlocks(state);
+        return true;
+    }
+
+    private static string Identity(PlacedBlock b) =>
+        $"{b.blockId}|{b.x}|{b.y}|{b.z}|{b.rotation}|{(b.mirrored ? 1 : 0)}";
+
+    private void RestoreBlocks(List<PlacedBlock> state)
+    {
+        HideGhost();
+        HideMirrorGhost();
+
+        var wanted = new Dictionary<string, PlacedBlock>();
+        foreach (var b in state)
+            wanted[Identity(b)] = b;
+
+        // 1) Retire les blocs absents de l'etat cible
+        var current = new List<PlacedBlockView>(placedViews);
+        var kept = new Dictionary<string, PlacedBlockView>();
+        foreach (var view in current)
+        {
+            var entry = RobotSession.Blueprint.blocks.Find(b => b.x == view.cell.x && b.y == view.cell.y && b.z == view.cell.z);
+            string id = entry != null ? Identity(entry) : null;
+            if (id != null && wanted.ContainsKey(id) && !kept.ContainsKey(id))
+                kept[id] = view;
+            else
+                RemoveSingle(view);
+        }
+
+        // 2) La liste du blueprint devient l'etat cible (copies : la pile reste intacte)
+        RobotSession.Blueprint.blocks.Clear();
+        foreach (var b in state)
+        {
+            RobotSession.Blueprint.blocks.Add(new PlacedBlock
+            {
+                blockId = b.blockId, x = b.x, y = b.y, z = b.z,
+                rotation = b.rotation, mirrored = b.mirrored, colorIndex = b.colorIndex,
+            });
+        }
+
+        // 3) Pose les blocs manquants, repeint ceux dont la couleur change
+        foreach (var b in RobotSession.Blueprint.blocks)
+        {
+            string id = Identity(b);
+            if (kept.TryGetValue(id, out var view))
+            {
+                int color = BlockPalette.IsPaint(b.colorIndex) ? b.colorIndex : 0;
+                if (view.colorIndex != color)
+                {
+                    view.colorIndex = color;
+                    var visual = BlockColliders.Visual(view.transform);
+                    BlockPaint.Apply(visual, color);
+                    BlockPlaceAnimator.Pulse(visual);
+                }
+                continue;
+            }
+            if (!defsById.TryGetValue(b.blockId, out var def))
+                continue;
+            var cell = new Vector3Int(b.x, b.y, b.z);
+            var spawned = SpawnView(def, cell, b.rotation, b.mirrored);
+            if (spawned == null)
+                continue;
+            if (BlockPalette.IsPaint(b.colorIndex))
+            {
+                spawned.colorIndex = b.colorIndex;
+                BlockPaint.Apply(BlockColliders.Visual(spawned.transform), b.colorIndex);
+            }
+            BlockPlaceAnimator.Place(BlockColliders.Visual(spawned.transform), cellY);
+        }
+
+        RobotSession.Dirty = true;
+        RefreshLift();
+        UpdateStats();
     }
 
     // =========================================================

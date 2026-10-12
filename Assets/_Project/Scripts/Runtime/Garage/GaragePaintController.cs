@@ -42,6 +42,12 @@ public class GaragePaintController : MonoBehaviour
     private readonly Dictionary<PlacedBlockView, Pending> pending = new();
     private readonly List<PlacedBlockView> arrived = new();
 
+    // Historique : un trait reste ouvert tant que des jets sont en vol
+    public int PendingCount => pending.Count;
+
+    // Annuler / retablir pendant un trait : les jets en vol sont perdus
+    public void CancelPending() => pending.Clear();
+
     // Legende des commandes (Ctrl_AJOUTER / SUPPRIMER / PIVOTER)
     private TMP_Text placeLabel, removeLabel, rotateLabel;
     private string placeText, removeText, rotateText;
