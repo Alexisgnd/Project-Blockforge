@@ -23,7 +23,7 @@ public static class RobotThumbnailRenderer
     public const int Layer = 30;
 
     private const float FieldOfView = 26f;
-    private const float Margin = 1.12f; // marge autour du robot dans le puits
+    private const float Margin = 0.98f; // marge autour du robot dans le puits
     private static readonly Vector3 ViewDirection = new Vector3(0.62f, 0.32f, 1f).normalized; // 3/4 avant, un peu au-dessus (comme l'Accueil)
 
     private static Camera camera;
@@ -65,6 +65,11 @@ public static class RobotThumbnailRenderer
             {
                 name = "RobotThumbnail",
                 antiAliasing = 1,
+                // Rendue a 2x puis affichee plus petite : les mipmaps la reduisent proprement
+                useMipMap = true,
+                autoGenerateMips = true,
+                filterMode = FilterMode.Trilinear,
+                anisoLevel = 4,
             };
             target.Create();
         }
@@ -119,6 +124,21 @@ public static class RobotThumbnailRenderer
         hd.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
         hd.backgroundColorHDR = BlockforgeTheme.SurfaceInset.linear;
         hd.antialiasing = HDAdditionalCameraData.AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+
+        // Image nette : la camera "saute" d'un robot a l'autre entre deux rendus,
+        // HDRP y verrait un mouvement enorme (flou de mouvement) ; le bloom et la
+        // profondeur de champ du hangar baveraient aussi sur une petite vignette.
+        hd.customRenderingSettings = true;
+        foreach (var field in new[]
+                 {
+                     FrameSettingsField.MotionBlur, FrameSettingsField.MotionVectors, FrameSettingsField.ObjectMotionVectors,
+                     FrameSettingsField.DepthOfField, FrameSettingsField.Bloom, FrameSettingsField.ChromaticAberration,
+                     FrameSettingsField.FilmGrain, FrameSettingsField.LensDistortion, FrameSettingsField.Vignette,
+                 })
+        {
+            hd.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)field] = true;
+            hd.renderingPathCustomFrameSettings.SetEnabled(field, false);
+        }
         return camera;
     }
 
