@@ -59,6 +59,8 @@ public class HangarRobotShowcase : MonoBehaviour
 
     // Centre du robot affiche (monde) et sa taille d'affichage (m), pour la camera
     public Vector3 FocusPoint => transform.position + Vector3.up * (hoverHeight + focusHeight);
+    // Dessus du robot affiche (monde) : le zoom de l'Accueil vise le haut du robot
+    public Vector3 TopPoint => transform.position + Vector3.up * (hoverHeight + topHeight);
     public float DisplaySize { get; private set; } = 4f;
 
     private Dictionary<string, BlockDefinition> defs;
@@ -81,6 +83,7 @@ public class HangarRobotShowcase : MonoBehaviour
 
     private float spin;               // vitesse ajoutee (degres / seconde), retombe vers 0
     private float focusHeight = 2f;   // hauteur du centre du robot au-dessus du turntable
+    private float topHeight = 3f;     // hauteur du dessus du robot au-dessus du turntable
 
     private void Awake()
     {
@@ -301,6 +304,7 @@ public class HangarRobotShowcase : MonoBehaviour
         DisplaySize = size * scale;
         // Centre vertical du robot au-dessus de sa base (turntable), a l'echelle
         focusHeight = (bounds.center.y - root.position.y) * scale;
+        topHeight = (bounds.max.y - root.position.y) * scale;
     }
 
     // Grandit, depasse legerement la taille finale, puis s'y cale

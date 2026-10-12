@@ -68,7 +68,7 @@ public static class MainMenuShowcaseSetup
             zoom.stepPerNotch = 0.15f;
             zoom.minDistanceFactor = 1.9f;
             zoom.minDistance = 6f;
-            zoom.lookBelowFactor = 0.45f;
+            zoom.aimTopFactor = 0.85f;
             var menu = Object.FindAnyObjectByType<MainMenuController>(FindObjectsInactive.Include);
             zoom.homeScreen = menu != null ? menu.homeScreen : null;
             if (zoom.homeScreen == null)

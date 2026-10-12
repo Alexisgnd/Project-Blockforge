@@ -10,9 +10,9 @@ using UnityEngine.UI;
 // camera du robot de la vitrine (HangarRobotShowcase).
 // - Zoom = position sur un trajet entre la pose d'origine de
 //   la camera (zoom 0, cadrage du menu inchange) et un point
-//   proche du robot (zoom 1). En se rapprochant, la camera
-//   se tourne progressivement vers le centre du robot pour
-//   le garder cadre.
+//   proche du HAUT du robot (zoom 1). En se rapprochant, la
+//   camera se tourne progressivement vers le dessus du robot
+//   (et non son centre) : on finit sur le haut du robot.
 // - La distance minimale suit la taille du robot affiche :
 //   un gros robot ne rentre jamais dans l'objectif.
 // - Mouvement amorti (SmoothDamp) : chaque cran de molette
@@ -38,8 +38,8 @@ public class HangarCameraZoom : MonoBehaviour
     public float minDistanceFactor = 1.9f;
     [Tooltip("Distance minimale absolue (m)")]
     public float minDistance = 6f;
-    [Tooltip("Au plus pres, la camera vise sous le centre du robot (x taille) : le robot remonte au-dessus des cartes des baies")]
-    public float lookBelowFactor = 0.45f;
+    [Tooltip("Point vise au plus pres : 0 = centre du robot, 1 = son dessus")]
+    [Range(0f, 1f)] public float aimTopFactor = 0.85f;
     [Tooltip("Temps d'amortissement du zoom (s)")]
     public float smoothTime = 0.18f;
     public bool invertScroll;
@@ -106,7 +106,8 @@ public class HangarCameraZoom : MonoBehaviour
             return;
         }
 
-        Vector3 focus = showcase.FocusPoint;
+        // Le zoom se dirige vers le haut du robot (entre son centre et son dessus)
+        Vector3 focus = Vector3.Lerp(showcase.FocusPoint, showcase.TopPoint, aimTopFactor);
         Vector3 away = originPosition - focus;
         float originDistance = away.magnitude;
         if (originDistance < 0.01f)
@@ -114,8 +115,7 @@ public class HangarCameraZoom : MonoBehaviour
 
         float nearest = Mathf.Min(originDistance, Mathf.Max(minDistance, showcase.DisplaySize * minDistanceFactor));
         Vector3 nearPosition = focus + away / originDistance * nearest;
-        Vector3 lookAt = focus + Vector3.down * showcase.DisplaySize * lookBelowFactor;
-        Quaternion nearRotation = Quaternion.LookRotation(lookAt - nearPosition, Vector3.up);
+        Quaternion nearRotation = Quaternion.LookRotation(focus - nearPosition, Vector3.up);
 
         // Ease-in-out sur le trajet : le cadrage tourne surtout en fin de zoom
         float t = zoom * zoom * (3f - 2f * zoom);
