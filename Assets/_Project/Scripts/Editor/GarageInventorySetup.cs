@@ -236,7 +236,7 @@ public static class GarageInventorySetup
             toDisable.Add(player);
         foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
         {
-            if (mb != null && mb.GetType().Name.Contains("Plier") && mb is not PlierBlockPreview)
+            if (mb != null && mb.GetType().Name.Contains("Plier") && mb is not PlierBlockPreview && mb is not PlierHologram)
                 toDisable.Add(mb);
         }
         inventory.disableWhileOpen = toDisable.Distinct().ToArray();

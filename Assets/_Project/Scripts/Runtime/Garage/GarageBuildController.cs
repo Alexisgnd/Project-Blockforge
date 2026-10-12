@@ -47,7 +47,15 @@ public class GarageBuildController : MonoBehaviour
     public GarageInventoryController inventory;
     public GarageToolbar toolbar;
     public GarageStatsHUD statsHud;
-    public PlierBlockPreview plierPreview;
+    public PlierBlockPreview plierPreview;   // ancienne pince (v1)
+    public PlierHologram plierHologram;      // pince v2 : hologramme du bloc
+
+    // Retours visuels de la pince (PlierToolFX) : rotation a la molette (+1 / -1),
+    // bloc pose, bloc retire, pose refusee (clic sur un emplacement invalide)
+    public event System.Action<int> SpinStepped;
+    public event System.Action BlockPlaced;
+    public event System.Action BlockRemoved;
+    public event System.Action PlaceRefused;
 
     [Header("Ghost")]
     public Material ghostValidMaterial;
@@ -211,6 +219,7 @@ public class GarageBuildController : MonoBehaviour
         {
             RecordHistory();
             RemoveBlock(hoverBlock);
+            BlockRemoved?.Invoke();
             HideGhost();
             return;
         }
@@ -258,7 +267,12 @@ public class GarageBuildController : MonoBehaviour
             PlaceBlock(def, placeCell, rotation, false);
             if (placeMirror)
                 PlaceBlock(def, mirrorCell, rotation, true);
+            BlockPlaced?.Invoke();
             HideGhost();
+        }
+        else if (!valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
+        {
+            PlaceRefused?.Invoke();
         }
     }
 
@@ -795,6 +809,9 @@ public class GarageBuildController : MonoBehaviour
         spinIndex = (spinIndex + (scrollY > 0 ? 1 : 3)) % 4;
         if (plierPreview != null)
             plierPreview.extraYaw = spinIndex * 90f;
+        if (plierHologram != null)
+            plierHologram.SetSpin(spinIndex);
+        SpinStepped?.Invoke(scrollY > 0 ? 1 : -1);
     }
 
     // =========================================================
