@@ -8,11 +8,12 @@ using UnityEngine.InputSystem;
 // Ajoute au demarrage par GarageBuildController (qui garde les
 // piles d'historique). Toujours actif, quel que soit l'outil en
 // main ou l'inventaire ouvert.
-// - Ctrl+Z : annuler la derniere action (pose, retrait, trait
-//   de peinture ; le jumeau miroir fait partie de l'action)
-// - Ctrl+Y ou Ctrl+Maj+Z : retablir
-// - Touches physiques (Input System) : Z est la touche Z d'un
-//   clavier AZERTY (wKey), Y est au meme endroit sur les deux.
+// - A : annuler la derniere action (pose, retrait, trait de
+//   peinture ; le jumeau miroir fait partie de l'action)
+// - E : retablir
+// - Pas de Ctrl : Ctrl fait descendre le joueur. Touches
+//   physiques (Input System) : A d'un clavier AZERTY = qKey,
+//   E est au meme endroit sur les deux.
 // - Ignore pendant la saisie d'un texte (recherche de pieces,
 //   nom du robot) et derriere une popup (curseur libre hors
 //   inventaire).
@@ -43,12 +44,11 @@ public class GarageHistory : MonoBehaviour
             build.EndPaintStroke();
 
         var kb = Keyboard.current;
-        if (kb == null || !Held(kb.ctrlKey) || !CanUseShortcuts())
+        if (kb == null || !CanUseShortcuts())
             return;
 
-        bool shift = Held(kb.shiftKey);
-        bool undo = kb.wKey.wasPressedThisFrame && !shift;
-        bool redo = kb.yKey.wasPressedThisFrame || (kb.wKey.wasPressedThisFrame && shift);
+        bool undo = kb.qKey.wasPressedThisFrame;   // touche A (AZERTY)
+        bool redo = kb.eKey.wasPressedThisFrame;
         if (!undo && !redo)
             return;
 
@@ -58,13 +58,9 @@ public class GarageHistory : MonoBehaviour
             Toast.Info(undo ? "Nothing to undo." : "Nothing to redo.");
     }
 
-    // Modificateur tenu, ou appuye/relache dans cette image (frappe tres rapide)
-    private static bool Held(UnityEngine.InputSystem.Controls.ButtonControl key) =>
-        key.isPressed || key.wasPressedThisFrame || key.wasReleasedThisFrame;
-
     private bool CanUseShortcuts()
     {
-        // Saisie de texte en cours : Ctrl+Z appartient au champ
+        // Saisie de texte en cours : les lettres appartiennent au champ
         var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         if (selected != null && selected.TryGetComponent<TMP_InputField>(out var field) && field.isFocused)
             return false;

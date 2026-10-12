@@ -33,7 +33,7 @@ using UnityEngine.UI;
 //   et GaragePaintController (ajoute au demarrage) peint les blocs
 //   via PaintBlock / MirrorTwin ; colorIndex est sauvegarde avec
 //   le bloc et reapplique au chargement (BlockPaint)
-// - Ctrl+Z / Ctrl+Y (ou Ctrl+Maj+Z) : annuler / retablir les
+// - A / E : annuler / retablir les
 //   poses, retraits et traits de peinture (GarageHistory)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
@@ -160,7 +160,7 @@ public class GarageBuildController : MonoBehaviour
             painter = gameObject.AddComponent<GaragePaintController>();
         painter.build = this;
 
-        // Annuler / retablir (Ctrl+Z, Ctrl+Y) : composant toujours actif, meme
+        // Annuler / retablir (A, E) : composant toujours actif, meme
         // quand ce controleur est coupe (pistolet en main, inventaire ouvert)
         if (!TryGetComponent<GarageHistory>(out var history))
             history = gameObject.AddComponent<GarageHistory>();
