@@ -62,6 +62,9 @@ public class HangarRobotShowcase : MonoBehaviour
     public float DisplaySize { get; private set; } = 4f;
 
     private Dictionary<string, BlockDefinition> defs;
+
+    // Catalogue des blocs par nom d'asset (aussi utilise pour les apercus de l'ecran Build)
+    public IReadOnlyDictionary<string, BlockDefinition> Catalog => defs;
     private Transform turntable;
 
     private GameObject current;

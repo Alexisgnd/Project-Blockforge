@@ -10,6 +10,8 @@ using UnityEngine.UI;
 // slot occupe -> MODIFIER / SUPPRIMER, slot libre -> CREER.
 // La suppression passe par une popup de confirmation
 // (action irreversible cote serveur).
+// Chaque baie occupee affiche un vrai apercu 3D du robot
+// (RobotThumbnailRenderer), rendu a chaque rechargement.
 // =========================================================
 
 public class BuildMenuController : MonoBehaviour
@@ -28,6 +30,8 @@ public class BuildMenuController : MonoBehaviour
     public string garageSceneName = "Garage";
 
     private RobotRecord[] recordsBySlot;
+    private readonly RenderTexture[] previews = new RenderTexture[3];
+    private HangarRobotShowcase showcase;
     private int pendingDeleteSlot = -1;
     private bool deleting;
 
@@ -114,7 +118,10 @@ public class BuildMenuController : MonoBehaviour
                 }
 
                 if (cards[i] != null)
+                {
                     cards[i].Bind(i, data, OnModifySlot, OnCreateSlot, OnDeleteSlot);
+                    cards[i].SetPreview(record != null ? RenderPreview(i, record) : null);
+                }
             }
 
             if (usedCountText != null)
@@ -128,6 +135,43 @@ public class BuildMenuController : MonoBehaviour
                 return;
             if (usedCountText != null)
                 usedCountText.text = "Offline";
+        }
+    }
+
+    // =========================================================
+    // APERCUS 3D
+    // =========================================================
+
+    private Texture RenderPreview(int index, RobotRecord record)
+    {
+        if (index < 0 || index >= previews.Length || record.data == null)
+            return null;
+        if (showcase == null)
+            showcase = FindAnyObjectByType<HangarRobotShowcase>();
+        if (showcase == null || showcase.Catalog == null)
+            return null;
+
+        // Texture a 2x la taille affichee pour rester nette
+        Vector2 size = cards[index].PreviewPixelSize * 2f;
+        if (size.x < 1f || size.y < 1f)
+            size = new Vector2(448f, 384f);
+
+        if (string.IsNullOrEmpty(record.data.name))
+            record.data.name = record.name;
+        previews[index] = RobotThumbnailRenderer.Render(record.data, showcase.Catalog, showcase.transform.position,
+                                                        Mathf.RoundToInt(size.x), Mathf.RoundToInt(size.y), previews[index]);
+        return previews[index];
+    }
+
+    private void OnDestroy()
+    {
+        for (int i = 0; i < previews.Length; i++)
+        {
+            if (previews[i] != null)
+            {
+                previews[i].Release();
+                Destroy(previews[i]);
+            }
         }
     }
 
@@ -248,12 +292,12 @@ public class BuildMenuController : MonoBehaviour
         text.ForceMeshUpdate(true, true);
         // Le bouton garde la largeur de son libelle (en capitales), aligne a droite
         var rect = (RectTransform)deleteConfirmButton.transform;
-        float width = Mathf.Min(360f, text.GetPreferredValues().x + 2 * BlockforgeTheme.Space4);
+        float width = Mathf.Min(420f, Mathf.Max(140f, text.GetPreferredValues().x + 2 * BlockforgeTheme.Space6));
         rect.sizeDelta = new Vector2(width, rect.sizeDelta.y);
         if (deleteCancelButton != null)
         {
             var cancel = (RectTransform)deleteCancelButton.transform;
-            cancel.anchoredPosition = new Vector2(rect.anchoredPosition.x - width - BlockforgeTheme.Space2, cancel.anchoredPosition.y);
+            cancel.anchoredPosition = new Vector2(rect.anchoredPosition.x - width - BlockforgeTheme.Space3, cancel.anchoredPosition.y);
         }
     }
 

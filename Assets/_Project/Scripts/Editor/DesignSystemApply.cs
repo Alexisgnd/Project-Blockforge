@@ -147,21 +147,26 @@ public static class DesignSystemApply
             var layout = navButtons.GetComponent<HorizontalLayoutGroup>();
             if (layout != null)
             {
-                layout.spacing = BlockforgeTheme.Space2;
+                layout.spacing = BlockforgeTheme.Space1;
                 layout.childAlignment = TextAnchor.MiddleLeft;
+                layout.childControlHeight = true;
+                layout.childForceExpandHeight = true;
             }
             foreach (var (key, label) in NavLabels)
             {
                 var tab = navButtons.Find("Nav_" + key);
                 if (tab == null)
                     continue;
+                // Onglets agrandis (cible de clic sur toute la hauteur du bandeau)
                 var text = tab.GetComponentInChildren<TMP_Text>(true);
                 Txt(text, DSTextStyle.Label, BlockforgeTheme.InkSecondary, label, TextAlignmentOptions.Center);
+                if (text != null)
+                    text.fontSize = NavLabelSize;
                 var el = El(tab, DSRole.TabNav, new[] { text });
                 if (el != null)
                     el.Selected = key == "ACCUEIL";
                 var le = GetOrAdd<LayoutElement>(tab.gameObject);
-                le.preferredWidth = PrefWidth(text) + 2 * BlockforgeTheme.Space3;
+                le.preferredWidth = PrefWidth(text) + 2 * BlockforgeTheme.Space5;
             }
         }
 
@@ -181,6 +186,9 @@ public static class DesignSystemApply
         if (controller != null)
             EditorUtility.SetDirty(controller);
     }
+
+    // Libelles de la navigation du haut : style label du DS, agrandi pour la lisibilite
+    private const float NavLabelSize = 15f;
 
     private static readonly string[] HomeStatLabels =
         { "CPU", "Firepower", "Health", "Speed", "Energy use", "Mass", "Parts" };
@@ -229,7 +237,7 @@ public static class DesignSystemApply
         var manager = Object.FindAnyObjectByType<RobotSlotManager>(FindObjectsInactive.Include);
         if (slots != null)
         {
-            Place(slots, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 72f + BlockforgeTheme.Space8),
+            Place(slots, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, BlockforgeTheme.Space8),
                   new Vector2(3 * slotW + 2 * gap, slotH), new Vector2(0.5f, 0));
             var statLabels = new TMP_Text[3];
             for (int i = 0; i < 3; i++)
@@ -281,13 +289,11 @@ public static class DesignSystemApply
             }
         }
 
-        // Barre d'actions du bas : un seul bouton principal (Play)
-        var bar = F("HomeScreen/BottomBar");
-        El(bar, DSRole.Strip, null, e => e.hairlineEdge = DSEdge.Top);
-        float x = BlockforgeTheme.Space8;
-        x = BarButton("HomeScreen/BottomBar/PlayButton", DSRole.ButtonPrimary, DSTextStyle.ButtonLG, "Play", x, BlockforgeTheme.ControlLg);
-        x = BarButton("HomeScreen/BottomBar/BuildButton", DSRole.ButtonSecondary, DSTextStyle.ButtonMD, "Build", x, BlockforgeTheme.ControlMd);
-        BarButton("HomeScreen/BottomBar/RobotSettingsButton", DSRole.ButtonGhost, DSTextStyle.ButtonMD, "Robot settings", x, BlockforgeTheme.ControlMd);
+        // Plus de barre d'actions en bas : Play et Build sont dans la navigation
+        // du haut (doublon). Une scene generee avant ce changement la perd ici.
+        var bar = root != null ? root.Find("HomeScreen/BottomBar") : null;
+        if (bar != null)
+            Undo.DestroyObjectImmediate(bar.gameObject);
     }
 
     private static float BarButton(string path, DSRole role, DSTextStyle style, string label, float x, float height)
@@ -517,7 +523,7 @@ public static class DesignSystemApply
         }
 
         // Dialogue de suppression (ton danger, bouton = verbe + objet)
-        ApplyDialog("BuildScreen/DeletePopup", "Delete this robot?", null, 196f,
+        ApplyDialog("BuildScreen/DeletePopup", "Delete this robot?", null, DialogHeight(52f),
                     ("CancelButton", DSRole.ButtonGhost, "Cancel"),
                     ("ConfirmButton", DSRole.ButtonDanger, "Delete robot"));
         var accent = F("BuildScreen/DeletePopup/Panel/Accent");
@@ -602,18 +608,18 @@ public static class DesignSystemApply
         ApplyInventory();
 
         // ---------- Dialogues ----------
-        ApplyDialog("NamePopup", "Name your robot", null, 176f,
+        ApplyDialog("NamePopup", "Name your robot", null, DialogHeight(BlockforgeTheme.ControlLg),
                     ("CancelButton", DSRole.ButtonGhost, "Cancel"),
                     ("ConfirmButton", DSRole.ButtonPrimary, "Save"));
         var input = F("NamePopup/Panel/NameInput");
         if (input != null)
         {
             ApplyField(input, "Robot name", null);
-            Place(input, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -(BlockforgeTheme.Space4 + 26 + BlockforgeTheme.Space4)),
-                  new Vector2(-2 * BlockforgeTheme.Space4, BlockforgeTheme.ControlMd), new Vector2(0.5f, 1));
+            Place(input, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -(DialogPad + DialogTitleH + DialogGap)),
+                  new Vector2(-2 * DialogPad, BlockforgeTheme.ControlLg), new Vector2(0.5f, 1));
         }
         ApplyDialog("QuitPopup", "Leave the garage?",
-                    "Your latest changes are not saved. If you leave now, they are lost.", 196f,
+                    "Your latest changes are not saved. If you leave now, they are lost.", DialogHeight(52f),
                     ("CancelButton", DSRole.ButtonGhost, "Stay"),
                     ("ConfirmButton", DSRole.ButtonDanger, "Leave without saving"));
     }
@@ -950,6 +956,18 @@ public static class DesignSystemApply
 
     // Dialogue : scrim, panneau radius-lg + shadow-overlay, titre display-md, corps body,
     // actions alignees a droite, l'action qui confirme en dernier
+    // Dialogues agrandis (12/10/2026) : panneau plus large, titre display-lg,
+    // texte title-md, boutons control-lg. Plus faciles a viser a la souris.
+    private const float DialogWidth = 600f;
+    private const float DialogPad = BlockforgeTheme.Space6;
+    private const float DialogTitleH = 40f;
+    private const float DialogGap = BlockforgeTheme.Space5;
+    private const float DialogButtonH = BlockforgeTheme.ControlLg;
+
+    // Hauteur d'un dialogue dont la zone de contenu (texte ou champ) mesure contentH
+    private static float DialogHeight(float contentH) =>
+        DialogPad + DialogTitleH + DialogGap + contentH + DialogGap + DialogButtonH + DialogPad;
+
     private static void ApplyDialog(string path, string title, string body, float height,
                                     params (string name, DSRole role, string label)[] buttons)
     {
@@ -964,23 +982,24 @@ public static class DesignSystemApply
             return;
         }
         El(panel, DSRole.Dialog);
-        float pad = BlockforgeTheme.Space4;
+        float pad = DialogPad;
         var rect = (RectTransform)panel;
         Undo.RecordObject(rect, "Design System");
-        rect.sizeDelta = new Vector2(440f, height);
+        rect.sizeDelta = new Vector2(DialogWidth, height);
 
         var titleText = panel.Find("Title")?.GetComponent<TMP_Text>();
-        Txt(titleText, DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, title, TextAlignmentOptions.TopLeft);
-        Place(titleText, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -pad), new Vector2(-2 * pad, 26), new Vector2(0.5f, 1));
+        Txt(titleText, DSTextStyle.DisplayLG, BlockforgeTheme.InkPrimary, title, TextAlignmentOptions.TopLeft);
+        Place(titleText, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -pad), new Vector2(-2 * pad, DialogTitleH), new Vector2(0.5f, 1));
 
         foreach (var bodyName in new[] { "Body", "Message" })
         {
             var bodyText = panel.Find(bodyName)?.GetComponent<TMP_Text>();
             if (bodyText == null)
                 continue;
-            Txt(bodyText, DSTextStyle.Body, BlockforgeTheme.InkSecondary, body, TextAlignmentOptions.TopLeft);
-            Place(bodyText, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -pad - 26 - pad),
-                  new Vector2(-2 * pad, rect.sizeDelta.y - (pad + 26 + pad) - (pad + BlockforgeTheme.ControlMd + pad)), new Vector2(0.5f, 1));
+            Txt(bodyText, DSTextStyle.TitleMD, BlockforgeTheme.InkSecondary, body, TextAlignmentOptions.TopLeft);
+            float top = pad + DialogTitleH + DialogGap;
+            Place(bodyText, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -top),
+                  new Vector2(-2 * pad, height - top - (DialogGap + DialogButtonH + pad)), new Vector2(0.5f, 1));
         }
 
         // De droite a gauche : la confirmation (dernier bouton) contre le bord
@@ -995,11 +1014,11 @@ public static class DesignSystemApply
                 continue;
             }
             var text = button.GetComponentInChildren<TMP_Text>(true);
-            Txt(text, DSTextStyle.ButtonMD, InkFor(role), label, TextAlignmentOptions.Center);
+            Txt(text, DSTextStyle.ButtonLG, InkFor(role), label, TextAlignmentOptions.Center);
             El(button, role, new[] { text });
-            float width = PrefWidth(text) + 2 * BlockforgeTheme.Space4;
-            Place(button, new Vector2(1, 0), new Vector2(1, 0), new Vector2(x, pad), new Vector2(width, BlockforgeTheme.ControlMd), new Vector2(1, 0));
-            x -= width + BlockforgeTheme.Space2;
+            float width = Mathf.Max(140f, PrefWidth(text) + 2 * BlockforgeTheme.Space6);
+            Place(button, new Vector2(1, 0), new Vector2(1, 0), new Vector2(x, pad), new Vector2(width, DialogButtonH), new Vector2(1, 0));
+            x -= width + BlockforgeTheme.Space3;
         }
     }
 

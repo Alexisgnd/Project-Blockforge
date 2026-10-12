@@ -5,8 +5,10 @@ using UnityEngine.UI;
 
 // =========================================================
 // CARTE D'UN SLOT DE CONSTRUCTION
-// Deux etats : robot existant (stats + MODIFIER / SUPPRIMER)
-// ou slot vide (+ CREER).
+// Deux etats : robot existant (apercu, stats, MODIFIER /
+// SUPPRIMER) ou slot vide (+ CREER). L'apercu est une texture
+// rendue par RobotThumbnailRenderer, affichee dans le puits
+// "Cover" par une RawImage creee a la volee.
 // =========================================================
 
 // Donnees d'affichage d'un slot (remplies depuis PocketBase)
@@ -23,6 +25,42 @@ public struct BuildSlotData
 
 public class BuildSlotCard : MonoBehaviour
 {
+    // Taille du puits d'apercu en pixels d'ecran (pour dimensionner la texture)
+    public Vector2 PreviewPixelSize
+    {
+        get
+        {
+            if (coverImage == null)
+                return Vector2.zero;
+            var rect = coverImage.rectTransform.rect;
+            var canvas = coverImage.canvas;
+            float scale = canvas != null ? canvas.scaleFactor : 1f;
+            return rect.size * scale;
+        }
+    }
+
+    // Affiche (ou retire, avec null) l'apercu 3D du robot dans le puits
+    public void SetPreview(Texture texture)
+    {
+        if (coverImage == null)
+            return;
+        if (preview == null)
+        {
+            var go = new GameObject("Preview", typeof(RectTransform), typeof(RawImage));
+            go.layer = coverImage.gameObject.layer;
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(coverImage.transform, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.one;       // 1 px : le bord du puits reste visible
+            rect.offsetMax = -Vector2.one;
+            preview = go.GetComponent<RawImage>();
+            preview.raycastTarget = false;
+        }
+        preview.texture = texture;
+        preview.enabled = texture != null;
+    }
+
     [Header("Commun (rempli par le setup)")]
     public TMP_Text numberText;
     public TMP_Text titleText;
@@ -42,6 +80,7 @@ public class BuildSlotCard : MonoBehaviour
     public GameObject emptyGroup;
     public Button createButton;
 
+    private RawImage preview;
     private int slotIndex;
     private Action<int> onModify;
     private Action<int> onCreate;

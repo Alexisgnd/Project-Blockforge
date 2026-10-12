@@ -39,7 +39,7 @@ public class HangarCameraZoom : MonoBehaviour
     [Tooltip("Distance minimale absolue (m)")]
     public float minDistance = 6f;
     [Tooltip("Au plus pres, la camera vise sous le centre du robot (x taille) : le robot remonte au-dessus des cartes des baies")]
-    public float lookBelowFactor = 0.22f;
+    public float lookBelowFactor = 0.45f;
     [Tooltip("Temps d'amortissement du zoom (s)")]
     public float smoothTime = 0.18f;
     public bool invertScroll;

@@ -217,29 +217,8 @@ public static class MainMenuUISetup
         slotManager.slotNameLabels = slotNames;
         slotManager.selectedBadges = slotBadges;
 
-        // Barre du bas : actions principales
-        var bottomBar = CreatePanel(home, "BottomBar", NavBg);
-        SetAnchors(bottomBar, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
-        bottomBar.sizeDelta = new Vector2(0, 72);
-        bottomBar.anchoredPosition = Vector2.zero;
-
-        var (playBtn, _) = CreateButton(bottomBar, "PlayButton", "JOUER", 18, Accent, BlockforgeTheme.OnAccent);
-        SetAnchors(playBtn.GetComponent<RectTransform>(), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        playBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(220, 48);
-        playBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(60, 0);
-        UnityEventTools.AddPersistentListener(playBtn.onClick, controller.OnPlayClicked);
-
-        var (buildBtn, _) = CreateButton(bottomBar, "BuildButton", "CONSTRUIRE", 16, CardBg, TextMain);
-        SetAnchors(buildBtn.GetComponent<RectTransform>(), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        buildBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 48);
-        buildBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(310, 0);
-        UnityEventTools.AddPersistentListener(buildBtn.onClick, controller.OnBuildClicked);
-
-        var (settingsBtn, _) = CreateButton(bottomBar, "RobotSettingsButton", "PARAMÈTRES DU ROBOT", 15, CardBg, TextDim);
-        SetAnchors(settingsBtn.GetComponent<RectTransform>(), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        settingsBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(260, 48);
-        settingsBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(560, 0);
-        UnityEventTools.AddPersistentListener(settingsBtn.onClick, controller.OnRobotSettingsClicked);
+        // Pas de barre d'actions en bas : Play et Build sont deja dans la
+        // navigation du haut (doublon retire le 12/10/2026)
 
         // ---------- Cablage final du controller ----------
         controller.slotManager = slotManager;
