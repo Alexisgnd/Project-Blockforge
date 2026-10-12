@@ -9,6 +9,8 @@ using UnityEngine.UI;
 // Pas d'apercu (image de couverture / de carte) : la fiche
 // reprend le pictogramme de la carte cliquee, et la carte
 // d'exemple est une ligne du panneau Details.
+// Lancement : "Play with bots" (actif) ou "Play online"
+// (desactive tant que le jeu en ligne n'existe pas).
 // =========================================================
 
 public class PlayMenuController : MonoBehaviour
@@ -37,7 +39,13 @@ public class PlayMenuController : MonoBehaviour
     public TMP_Text detailObjectivePrimary;
     public TMP_Text detailObjectiveSecondary;
     public Button backButton;
+    [Tooltip("Play with bots")]
     public Button playButton;
+    [Tooltip("Play online : desactive pour l'instant")]
+    public Button playOnlineButton;
+
+    // Choix du joueur au lancement, lu par la scene de jeu
+    public static bool PlayWithBots { get; private set; } = true;
 
     private GameModeDefinition current;
 
@@ -47,6 +55,8 @@ public class PlayMenuController : MonoBehaviour
             backButton.onClick.AddListener(ShowModesList);
         if (playButton != null)
             playButton.onClick.AddListener(LaunchCurrentMode);
+        if (playOnlineButton != null)
+            playOnlineButton.interactable = false; // en ligne : pas encore disponible
     }
 
     private void Start()
@@ -118,6 +128,7 @@ public class PlayMenuController : MonoBehaviour
             return;
         }
 
+        PlayWithBots = true;
         SceneManager.LoadScene(current.sceneName);
     }
 }

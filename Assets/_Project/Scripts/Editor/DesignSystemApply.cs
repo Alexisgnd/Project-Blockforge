@@ -389,7 +389,83 @@ public static class DesignSystemApply
         Txt(T(d + "ObjectivesPanel/ObjectiveSecondary/Text"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
 
         DialogButton(F(d + "BackButton"), DSRole.ButtonGhost, DSTextStyle.ButtonMD, "Back", BlockforgeTheme.ControlMd);
-        DialogButton(F(d + "PlayButton"), DSRole.ButtonPrimary, DSTextStyle.ButtonLG, "Play", BlockforgeTheme.ControlLg);
+        ApplyPlayChoice(playMenu, d);
+    }
+
+    // Deux facons de lancer un mode : contre des bots (action principale) ou en
+    // ligne (pas encore disponible : desactive, avec cadenas et raison, cf. DS).
+    private static void ApplyPlayChoice(PlayMenuController playMenu, string d)
+    {
+        var play = F(d + "PlayButton");
+        if (play == null)
+            return;
+        DialogButton(play, DSRole.ButtonPrimary, DSTextStyle.ButtonLG, "Play with bots", BlockforgeTheme.ControlLg);
+        var playRect = (RectTransform)play;
+        Resize(playRect, Mathf.Max(260f, playRect.sizeDelta.x), BlockforgeTheme.ControlLg);
+
+        // Bouton "Play online" : clone du bouton Play, a sa gauche
+        var online = play.parent.Find("PlayOnlineButton"); // cree au premier passage (pas d'alerte "introuvable")
+        if (online == null)
+        {
+            var clone = Object.Instantiate(play.gameObject, play.parent);
+            clone.name = "PlayOnlineButton";
+            Undo.RegisterCreatedObjectUndo(clone, "Design System");
+            online = clone.transform;
+            var cloneButton = clone.GetComponent<Button>();
+            if (cloneButton != null)
+                cloneButton.onClick.RemoveAllListeners();
+        }
+        var onlineText = online.GetComponentInChildren<TMP_Text>(true);
+        Txt(onlineText, DSTextStyle.ButtonLG, InkFor(DSRole.ButtonSecondary), "Play online", TextAlignmentOptions.Center);
+        El(online, DSRole.ButtonSecondary, new[] { onlineText });
+        var onlineButton = online.GetComponent<Button>();
+        if (onlineButton != null)
+        {
+            Undo.RecordObject(onlineButton, "Design System");
+            onlineButton.interactable = false;
+            EditorUtility.SetDirty(onlineButton);
+        }
+
+        // Cadenas devant le libelle
+        const float iconSize = 18f;
+        float labelW = PrefWidth(onlineText);
+        float padX = BlockforgeTheme.Space6;
+        float onlineW = padX + iconSize + BlockforgeTheme.Space2 + labelW + padX;
+        var onlineRect = (RectTransform)online;
+        Place(onlineRect, playRect.anchorMin, playRect.anchorMax,
+              new Vector2(playRect.anchoredPosition.x - playRect.sizeDelta.x - BlockforgeTheme.Space3, playRect.anchoredPosition.y),
+              new Vector2(onlineW, BlockforgeTheme.ControlLg), playRect.pivot);
+        var lockIcon = Child(online, "LockIcon");
+        var lockImage = GetOrAdd<Image>(lockIcon.gameObject);
+        lockImage.raycastTarget = false;
+        SetIcon(lockImage, "lock", BlockforgeTheme.InkSecondary, iconSize);
+        Place(lockImage, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(padX, 0), new Vector2(iconSize, iconSize), new Vector2(0, 0.5f));
+        if (onlineText != null)
+        {
+            var textRect = onlineText.rectTransform;
+            Undo.RecordObject(textRect, "Design System");
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(padX + iconSize + BlockforgeTheme.Space2, 0);
+            textRect.offsetMax = new Vector2(-padX, 0);
+            EditorUtility.SetDirty(textRect);
+        }
+
+        // La raison, juste au-dessus du bouton
+        var reasonGo = Child(online.parent, "PlayOnlineReason");
+        var reason = GetOrAdd<TextMeshProUGUI>(reasonGo.gameObject);
+        reason.raycastTarget = false;
+        Txt(reason, DSTextStyle.Caption, BlockforgeTheme.InkMuted, "Online play is coming soon.", TextAlignmentOptions.BottomRight);
+        Place(reason, playRect.anchorMin, playRect.anchorMax,
+              new Vector2(onlineRect.anchoredPosition.x, onlineRect.anchoredPosition.y + BlockforgeTheme.ControlLg + BlockforgeTheme.Space2),
+              new Vector2(320f, 18f), playRect.pivot);
+
+        if (playMenu != null)
+        {
+            Undo.RecordObject(playMenu, "Design System");
+            playMenu.playOnlineButton = onlineButton;
+            EditorUtility.SetDirty(playMenu);
+        }
     }
 
     private static void ApplyBuildScreen()
