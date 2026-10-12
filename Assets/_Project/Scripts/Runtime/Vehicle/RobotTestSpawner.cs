@@ -7,8 +7,16 @@ using UnityEngine;
 // en memoire (RobotSession, rempli par le garage avant la
 // touche P) ou, si la scene est lancee directement, un robot
 // par defaut (6 cubes + 4 roues Scout) ; le pose sur le
-// SpawnPoint, lui ajoute un Rigidbody et la conduite ZQSD
-// (RobotTestDriver) et branche la camera de poursuite.
+// SpawnPoint (un peu au-dessus : les suspensions se posent),
+// lui ajoute la physique (RobotLocomotion), l'animation des
+// blocs de mouvement (RobotPartAnimator), le pilotage
+// (RobotTestDriver), le HUD de match (RobotTestHUD : vie,
+// reticule, etat du robot, minimap) et branche la camera.
+// Le robot passe sur le calque RobotLayer : la minimap le
+// remplace par son marqueur au lieu de le photographier.
+// F5 : passe au robot suivant (le robot du garage, puis des
+// robots de demonstration : chenilles, pattes, survol,
+// helico avec propulseur et gouverne).
 // =========================================================
 
 public class RobotTestSpawner : MonoBehaviour
@@ -24,11 +32,16 @@ public class RobotTestSpawner : MonoBehaviour
              "voir le log [GarageBuild] Grille mesuree). 1 m = l'echelle des blocs Blender et du Mothership.")]
     public float cellSize = 1f;
 
+    public const int RobotLayer = 29;
+
     public GameObject Robot { get; private set; }
+
+    private readonly Dictionary<string, BlockDefinition> defs = new();
+    private GameObject hudHost;
+    private int demoIndex;   // 0 = robot du garage (ou robot par defaut), 1.. = robots de demonstration
 
     private void Start()
     {
-        var defs = new Dictionary<string, BlockDefinition>();
         if (blocks != null)
         {
             foreach (var def in blocks)
@@ -40,22 +53,58 @@ public class RobotTestSpawner : MonoBehaviour
 
         var blueprint = RobotSession.Blueprint;
         bool isDefault = blueprint == null || blueprint.blocks == null || blueprint.blocks.Count == 0;
-        if (isDefault)
-            blueprint = CreateDefaultTestBlueprint();
+        Spawn(isDefault ? CreateDefaultTestBlueprint() : blueprint, isDefault);
+    }
+
+    // F5 : robot suivant (robot du garage, puis les demonstrations de chaque famille de mouvement)
+    private void Update()
+    {
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb == null || !kb.f5Key.wasPressedThisFrame)
+            return;
+        var demos = DemoBlueprints();
+        demoIndex = (demoIndex + 1) % (demos.Count + 1);
+        if (demoIndex == 0)
+        {
+            var bp = RobotSession.Blueprint;
+            bool isDefault = bp == null || bp.blocks == null || bp.blocks.Count == 0;
+            Spawn(isDefault ? CreateDefaultTestBlueprint() : bp, isDefault);
+        }
+        else
+        {
+            Spawn(demos[demoIndex - 1], false);
+        }
+    }
+
+    private void Spawn(RobotBlueprint blueprint, bool isDefault)
+    {
+        if (Robot != null)
+            Destroy(Robot);
+        if (hudHost != null)
+            Destroy(hudHost);
 
         Robot = RobotAssembler.Build(blueprint, defs, cellSize, null, out int placed, out int weightKg);
 
-        Vector3 position = spawnPoint != null ? spawnPoint.position : Vector3.up * 0.2f;
+        Vector3 position = (spawnPoint != null ? spawnPoint.position : Vector3.zero) + Vector3.up * 0.4f;
         Quaternion rotation = spawnPoint != null ? Quaternion.Euler(0f, spawnPoint.eulerAngles.y, 0f) : Quaternion.identity;
         Robot.transform.SetPositionAndRotation(position, rotation);
         CheckGround(position);
 
-        // Rigidbody ajoute avant le pilote : [RequireComponent] en creerait un
-        // par defaut sinon. La masse n'influe pas sur la conduite (pilotee en
-        // vitesse), seulement sur les chocs.
-        var rb = Robot.AddComponent<Rigidbody>();
-        rb.mass = Mathf.Clamp(weightKg * 0.01f, 1f, 100f);
+        SetLayer(Robot.transform, RobotLayer);
+
+        // Physique (masse = poids / 100), animations, pilotage
+        Robot.AddComponent<Rigidbody>();
+        var locomotion = Robot.AddComponent<RobotLocomotion>();
+        locomotion.Setup(cellSize, weightKg);
+        Robot.AddComponent<RobotPartAnimator>().Build(locomotion);
         Robot.AddComponent<RobotTestDriver>();
+
+        // HUD de match (theme hud du design system), recree avec le robot
+        int maxHealth = 0;
+        foreach (var view in Robot.GetComponentsInChildren<PlacedBlockView>())
+            maxHealth += view.definition != null ? view.definition.resistanceHp : 0;
+        hudHost = new GameObject("MatchHUD_" + blueprint.name);
+        hudHost.AddComponent<RobotTestHUD>().Bind(locomotion, blueprint.name, maxHealth, weightKg);
 
         if (followCamera == null)
             followCamera = FindAnyObjectByType<RobotFollowCamera>();
@@ -64,7 +113,67 @@ public class RobotTestSpawner : MonoBehaviour
 
         Debug.Log($"[RobotTest] Robot '{blueprint.name}' assemble : {placed} bloc(s), {weightKg} kg, case {cellSize} m" +
                   (isDefault ? " (robot par defaut : aucun blueprint en memoire)" : "") +
-                  $" ; ECHAP x2 -> '{RobotSession.ReturnSceneName}'.");
+                  $" ; F5 : robot suivant ; ECHAP x2 -> '{RobotSession.ReturnSceneName}'.");
+    }
+
+    // ---------- Robots de demonstration (une famille de mouvement chacun) ----------
+
+    private static PlacedBlock B(string id, int x, int y, int z, int face = 0, int spin = 0) =>
+        new() { blockId = id, x = x, y = y, z = z, rotation = face == 0 && spin == 0 ? 0 : BlockFootprint.Compose(face, spin) };
+
+    private static void Slab(RobotBlueprint bp, int x0, int x1, int y, int z0, int z1)
+    {
+        for (int x = x0; x <= x1; x++)
+            for (int z = z0; z <= z1; z++)
+                bp.blocks.Add(B("Block_01_Cube", x, y, z));
+    }
+
+    public static List<RobotBlueprint> DemoBlueprints()
+    {
+        var list = new List<RobotBlueprint>();
+
+        var tracks = new RobotBlueprint { name = "DEMO TRACKS" };
+        Slab(tracks, 13, 17, 1, 13, 16);
+        tracks.blocks.Add(B("Block_TankTrack_N1_Bison", 13, 0, 14, 1));
+        tracks.blocks.Add(B("Block_TankTrack_N1_Bison", 17, 0, 14, 1));
+        tracks.blocks.Add(B("Block_TankTrack_N1_Bison", 13, 0, 16, 1));
+        tracks.blocks.Add(B("Block_TankTrack_N1_Bison", 17, 0, 16, 1));
+        list.Add(tracks);
+
+        var legs = new RobotBlueprint { name = "DEMO LEGS" };
+        Slab(legs, 14, 16, 2, 14, 16);
+        foreach (int z in new[] { 14, 16 })
+        {
+            legs.blocks.Add(B("Block_InsectLeg_N1_Walker", 13, 1, z, 4));
+            legs.blocks.Add(B("Block_InsectLeg_N1_Walker", 17, 1, z, 3));
+        }
+        list.Add(legs);
+
+        var hover = new RobotBlueprint { name = "DEMO HOVER" };
+        Slab(hover, 14, 17, 1, 14, 17);
+        // Lames plaquees sur les flancs par leur charniere : le disque reste a plat
+        foreach (int z in new[] { 14, 16 })
+        {
+            hover.blocks.Add(B("Block_HoverBlade_N1_Squall", 13, 1, z, 4));
+            hover.blocks.Add(B("Block_HoverBlade_N1_Squall", 18, 1, z, 3));
+        }
+        list.Add(hover);
+
+        var heli = new RobotBlueprint { name = "DEMO HELI" };
+        Slab(heli, 14, 16, 0, 13, 16);
+        heli.blocks.Add(B("Block_RotorBlade_Recon", 15, 1, 15, 1));
+        heli.blocks.Add(B("Block_Rudder_N1_Hawk", 15, 1, 13, 1));
+        heli.blocks.Add(B("Block_Thruster_N1_Lynx", 15, 0, 12, 6));
+        list.Add(heli);
+
+        return list;
+    }
+
+    private static void SetLayer(Transform root, int layer)
+    {
+        root.gameObject.layer = layer;
+        foreach (Transform child in root)
+            SetLayer(child, layer);
     }
 
     // Le spawn a-t-il un sol sous lui ? Une map sans collider (marquage pris pour
