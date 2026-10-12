@@ -2,13 +2,18 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // =========================================================
 // INVENTAIRE DU GARAGE (fenetre animee en bas d'ecran)
-// TAB : ouvre/ferme. Filtres par categorie + recherche.
-// Le gameplay s'abonne a BlockSelected pour la pince.
+// TAB : ouvre/ferme (et SEULEMENT Tab : cliquer un objet le
+// selectionne sans refermer la fenetre). Filtres par categorie
+// + recherche. Le champ de recherche ne garde le clavier que
+// tant qu'on tape dedans : il le rend a la fermeture et des
+// qu'on clique ailleurs. Le gameplay s'abonne a
+// BlockSelected pour la pince.
 // =========================================================
 
 public class GarageInventoryController : MonoBehaviour
@@ -18,7 +23,7 @@ public class GarageInventoryController : MonoBehaviour
     public float animationDuration = 0.25f;
     [Tooltip("La barre d'outils remonte avec le panneau")]
     public RectTransform liftWhileOpen;
-    [Tooltip("Zone cliquable au-dessus du panneau qui referme l'inventaire")]
+    [Tooltip("Zone au-dessus du panneau : bloque les clics vers la scene (ne referme plus, seul Tab referme)")]
     public GameObject clickAway;
 
     [Header("Donnees")]
@@ -86,8 +91,9 @@ public class GarageInventoryController : MonoBehaviour
             cards.Add(card);
         }
 
+        // Clic hors du panneau : rend le clavier (champ de recherche) sans refermer
         if (clickAway != null && clickAway.TryGetComponent<Button>(out var clickAwayButton))
-            clickAwayButton.onClick.AddListener(Close);
+            clickAwayButton.onClick.AddListener(ReleaseSearchFocus);
 
         for (int i = 0; i < tabButtons.Length; i++)
         {
@@ -113,6 +119,10 @@ public class GarageInventoryController : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null && kb.tabKey.wasPressedThisFrame)
             Toggle();
+        // Entree dans la recherche : on arrete de taper (la fenetre reste ouverte)
+        else if (kb != null && SearchHasFocus &&
+                 (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
+            ReleaseSearchFocus();
 
         // Animation du panneau (temps non-scale pour rester fluide)
         float target = IsOpen ? 1f : 0f;
@@ -148,12 +158,27 @@ public class GarageInventoryController : MonoBehaviour
 
     public void Close()
     {
+        ReleaseSearchFocus();
         IsOpen = false;
         if (clickAway != null)
             clickAway.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         SetGameplayEnabled(true);
+    }
+
+    public bool SearchHasFocus => searchField != null && searchField.isFocused;
+
+    // Le champ de recherche rend le clavier : plus aucune lettre n'y est saisie
+    public void ReleaseSearchFocus()
+    {
+        if (searchField == null)
+            return;
+        if (searchField.isFocused)
+            searchField.DeactivateInputField();
+        var eventSystem = EventSystem.current;
+        if (eventSystem != null && eventSystem.currentSelectedGameObject == searchField.gameObject)
+            eventSystem.SetSelectedGameObject(null);
     }
 
     private void SetOpenImmediate(bool open)
@@ -209,12 +234,11 @@ public class GarageInventoryController : MonoBehaviour
         }
     }
 
-    // Clic sur une carte : selectionne le bloc puis referme la fenetre
+    // Clic sur une carte : selectionne le bloc, la fenetre reste ouverte (Tab la referme)
     private void OnCardClicked(BlockDefinition def)
     {
+        ReleaseSearchFocus();
         SelectBlock(def);
-        if (IsOpen)
-            Close();
     }
 
     public void SelectBlock(BlockDefinition def)
