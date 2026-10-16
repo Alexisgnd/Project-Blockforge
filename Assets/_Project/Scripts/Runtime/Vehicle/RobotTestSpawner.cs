@@ -6,7 +6,7 @@ using UnityEngine;
 // Au Start (synchrone, sans animation) : assemble le blueprint
 // en memoire (RobotSession, rempli par le garage avant la
 // touche P) ou, si la scene est lancee directement, un robot
-// par defaut (6 cubes + 4 roues Scout) ; le pose sur le
+// par defaut (12 cubes + 4 roues Scout) ; le pose sur le
 // SpawnPoint (un peu au-dessus : les suspensions se posent),
 // lui ajoute la physique (RobotLocomotion), l'animation des
 // blocs de mouvement (RobotPartAnimator), le pilotage
@@ -195,24 +195,31 @@ public class RobotTestSpawner : MonoBehaviour
                          "Relance Blockforge > Setup Map Test Scene, ou verifie le filtre des maillages sans collision.");
     }
 
-    // Robot de demonstration au centre de la grille 31 x 31 : 2 x 3 cubes et
+    // Robot par defaut (scene lancee sans robot du garage), au centre de la
+    // grille 31 x 31 : chassis 2 x 5 cubes, cabine de 2 cubes a l'arriere et
     // quatre roues Scout (1x2x2, moyeu cote -X) plaquees sur les flancs, face 3
     // (+X) a droite et face 4 (-X) a gauche, comme les poserait le garage.
+    // La roue est centree sur sa case en Y et en Z quelle que soit la face
+    // (BlockFootprint.LocalBox) : gauche et droite prennent donc les MEMES z.
+    // (L'ancienne version decalait les roues gauches d'une case vers l'avant :
+    // robot de travers.) Symetrique : centre XZ des roues = centre du chassis.
     public static RobotBlueprint CreateDefaultTestBlueprint()
     {
         var bp = new RobotBlueprint { name = "ROBOT TEST" };
         for (int x = 15; x <= 16; x++)
         {
-            for (int z = 14; z <= 16; z++)
+            for (int z = 13; z <= 17; z++)
                 bp.blocks.Add(new PlacedBlock { blockId = "Block_01_Cube", x = x, y = 0, z = z });
+            bp.blocks.Add(new PlacedBlock { blockId = "Block_01_Cube", x = x, y = 1, z = 13 });   // cabine (arriere)
         }
 
         int right = BlockFootprint.Compose(3, 0);
         int left = BlockFootprint.Compose(4, 0);
-        bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 17, y = 0, z = 13, rotation = right });
-        bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 17, y = 0, z = 16, rotation = right });
-        bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 14, y = 0, z = 14, rotation = left });
-        bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 14, y = 0, z = 17, rotation = left });
+        foreach (int z in new[] { 13, 17 })
+        {
+            bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 17, y = 0, z = z, rotation = right });
+            bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 14, y = 0, z = z, rotation = left });
+        }
         return bp;
     }
 }
