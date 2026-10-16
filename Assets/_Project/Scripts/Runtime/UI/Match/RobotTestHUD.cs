@@ -7,7 +7,10 @@ using UnityEngine.UI;
 // HUD DE MATCH DE LA SCENE DE TEST (design system, theme hud)
 // Construit au lancement par RobotTestSpawner, au format du
 // composant MatchHud du DS :
-// - Reticule au centre (Reticle : quatre arcs de 2 px + point)
+// - Reticule au centre (Reticle : quatre arcs de 2 px + point),
+//   entoure de la jauge d'energie des armes (RobotEnergy) : anneau
+//   coupe a la verticale, chaque moitie se remplit du bas vers le
+//   haut ; warning sous 25 %, clignote en danger sur un tir refuse
 // - Sante en bas a gauche (HealthBar : pastille, pourcentage en
 //   readout-lg, "Robot health" en label, dix segments inclines ;
 //   success > 50 %, warning <= 50 %, danger-ink <= 25 %)
@@ -58,6 +61,10 @@ public class RobotTestHUD : MonoBehaviour
     // Etat
     private HudLabel speedValue, massValue, gripValue;
     private float speedShown;
+    // Energie (anneau autour du reticule)
+    private Image energyLeft, energyRight;
+    private RobotEnergy energy;
+    private float energyShown = 1f, refusedFlash;
     // Armes et modules
     private RobotLoadoutState loadout;
     private readonly List<(Image tile, Image icon, bool tinted, HudLabel count, HudLabel key)> slotViews = new();
@@ -73,6 +80,9 @@ public class RobotTestHUD : MonoBehaviour
         BuildHealth();
         BuildStatus(robotName, weightKg);
         BuildSlots(locomotion != null ? locomotion.GetComponent<RobotLoadoutState>() : null);
+        energy = locomotion != null ? locomotion.GetComponent<RobotEnergy>() : null;
+        if (energy != null)
+            energy.Refused += () => refusedFlash = 1f;
         var map = gameObject.AddComponent<MiniMap>();
         map.Build(root, locomotion != null ? locomotion.transform : null);
         SetHealth(health);
@@ -116,6 +126,34 @@ public class RobotTestHUD : MonoBehaviour
         Place(shadow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -1f), new Vector2(64f, 64f));
         var ring = NewImage(root, "Reticle", HudShapes.Reticle(), BlockforgeTheme.Hud.InkPrimary);
         Place(ring.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(64f, 64f));
+        BuildEnergy();
+    }
+
+    // Jauge d'energie des armes autour du reticule : un anneau coupe a la
+    // verticale, chaque moitie se remplit du bas vers le haut (gauche dans le sens
+    // horaire, droite dans l'autre) ; fond sombre, accent par-dessus
+    private void BuildEnergy()
+    {
+        const int radius = 27, thickness = 3, gap = 16;
+        var sprite = HudShapes.Ring(radius, thickness, gap);
+        float size = (radius + thickness + 2) * 2f;
+        var back = NewImage(root, "EnergyBack", sprite, new Color(0f, 0f, 0f, 0.55f));
+        Place(back.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -1f), new Vector2(size, size));
+        var dim = NewImage(root, "EnergyDim", sprite, new Color(1f, 1f, 1f, 0.22f));
+        Place(dim.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+        energyLeft = NewImage(root, "EnergyLeft", sprite, BlockforgeTheme.Hud.Accent);
+        Place(energyLeft.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+        energyRight = NewImage(root, "EnergyRight", sprite, BlockforgeTheme.Hud.Accent);
+        Place(energyRight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+        foreach (var half in new[] { energyLeft, energyRight })
+        {
+            half.type = Image.Type.Filled;
+            half.fillMethod = Image.FillMethod.Radial360;
+            half.fillOrigin = (int)Image.Origin360.Bottom;
+            half.fillAmount = 0.5f;
+        }
+        energyLeft.fillClockwise = true;    // depuis le bas, le sens horaire monte par la gauche
+        energyRight.fillClockwise = false;
     }
 
     private void BuildHealth()
@@ -346,6 +384,23 @@ public class RobotTestHUD : MonoBehaviour
         gripValue.Set(loco.TotalContacts > 0
             ? $"{loco.GroundedContacts} / {loco.TotalContacts}"
             : (loco.HasRotors ? "Air" : "–"));
+        UpdateEnergy();
+    }
+
+    private void UpdateEnergy()
+    {
+        if (energy == null || energyLeft == null)
+            return;
+        energyShown = Mathf.Lerp(energyShown, energy.Fraction, 1f - Mathf.Exp(-14f * Time.deltaTime));
+        refusedFlash = Mathf.MoveTowards(refusedFlash, 0f, Time.deltaTime * 4f);
+        float fill = energyShown * 0.5f;
+        energyLeft.fillAmount = fill;
+        energyRight.fillAmount = fill;
+        Color tone = energy.Fraction <= 0.25f ? BlockforgeTheme.Hud.Warning : BlockforgeTheme.Hud.Accent;
+        if (refusedFlash > 0f)
+            tone = Color.Lerp(tone, BlockforgeTheme.Hud.DangerInk, Mathf.PingPong(refusedFlash * 2f, 1f));
+        energyLeft.color = tone;
+        energyRight.color = tone;
     }
 
     // =========================================================

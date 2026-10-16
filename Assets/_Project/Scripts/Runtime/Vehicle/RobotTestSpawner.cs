@@ -10,10 +10,12 @@ using UnityEngine;
 // SpawnPoint (un peu au-dessus : les suspensions se posent),
 // lui ajoute la physique (RobotLocomotion), l'animation des
 // blocs de mouvement (RobotPartAnimator), le pilotage
-// (RobotTestDriver), les slots d'armes (RobotLoadoutState), la
-// visee des armes (WeaponAimController), la poussiere au sol
-// (RobotGroundFX), le HUD de match (RobotTestHUD : vie,
-// reticule, etat du robot, minimap) et branche la camera.
+// (RobotTestDriver), les slots d'armes (RobotLoadoutState),
+// l'energie (RobotEnergy), la visee (WeaponAimController), le tir
+// (WeaponFireController), la poussiere au sol (RobotGroundFX), le
+// redressement (RobotRecovery, touche R), le HUD de match
+// (RobotTestHUD : vie, reticule + jauge d'energie, etat du robot,
+// minimap) et branche la camera.
 // L'apparition est jouee par RobotSpawnSequence : assemblage
 // holographique en levitation, puis chute et controles.
 // Le robot passe sur le calque RobotLayer : la minimap le
@@ -103,12 +105,11 @@ public class RobotTestSpawner : MonoBehaviour
         Robot.AddComponent<RobotPartAnimator>().Build(locomotion);
         var driver = Robot.AddComponent<RobotTestDriver>();
         Robot.AddComponent<RobotLoadoutState>();   // armes et modules : slots 1 / 2 / 3
+        Robot.AddComponent<RobotEnergy>();         // energie des armes (jauge du reticule)
         var aim = Robot.AddComponent<WeaponAimController>();   // les armes du slot actif visent le reticule
+        var fire = Robot.AddComponent<WeaponFireController>(); // clic gauche : tir (laser, plasma, rail, Tesla)
         var dust = Robot.AddComponent<RobotGroundFX>();        // poussiere des roues / chenilles / pattes
-
-        // Apparition : assemblage holographique en levitation, puis chute et
-        // controles rendus au joueur (pilotage, physique, visee, poussiere)
-        Robot.AddComponent<RobotSpawnSequence>().Begin(new Behaviour[] { driver, locomotion, aim, dust });
+        Robot.AddComponent<RobotRecovery>();       // R : redressement facon Robocraft
 
         // HUD de match (theme hud du design system), recree avec le robot
         int maxHealth = 0;
@@ -121,6 +122,10 @@ public class RobotTestSpawner : MonoBehaviour
             followCamera = FindAnyObjectByType<RobotFollowCamera>();
         if (followCamera != null)
             followCamera.SetTarget(Robot.transform);
+
+        // Apparition : assemblage holographique en levitation, puis chute et
+        // controles rendus au joueur (pilotage, physique, visee, tir, poussiere)
+        Robot.AddComponent<RobotSpawnSequence>().Begin(new Behaviour[] { driver, locomotion, aim, fire, dust });
 
         Debug.Log($"[RobotTest] Robot '{blueprint.name}' assemble : {placed} bloc(s), {weightKg} kg, case {cellSize} m" +
                   (isDefault ? " (robot par defaut : aucun blueprint en memoire)" : "") +

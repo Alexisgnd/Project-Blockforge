@@ -155,7 +155,7 @@ public class RobotGroundFX : MonoBehaviour
 
     private void Update()
     {
-        if (host == null || loco == null || accumulators == null || loco.Body == null)
+        if (host == null || loco == null || !loco.enabled || accumulators == null || loco.Body == null)
             return;
         float dt = Time.deltaTime;
         Vector3 forward = transform.forward;

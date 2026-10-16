@@ -43,7 +43,8 @@ Chaque cible mobile est une hiérarchie. Le **parent** (`MoveLinear_*`, `MoveRot
 Dans Unity, tout est automatique :
 - `MapTestGroundImporter` (Scripts/Editor) lit les propriétés `bf_*` à l'import du FBX et pose un composant **`MovingTarget`** (Scripts/Runtime/Combat) configuré sur chaque racine. Si les propriétés n'arrivent pas, le setup de la scène l'ajoute quand même, réglé d'après le préfixe du nom.
 - En jeu, `MovingTarget` donne à la pièce mobile un Rigidbody kinematique (déplacé en FixedUpdate, les robots sont poussés proprement) et passe ses colliders en convexe. Chaque cible démarre avec un déphasage aléatoire.
-- Pop-ups : cycle debout / couché automatique (durées réglables dans l'inspecteur) ; `Knock()` couche la cible puis la relève — à appeler depuis le futur système de dégâts. Si une cible bascule du mauvais côté, inverser le signe de `angle`.
+- Pop-ups : cycle debout / couché automatique (durées réglables dans l'inspecteur) ; `Knock()` couche la cible puis la relève (appelé par `WeaponFireController` quand un tir touche le disque). Le sens de bascule est choisi au lancement : la cible tombe du côté de son bras (vers l'arrière).
+- Export FBX : avec `bake_space_transform=True`, Blender exporte mal les maillages **enfants d'un empty** (rotation parasite de 90° en X, position locale non convertie) — ce sont justement les pièces mobiles. `MapTestGroundImporter.OnPostprocessModel` les remet d'aplomb à l'import ; sans ce correctif, les disques des tourniquets flottaient en l'air et les pop-ups balayaient le sol.
 - Sélectionner une cible dans l'éditeur affiche sa trajectoire (gizmo orange).
 
 ## Intégration Unity

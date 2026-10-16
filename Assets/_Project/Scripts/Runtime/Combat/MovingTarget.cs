@@ -14,8 +14,9 @@ using UnityEngine;
 // - Popup  : <nom>_Hinge bascule de `angle` degres autour de
 //   l'axe Hinge -> <nom>_HingeAxis (empties poses dans Blender :
 //   aucune ambiguite de conversion d'axes) ; cycle leve/couche
-//   automatique, et Knock() la couche puis la releve (a appeler
-//   depuis le futur systeme de degats)
+//   automatique ; le sens de bascule est choisi au lancement (vers
+//   le bras, donc vers l'arriere) ; Hit() / Knock() la couche puis
+//   la releve (appele par WeaponFireController)
 // La piece mobile recoit un Rigidbody kinematique deplace en
 // FixedUpdate (MovePosition / MoveRotation) : un robot touche est
 // pousse proprement. Ses MeshCollider passent en convexe (exige
@@ -97,6 +98,7 @@ public class MovingTarget : MonoBehaviour
                 hingeAxis = axis != null ? (axis.position - mover.position).normalized : mover.right;
                 if (hingeAxis.sqrMagnitude < 1e-6f)
                     hingeAxis = mover.right;
+                ChooseFallSide();
                 nextSwitch = autoCycle ? Time.time + Random.Range(0.5f, upSeconds.y) : float.PositiveInfinity;
                 break;
         }
@@ -109,6 +111,30 @@ public class MovingTarget : MonoBehaviour
         body.interpolation = RigidbodyInterpolation.Interpolate;
         foreach (var meshCollider in mover.GetComponentsInChildren<MeshCollider>(true))
             meshCollider.convex = true;
+    }
+
+    // Sens de bascule : la cible tombe du cote de son bras (<nom>_Arm, derriere le
+    // disque), jamais vers le tireur. Le signe de l'angle venu de Blender depend de
+    // la conversion d'axes : on l'etablit ici sur la geometrie reelle.
+    private void ChooseFallSide()
+    {
+        var disk = FindDeep(transform, name + "_Disk");
+        var arm = FindDeep(transform, name + "_Arm");
+        if (disk == null || arm == null)
+            return;
+        Vector3 d = disk.position - mover.position;
+        Vector3 back = Vector3.ProjectOnPlane(arm.position - disk.position, Vector3.up);
+        if (back.sqrMagnitude < 1e-6f)
+            return;
+        Vector3 down = Quaternion.AngleAxis(angle, hingeAxis) * d;
+        if (Vector3.Dot(Vector3.ProjectOnPlane(down, Vector3.up), back) < 0f)
+            angle = -angle;
+    }
+
+    // Touchee par un tir (WeaponFireController) : un pop-up se couche
+    public void Hit(float damage)
+    {
+        Knock();
     }
 
     // Couche la cible (pop-up uniquement) ; elle se releve apres downSeconds

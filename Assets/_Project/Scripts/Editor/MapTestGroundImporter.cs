@@ -37,6 +37,17 @@ using UnityEngine.Rendering.HighDefinition;
 //   opposee sans ombre (faces et falaises dos au soleil) ; les
 //   remparts et les montagnes lointaines (Backdrop_Mountains, 6 km)
 //   ne projettent pas d'ombre ; camera vue jusqu'a 8 km
+// - OnPostprocessModel : l'export FBX de Blender avec
+//   bake_space_transform (axes cuits dans les maillages) se trompe
+//   pour les maillages ENFANTS D'UN EMPTY (pieces mobiles des
+//   cibles : _Carriage, _Rotor, _Hinge) : ils arrivent avec une
+//   rotation parasite de 90 degres en X et une position locale
+//   non convertie (axes Blender Z-up, decalee de la hauteur de
+//   l'empty). Resultat : disques couches a plat, cibles de
+//   tourniquet en l'air, pop-ups qui balayent le sol. Corrige ici
+//   a l'import (FixMoverChildren) : rotation monde identite comme
+//   tous les autres maillages, position locale reconvertie. Ne
+//   s'applique que si le fichier porte la signature du bug
 // - PrepareInstance (appele par MapTestSceneSetup sur la map
 //   instanciee) : murs invisibles Bounds_* = BoxCollider sans
 //   rendu (un MeshCollider de 760 m declenche l'avertissement
@@ -52,7 +63,7 @@ public class MapTestGroundImporter : AssetPostprocessor
     private static readonly string[] MoverPrefixes = { "MoveLinear_", "MoveRotor_", "MoveOrbit_", "MovePopup_" };
 
     // A incrementer quand les regles d'import changent (force la reimportation)
-    public override uint GetVersion() => 1;
+    public override uint GetVersion() => 2;
 
     private static bool IsTestGround(string path)
     {
@@ -75,6 +86,50 @@ public class MapTestGroundImporter : AssetPostprocessor
         importer.importAnimation = false;
         importer.addCollider = false;
         importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+    }
+
+    private void OnPostprocessModel(GameObject root)
+    {
+        if (!IsTestGround(assetPath))
+            return;
+        int fixedCount = FixMoverChildren(root.transform);
+        if (fixedCount > 0)
+            Debug.Log($"[MapTestGroundImporter] {fixedCount} piece(s) mobile(s) de cible remise(s) d'aplomb (enfants d'empty mal exportes par Blender).");
+    }
+
+    // Signature du bug : un maillage de premier niveau est a l'identite (export
+    // cuit) alors qu'un enfant d'empty mobile porte une rotation. Correction :
+    // position locale p (axes Blender, decalee de la hauteur h de l'empty) ->
+    // (p.x, p.z - h, -(p.y + h)) ; rotation monde = identite.
+    public static int FixMoverChildren(Transform root)
+    {
+        bool baked = false;
+        for (int i = 0; i < root.childCount && !baked; i++)
+        {
+            var c = root.GetChild(i);
+            if (c.GetComponent<MeshFilter>() != null)
+                baked = Quaternion.Angle(c.localRotation, Quaternion.identity) < 1f;
+        }
+        if (!baked)
+            return 0;
+
+        int count = 0;
+        foreach (var e in root.GetComponentsInChildren<Transform>(true))
+        {
+            if (!(e.name.EndsWith("_Carriage") || e.name.EndsWith("_Rotor") || e.name.EndsWith("_Hinge")))
+                continue;
+            float h = e.localPosition.y;
+            foreach (Transform child in e)
+            {
+                if (child.GetComponent<MeshFilter>() == null || Quaternion.Angle(child.localRotation, Quaternion.identity) < 1f)
+                    continue;
+                Vector3 p = child.localPosition;
+                child.localPosition = new Vector3(p.x, p.z - h, -(p.y + h));
+                child.rotation = Quaternion.identity;
+                count++;
+            }
+        }
+        return count;
     }
 
     private void OnPostprocessGameObjectWithUserProperties(GameObject go, string[] propNames, object[] values)

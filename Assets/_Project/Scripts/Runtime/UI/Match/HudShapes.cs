@@ -10,6 +10,7 @@ using UnityEngine;
 // - Reticule : quatre arcs de 2 px ouverts aux diagonales et un
 //   point central (rayon 17 sur 64 px), avec son ombre portee
 // - Disque (pastille de la HealthBar)
+// - Anneau d'energie autour du reticule (fente en haut et en bas)
 // Rendus a 4x puis affiches a la taille du DS : bords nets.
 // =========================================================
 
@@ -134,6 +135,45 @@ public static class HudShapes
         tex.Apply(true, true);
         var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f * Scale);
         sprite.name = tex.name;
+        return sprite;
+    }
+
+    // ---------- Anneau d'energie (deux moities, fente verticale) ----------
+
+    private static readonly Dictionary<(int, int, int), Sprite> rings = new();
+
+    // Anneau de rayon 'radius' px (ligne centrale), epaisseur 'thickness' px, ouvert
+    // en haut et en bas de 'gapDeg' degres de chaque cote (jauge coupee a la
+    // verticale) ; sprite carre de 2 x (radius + thickness) px
+    public static Sprite Ring(int radius, int thickness, int gapDeg)
+    {
+        var key = (radius, thickness, gapDeg);
+        if (rings.TryGetValue(key, out var cached) && cached != null)
+            return cached;
+        int size = (radius + thickness + 2) * 2 * Scale;
+        var tex = NewTexture(size, size, $"HudRing_{radius}_{thickness}_{gapDeg}");
+        var px = new Color32[size * size];
+        float c = size * 0.5f, r0 = radius * Scale, half = thickness * 0.5f * Scale;
+        float gap = gapDeg * 0.5f;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x + 0.5f - c, dy = y + 0.5f - c;
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                float ring = Mathf.Clamp01(half - Mathf.Abs(r - r0) + 0.5f);
+                // Angle depuis l'axe vertical : fente autour de 0 (haut) et 180 (bas)
+                float ang = Mathf.Abs(Mathf.Atan2(dx, dy) * Mathf.Rad2Deg);   // 0 = haut, 180 = bas
+                float toSlit = Mathf.Min(ang, 180f - ang) - gap;              // degres hors de la fente
+                float inside = Mathf.Clamp01(toSlit * Mathf.Deg2Rad * Mathf.Max(r, 1f) + 0.5f);
+                px[y * size + x] = new Color32(255, 255, 255, (byte)(ring * inside * 255f));
+            }
+        }
+        tex.SetPixels32(px);
+        tex.Apply(true, true);
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f * Scale);
+        sprite.name = tex.name;
+        rings[key] = sprite;
         return sprite;
     }
 

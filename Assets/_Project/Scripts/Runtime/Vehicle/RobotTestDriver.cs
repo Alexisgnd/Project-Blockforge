@@ -6,7 +6,9 @@ using UnityEngine.SceneManagement;
 // PILOTAGE DU ROBOT DE TEST (entrees -> RobotLocomotion)
 // Z / S : avancer / reculer, Q / D : tourner, Shift : boost,
 // Espace / Ctrl : monter / descendre (rotors, propulseurs
-// orientes vers le haut), R : remettre le robot sur ses roues.
+// orientes vers le haut), R : redresser le robot (RobotRecovery :
+// levitation, remise a plat, chute ; recharge de quelques
+// secondes), clic gauche : tirer (WeaponFireController).
 // Touches physiques W/S/A/D (Z/S/Q/D en AZERTY) ; les fleches
 // marchent aussi.
 // ECHAP libere le curseur ; un second ECHAP (curseur libre)
@@ -25,14 +27,17 @@ public class RobotTestDriver : MonoBehaviour
     public bool lockCursorOnStart = true;
 
     private RobotLocomotion loco;
+    private RobotRecovery recovery;
 
     private void Awake()
     {
         loco = GetComponent<RobotLocomotion>();
+        recovery = GetComponent<RobotRecovery>();
     }
 
     private void Start()
     {
+        recovery = GetComponent<RobotRecovery>();
         if (lockCursorOnStart)
             SetCursorLocked(true);
     }
@@ -75,7 +80,14 @@ public class RobotTestDriver : MonoBehaviour
         if (kb.spaceKey.isPressed) lift += 1f;
         if (kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed) lift -= 1f;
         if (kb.rKey.wasPressedThisFrame)
-            loco.Recover();
+        {
+            // Redressement facon Robocraft (levitation + remise a plat) ; repli : teleportation
+            if (recovery == null || !recovery.Begin())
+            {
+                if (recovery == null)
+                    loco.Recover();
+            }
+        }
 
         // Curseur libre (menu, retour) : le robot ne recoit plus d'ordres
         if (Cursor.lockState != CursorLockMode.Locked)

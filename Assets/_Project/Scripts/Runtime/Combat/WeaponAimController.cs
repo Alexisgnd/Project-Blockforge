@@ -22,6 +22,9 @@ using UnityEngine;
 //   lacet libre ; rotation lissee (vitesse max en degres / s)
 // - Les armes des autres slots reviennent au repos (lacet 0,
 //   tangage 0)
+// Expose les tourelles (bouche, axe du canon) a
+// WeaponFireController. Le rayon de visee traverse les triggers
+// (pieces mobiles des cibles) pour qu'on puisse les viser.
 // Les blocs miroir (echelle negative) marchent sans cas
 // particulier : la cible est ramenee dans le repere local du
 // pivot (InverseTransformPoint tient compte du miroir) et la
@@ -41,19 +44,28 @@ public class WeaponAimController : MonoBehaviour
     private static readonly string[] FixedPrefixes = { "base", "pedestal", "mount", "azimuth", "support", "foot" };
     private const string MeleeFamily = "tesla";
 
-    private class Turret
+    public class Turret
     {
         public PlacedBlockView view;
         public Transform pivot;
+        public Vector3 muzzleLocal;    // bout du canon, repere du pivot
         public float yaw, pitch;       // degres, repere de l'arme
+
+        public Vector3 Muzzle => pivot.TransformPoint(muzzleLocal);
+        // Axe du canon en monde (via deux points : juste avec un bloc miroir)
+        public Vector3 Forward => (pivot.TransformPoint(muzzleLocal + Vector3.forward) - Muzzle).normalized;
+        public bool Aligned => Mathf.Abs(Mathf.DeltaAngle(yaw, wantedYaw)) < 8f && Mathf.Abs(pitch - wantedPitch) < 8f;
+        public float wantedYaw, wantedPitch;
     }
 
     private readonly List<Turret> turrets = new();
+    public IReadOnlyList<Turret> Turrets => turrets;
     private RobotLoadoutState loadout;
     private Camera viewCamera;
     private int robotLayerMask;
 
     public Vector3 AimPoint { get; private set; }
+    public bool HasAimHit { get; private set; }
 
     private void Awake()
     {
@@ -154,7 +166,11 @@ public class WeaponAimController : MonoBehaviour
         foreach (var part in moving)
             part.SetParent(pivot, true);
 
-        return new Turret { view = view, pivot = pivot };
+        // Bouche : point le plus avance (+Z) des pieces mobiles, dans l'axe du pivot
+        Vector3 muzzle = new Vector3(0f, 0f, 0.5f);
+        if (TryGetLocalBounds(pivot, moving, out var turretBounds))
+            muzzle = new Vector3(0f, turretBounds.center.y, turretBounds.max.z);
+        return new Turret { view = view, pivot = pivot, muzzleLocal = muzzle };
     }
 
     // Bornes de pieces dans le repere de 'space' (sommets des renderers)
@@ -201,9 +217,8 @@ public class WeaponAimController : MonoBehaviour
         {
             var origin = viewCamera.transform.position;
             var dir = viewCamera.transform.forward;
-            AimPoint = Physics.Raycast(origin, dir, out var hit, maxRange, robotLayerMask, QueryTriggerInteraction.Ignore)
-                ? hit.point
-                : origin + dir * maxRange;
+            HasAimHit = Physics.Raycast(origin, dir, out var hit, maxRange, robotLayerMask, QueryTriggerInteraction.Collide);
+            AimPoint = HasAimHit ? hit.point : origin + dir * maxRange;
         }
 
         var selected = loadout != null ? loadout.Selected : null;
@@ -226,6 +241,8 @@ public class WeaponAimController : MonoBehaviour
                     wantedPitch = Mathf.Clamp(Mathf.Atan2(local.y, flat) * Mathf.Rad2Deg, minPitch, maxPitch);
                 }
             }
+            t.wantedYaw = wantedYaw;
+            t.wantedPitch = wantedPitch;
             t.yaw = Mathf.MoveTowardsAngle(t.yaw, wantedYaw, yawSpeed * dt);
             t.pitch = Mathf.MoveTowards(t.pitch, wantedPitch, pitchSpeed * dt);
             // +Z = canon, +Y = haut de l'arme : lacet autour de Y, tangage (vers le haut) autour de -X

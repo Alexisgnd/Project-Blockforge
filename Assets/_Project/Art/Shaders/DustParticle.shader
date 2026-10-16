@@ -1,6 +1,9 @@
 // =========================================================
-// POUSSIERE DES ROUES (HDRP) - particules RobotGroundFX
-// Shader non eclaire, fondu alpha, ecrit a la main : passe
+// PARTICULE DOUCE (HDRP) - poussiere des roues (RobotGroundFX),
+// impacts et etincelles des armes (WeaponFireController),
+// redressement du robot (RobotRecovery)
+// Shader non eclaire, fondu alpha ou additif (_SrcBlend /
+// _DstBlend + _Additive), ecrit a la main : passe
 // "SRPDefaultUnlit", que HDRP dessine avec les transparents.
 // Un disque doux calcule dans le shader (pas de texture).
 // Couleur et alpha : _Tint du materiau (un materiau par regime
@@ -20,6 +23,11 @@ Shader "Blockforge/DustParticle"
     {
         _Tint ("Tint", Color) = (1, 1, 1, 1)
         _Softness ("Edge softness", Range(0.05, 1)) = 0.75
+        [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src blend", Float) = 5
+        [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst blend", Float) = 10
+        _Additive ("Additive (rgb x alpha)", Float) = 0
+        _FadeIn ("Fade in (part of life)", Range(0.01, 1)) = 0.12
+        _FadeOut ("Fade out start (part of life)", Range(0, 0.99)) = 0.45
     }
 
     SubShader
@@ -31,7 +39,7 @@ Shader "Blockforge/DustParticle"
             Name "Dust"
             Tags { "LightMode" = "SRPDefaultUnlit" }
 
-            Blend SrcAlpha OneMinusSrcAlpha
+            Blend [_SrcBlend] [_DstBlend]
             ZWrite Off
             ZTest LEqual
             Cull Off
@@ -47,6 +55,9 @@ Shader "Blockforge/DustParticle"
 
             float4 _Tint;
             float _Softness;
+            float _Additive;
+            float _FadeIn;
+            float _FadeOut;
 
             struct Attributes
             {
@@ -78,8 +89,11 @@ Shader "Blockforge/DustParticle"
                 float a = smoothstep(1.0, 1.0 - _Softness, r);
                 a *= a;
                 float age = saturate(input.uv.z);
-                float fade = smoothstep(0.0, 0.12, age) * (1.0 - smoothstep(0.45, 1.0, age));
-                return float4(_Tint.rgb, _Tint.a * a * fade);
+                float fade = smoothstep(0.0, _FadeIn, age) * (1.0 - smoothstep(_FadeOut, 1.0, age));
+                float k = _Tint.a * a * fade;
+                if (_Additive > 0.5)
+                    return float4(_Tint.rgb * k, 1.0);   // Blend One One : la couleur porte l'alpha
+                return float4(_Tint.rgb, k);
             }
             ENDHLSL
         }
