@@ -11,6 +11,8 @@ using UnityEngine.SceneManagement;
 // SETUP DE LA SCENE MAP_TEST (terrain d'essai du robot)
 // Menus : Blockforge > Setup Map Test Scene               (Red Canyon : raffinerie dans un canyon, la map de test)
 //         Blockforge > Setup Map Test Scene (arene plate) (arene d'entrainement 180 x 160 m, variante rapide)
+//         Blockforge > Setup Map Test Scene (terrain d'essai 600 m) (Map_TestGround.fbx genere par
+//                        Tools/Maps/TestGround : zones, complexe a etages, cibles mobiles MovingTarget)
 // - Soleil, volume global (profil Sky and Fog partage avec
 //   Map_MARS), camera de poursuite (RobotFollowCamera)
 // - Map : GLB importe par glTFast (Art/Models/Map_Canyon.glb
@@ -38,6 +40,8 @@ public static class MapTestSceneSetup
     public const string ArenaModelPath = "Assets/_Project/Art/Models/Map_Arena.glb";
     private const string CanyonObjectName = "Map_Canyon";
     private const string ArenaObjectName = "Map_Arena";
+    public const string TestGroundModelPath = MapTestGroundImporter.ModelPath;
+    private const string TestGroundObjectName = "Map_TestGround";
     private const string AssetDir = "Assets/_Project/Art/MapTest";
     private const string TemplateProfilePath = "Assets/Settings/SkyandFogSettingsProfile.asset";
     private const string ProfilePath = AssetDir + "/MapTestVolumeProfile.asset";
@@ -51,6 +55,12 @@ public static class MapTestSceneSetup
     {
         "marking", "deck_joint", "_dash", "lane_", "height_band", "top_marker", "landing_marker",
         "spawn_cross", "spawn_ring", "lettering", "label", "decal", "stripe", "edge_paint",
+        // terrain d'essai (Map_TestGround) : peintures au sol, chiffres et textes en relief
+        "spawnring", "hub_border", "corr_", "fireline", "laneline", "runway_", "_number", "_text",
+        // murs invisibles Bounds_* : BoxCollider pose par MapTestGroundImporter.PrepareInstance
+        "bounds_",
+        // decor lointain (montagnes jusqu'a 6 km) : hors d'atteinte, aucune collision
+        "backdrop",
     };
 
     // Sous-arbres entierement sans collision : decor exterieur du canyon, que le
@@ -83,6 +93,17 @@ public static class MapTestSceneSetup
     public static void SetupCanyon()
     {
         Setup(CanyonModelPath, CanyonObjectName);
+    }
+
+    // Variante : le terrain d'essai 600 x 600 m (zones de test, complexe a etages,
+    // ~200 cibles disques dont 52 mobiles)
+    [MenuItem("Blockforge/Setup Map Test Scene (terrain d'essai 600 m)")]
+    public static void SetupTestGround()
+    {
+        int remapped = MapTestGroundImporter.EnsureMaterials();
+        Debug.Log($"[MapTestSceneSetup] Terrain d'essai : {remapped} materiaux grille HDRP/Lit remappes sur le FBX.");
+        if (Setup(TestGroundModelPath, TestGroundObjectName))
+            MapTestGroundImporter.ApplyLighting();
     }
 
     // Variante : l'arene plate d'entrainement (rampes calibrees, cibles, murs)
@@ -248,6 +269,7 @@ public static class MapTestSceneSetup
             {
                 case CanyonObjectName:
                 case ArenaObjectName:
+                case TestGroundObjectName:
                 case "Map_Test":     // instances des versions precedentes du setup
                 case "TestGround":
                 case "TestObstacles":
@@ -271,6 +293,8 @@ public static class MapTestSceneSetup
         instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         instance.transform.localScale = Vector3.one;
         var (colliders, skipped) = AddColliders(instance);
+        // Terrain d'essai : murs invisibles et cibles mobiles (sans effet sur les autres maps)
+        var (movers, bounds) = MapTestGroundImporter.PrepareInstance(instance);
 
         var spawn = FindSpawnNode(instance.transform);
         string spawnSource = "noeud du modele";
@@ -281,6 +305,8 @@ public static class MapTestSceneSetup
             spawnSource = "objet cree (aucun noeud spawn dans le modele)";
         }
 
+        if (movers > 0 || bounds > 0)
+            Debug.Log($"[MapTestSceneSetup] {movers} cibles mobiles (MovingTarget), {bounds} murs invisibles.");
         Debug.Log($"[MapTestSceneSetup] {Path.GetFileName(modelPath)} instancie : {colliders} MeshCollider " +
                   $"({skipped} maillages laisses sans collision : marquages et decor exterieur), spawn = {spawnSource}.");
         return (spawn, Path.GetFileName(modelPath));

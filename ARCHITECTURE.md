@@ -43,7 +43,8 @@ Tools/
 | `UI/`       | `Garage/` (inventaire, stats, toolbar, sauvegarde T, test P), `MainMenu/` (slots de robots du joueur chargés depuis PocketBase, partagés entre Accueil et Construire, modes), `BootAuthController` |
 | `Network/`  | Client PocketBase (`PocketBaseClient`) et garde d'authentification (`AuthGuard`) |
 | `Vehicle/`  | Robot hors du garage : `RobotAssembler` (blueprint → GameObject, visuel + `BoxCollider` par bloc, pivot au centre de l'empreinte), `RobotTestSpawner` (spawn au Start, robot par défaut si aucun blueprint), `RobotTestDriver` (conduite char ZQSD sur Rigidbody piloté en vitesse), `RobotFollowCamera` (poursuite orbitale), `HangarRobotShowcase` (robot sélectionné assemblé en vitrine sur la plateforme du menu d'accueil, rotation + flottement, sans physique). `VehicleBlueprint` est l'ancien modèle de design, inutilisé : ne jamais importer `Blockforge.Vehicle` |
-| `Core/`, `Combat/`, `SaveLoad/` | Réservés (bootstrap, dégâts/destruction, sérialisation locale) — vides pour l'instant |
+| `Combat/`   | `MovingTarget` : cibles mobiles du terrain d'essai (rail aller-retour, tourniquet/orbite, pop-up qui bascule ; pièce mobile en Rigidbody kinematique, `Knock()` pour coucher un pop-up sur impact). Dégâts/destruction à venir |
+| `Core/`, `SaveLoad/` | Réservés (bootstrap, sérialisation locale) — vides pour l'instant |
 
 ## Découpage des outils (`Scripts/Editor/`)
 
@@ -65,7 +66,8 @@ Tous les outils suivent le même pattern « one-shot » :
 | `MainMenuHangarSetup`, `MapMarsSceneSetup`, `MapMarsMaterialSetup` | Décors du hangar et de la carte Mars |
 | `BlockforgeScenes` | Chemins des scènes, `OpenForSetup`, `RegisterAllInBuildSettings` (liste globale **et** profil de build actif, qui la surcharge), `LoadModelAsset` (FBX ou GLB) |
 | `GarageV2SceneSetup` | **Setup Garage V2 Scene** : copie de Garage en Garage_V2, vaisseau Mothership (GLB), ligne centrale du miroir, grille recâblée, joueur sur `PlayerSpawn` ; **MainMenu -> Garage V2 / (V1)** |
-| `MapTestSceneSetup` | **Setup Map Test Scene** (Red Canyon) / **(arène plate)** : soleil, volume, caméra de poursuite, map GLB avec `MeshCollider` (marquages et décor non jouable exclus), spawn, `TestSceneBootstrap` |
+| `MapTestSceneSetup` | **Setup Map Test Scene** (Red Canyon) / **(arène plate)** / **(terrain d'essai 600 m)** : soleil, volume, caméra de poursuite, map GLB avec `MeshCollider` (marquages et décor non jouable exclus), spawn, `TestSceneBootstrap` |
+| `MapTestGroundImporter` | Import de `Map_TestGround.fbx` (terrain d'essai généré par `Tools/Maps/TestGround`) : réglages du modèle, propriétés FBX `bf_*` → `MovingTarget` ; `PrepareInstance` coupe le rendu des murs invisibles `Bounds_*` |
 | `BlockforgeBatch` | Pilotage externe de l'éditeur ouvert : `Library/BlockforgeRun.request` (menus, `open:<scène>`, `play`, `stop`) → `Library/BlockforgeRun.result` |
 
 Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à la
