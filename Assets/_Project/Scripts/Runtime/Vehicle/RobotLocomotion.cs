@@ -26,6 +26,12 @@ using UnityEngine;
 // triggers : le robot repose sur ses suspensions, pas sur les
 // boites d'empreinte (le chassis, lui, heurte toujours le decor).
 // Masse = poids reel / 100 ; centre de masse abaisse (stabilite).
+// Suspension au repos = rayon + GroundSag x debattement : a
+// l'equilibre (le ressort s'enfonce de GroundSag x debattement
+// sous le poids) le pneu, la chenille ou le pied touche le sol.
+// (Avant : rayon + debattement complet, le robot flottait de
+// 0,65 x debattement, ~26 cm sur une roue Scout.) Les lames de
+// survol gardent tout leur debattement : elles doivent flotter.
 // Les animations des pieces sont faites par RobotPartAnimator a
 // partir de l'etat expose ici (vitesse aux contacts, compression,
 // portance, poussee).
@@ -101,6 +107,10 @@ public class RobotLocomotion : MonoBehaviour
     public float RobotHeight { get; private set; } = 1f;
 
     private readonly RaycastHit[] hits = new RaycastHit[16];
+
+    // Part du debattement enfoncee par le poids a l'equilibre (roues, chenilles,
+    // pattes) ; RobotPartAnimator utilise la meme valeur pour poser les visuels
+    public const float GroundSag = 0.35f;
     private float cellSize = 1f;
 
     private static readonly Regex HoverFanName = new(@"blade|rotor_\d|impeller|turbine|tri_blade", RegexOptions.IgnoreCase);
@@ -146,7 +156,7 @@ public class RobotLocomotion : MonoBehaviour
         {
             foreach (var c in u.contacts)
             {
-                float sag = u.kind == LocomotionKind.Hover ? 0.5f : 0.35f;
+                float sag = u.kind == LocomotionKind.Hover ? 0.5f : GroundSag;
                 c.stiffness = share * g / Mathf.Max(0.02f, sag * c.travel);
                 float ratio = u.kind == LocomotionKind.Hover ? 0.35f : 0.55f;
                 c.damping = 2f * Mathf.Sqrt(c.stiffness * share) * ratio;
@@ -225,7 +235,7 @@ public class RobotLocomotion : MonoBehaviour
             unit.axis = Axis(duct);
             unit.radius = LargestOther(vb.extents, duct);
             float height = hoverHeight * cellSize + vb.extents.y;
-            AddContact(unit, vb.center, height, height * 0.6f);
+            AddContact(unit, vb.center, height, height * 0.6f, onGround: false);
             SetFamily(unit, hoverSpeed, 9f, 0.18f, 0.6f);
         }
         else if (family.Contains("rotor"))
@@ -281,9 +291,12 @@ public class RobotLocomotion : MonoBehaviour
         unit.friction = friction;
     }
 
-    private static void AddContact(LocomotionUnit unit, Vector3 origin, float radius, float travel)
+    // onGround : roue, chenille, patte -> au repos, le contact touche le sol
+    // (seule la marge d'enfoncement est ajoutee au rayon) ; survol -> flotte
+    private static void AddContact(LocomotionUnit unit, Vector3 origin, float radius, float travel, bool onGround = true)
     {
-        unit.contacts.Add(new LocomotionContact { localOrigin = origin, rest = radius + travel, travel = travel });
+        float rest = radius + (onGround ? travel * GroundSag : travel);
+        unit.contacts.Add(new LocomotionContact { localOrigin = origin, rest = rest, travel = travel });
     }
 
     // =========================================================
