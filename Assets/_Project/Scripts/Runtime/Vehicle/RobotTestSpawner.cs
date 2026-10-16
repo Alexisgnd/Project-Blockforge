@@ -6,7 +6,8 @@ using UnityEngine;
 // Au Start (synchrone, sans animation) : assemble le blueprint
 // en memoire (RobotSession, rempli par le garage avant la
 // touche P) ou, si la scene est lancee directement, un robot
-// par defaut (12 cubes + 4 roues Scout) ; le pose sur le
+// par defaut (12 cubes, 4 roues Scout, 2 lasers, 1 plasma,
+// 1 radar) ; le pose sur le
 // SpawnPoint (un peu au-dessus : les suspensions se posent),
 // lui ajoute la physique (RobotLocomotion), l'animation des
 // blocs de mouvement (RobotPartAnimator), le pilotage
@@ -98,6 +99,7 @@ public class RobotTestSpawner : MonoBehaviour
         locomotion.Setup(cellSize, weightKg);
         Robot.AddComponent<RobotPartAnimator>().Build(locomotion);
         Robot.AddComponent<RobotTestDriver>();
+        Robot.AddComponent<RobotLoadoutState>();   // armes et modules : slots 1 / 2 / 3
 
         // HUD de match (theme hud du design system), recree avec le robot
         int maxHealth = 0;
@@ -196,7 +198,8 @@ public class RobotTestSpawner : MonoBehaviour
     }
 
     // Robot par defaut (scene lancee sans robot du garage), au centre de la
-    // grille 31 x 31 : chassis 2 x 5 cubes, cabine de 2 cubes a l'arriere et
+    // grille 31 x 31 : chassis 2 x 5 cubes, cabine de 2 cubes a l'arriere,
+    // armes et module sur le dessus (slots du HUD) et
     // quatre roues Scout (1x2x2, moyeu cote -X) plaquees sur les flancs, face 3
     // (+X) a droite et face 4 (-X) a gauche, comme les poserait le garage.
     // La roue est centree sur sa case en Y et en Z quelle que soit la face
@@ -220,6 +223,14 @@ public class RobotTestSpawner : MonoBehaviour
             bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 17, y = 0, z = z, rotation = right });
             bp.blocks.Add(new PlacedBlock { blockId = "Block_Wheel_N1_Scout", x = 14, y = 0, z = z, rotation = left });
         }
+
+        // Armes et module sur le dessus (posees face 1 comme au garage) : remplissent
+        // les slots 1 / 2 / 3 du HUD -> 1 : Laser Wasp x2, 2 : Plasma Pulser, 3 : Radar
+        int top = BlockFootprint.Compose(1, 0);
+        bp.blocks.Add(new PlacedBlock { blockId = "Block_Laser_N1_Wasp", x = 15, y = 1, z = 17, rotation = top });
+        bp.blocks.Add(new PlacedBlock { blockId = "Block_Laser_N1_Wasp", x = 16, y = 1, z = 17, rotation = top });
+        bp.blocks.Add(new PlacedBlock { blockId = "Block_Plasma_N1_Pulser", x = 15, y = 1, z = 15, rotation = top });
+        bp.blocks.Add(new PlacedBlock { blockId = "Block_19_Radar", x = 16, y = 1, z = 15, rotation = top });
         return bp;
     }
 }

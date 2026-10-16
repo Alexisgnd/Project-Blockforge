@@ -117,7 +117,7 @@ public class GarageInventoryController : MonoBehaviour
     private void Update()
     {
         var kb = Keyboard.current;
-        if (kb != null && kb.tabKey.wasPressedThisFrame)
+        if (kb != null && kb.tabKey.wasPressedThisFrame && !LoadoutReplaceDialog.IsOpen)
             Toggle();
         // Entree dans la recherche : on arrete de taper (la fenetre reste ouverte)
         else if (kb != null && SearchHasFocus &&

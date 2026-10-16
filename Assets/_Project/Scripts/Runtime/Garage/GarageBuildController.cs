@@ -37,6 +37,10 @@ using UnityEngine.UI;
 //   poses, retraits et traits de peinture (GarageHistory)
 // - Recharge le blueprint existant (purge les blocs qui ne tiennent
 //   plus), met a jour stats et Dirty
+// - Armes et modules : au plus RobotLoadout.MaxTypes (3) types,
+//   quantites libres. Poser un 4e type ouvre LoadoutReplaceDialog :
+//   le type choisi est retire en entier (tous ses blocs, une seule
+//   etape d'historique avec la pose), puis le bloc est pose
 // =========================================================
 
 public class GarageBuildController : MonoBehaviour
@@ -153,6 +157,7 @@ public class GarageBuildController : MonoBehaviour
         robotRoot = new GameObject("RobotRoot").transform;
         LoadBlueprint();
         UpdateStats();
+        WarnLoadoutOverLimit();
 
         // Pistolet a peinture : actif quand l'outil 2 est en main (meme quand
         // ce controleur est coupe par GarageToolSwitcher)
@@ -187,6 +192,14 @@ public class GarageBuildController : MonoBehaviour
 
     private void Update()
     {
+        // Dialogue de remplacement ouvert, ou ferme a cette image (le clic qui
+        // le ferme ne doit pas poser un bloc)
+        if (LoadoutReplaceDialog.IsOpen || LoadoutReplaceDialog.ClosedThisFrame)
+        {
+            HideGhost();
+            return;
+        }
+
         // Curseur libre = popup ou inventaire ouvert : pas de construction
         if (Cursor.lockState != CursorLockMode.Locked || viewCamera == null)
         {
@@ -263,6 +276,19 @@ public class GarageBuildController : MonoBehaviour
 
         if (valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
+            // 4e type d'arme ou de module : le joueur choisit lequel remplacer
+            var loadout = RobotLoadout.Collect(RobotSession.Blueprint, defsById);
+            if (RobotLoadout.WouldExceed(loadout, def))
+            {
+                var pending = new PendingPlacement
+                {
+                    def = def, cell = placeCell, rotation = rotation, mirror = placeMirror, mirrorCell = mirrorCell,
+                };
+                HideGhost();
+                LoadoutReplaceDialog.Open(loadout, def, removed => ReplaceAndPlace(removed, pending));
+                return;
+            }
+
             RecordHistory();
             PlaceBlock(def, placeCell, rotation, false);
             if (placeMirror)
@@ -274,6 +300,66 @@ public class GarageBuildController : MonoBehaviour
         {
             PlaceRefused?.Invoke();
         }
+    }
+
+    // =========================================================
+    // ARMES ET MODULES (limite de types, RobotLoadout)
+    // =========================================================
+
+    private struct PendingPlacement
+    {
+        public BlockDefinition def;
+        public Vector3Int cell;
+        public int rotation;
+        public bool mirror;
+        public Vector3Int mirrorCell;
+    }
+
+    // Retire tous les blocs du type choisi puis pose le bloc en attente ; une
+    // seule etape d'historique (A annule le tout)
+    private void ReplaceAndPlace(BlockDefinition removed, PendingPlacement p)
+    {
+        if (removed == null || p.def == null)
+            return;
+
+        RecordHistory();
+        var victims = new List<PlacedBlockView>();
+        foreach (var view in placedViews)
+        {
+            if (view.definition == removed)
+                victims.Add(view);
+        }
+        foreach (var view in victims)
+            RemoveSingle(view);
+        RobotSession.Dirty = true;
+        RefreshLift();
+        UpdateStats();
+        if (victims.Count > 0)
+            BlockRemoved?.Invoke();
+
+        // La pose reste-t-elle possible ? (le support pouvait etre un bloc retire)
+        if (CanPlace(p.def, p.cell, p.rotation) && CapacityAllows(p.def) && HasSupport(p.def, p.cell, p.rotation, false))
+        {
+            PlaceBlock(p.def, p.cell, p.rotation, false);
+            if (p.mirror && CanPlace(p.def, p.mirrorCell, p.rotation, true) && CapacityAllows(p.def)
+                && HasSupport(p.def, p.mirrorCell, p.rotation, true))
+                PlaceBlock(p.def, p.mirrorCell, p.rotation, true);
+            BlockPlaced?.Invoke();
+            Toast.Info($"{removed.blockName} removed. {victims.Count} block{(victims.Count > 1 ? "s" : "")} replaced by {p.def.blockName}, press A to undo.");
+        }
+        else
+        {
+            Toast.Warning($"{removed.blockName} removed. {p.def.blockName} no longer fits there: place it again.");
+        }
+    }
+
+    // Blueprint charge avec trop de types (robot anterieur a la regle)
+    private void WarnLoadoutOverLimit()
+    {
+        var loadout = RobotLoadout.Collect(RobotSession.Blueprint, defsById);
+        if (loadout.Count > RobotLoadout.MaxTypes)
+            Toast.Warning($"This robot has {loadout.Count} weapon and module types. Only {RobotLoadout.MaxTypes} " +
+                          "can be used in a match: the next one you add will ask which to replace.");
     }
 
     // =========================================================

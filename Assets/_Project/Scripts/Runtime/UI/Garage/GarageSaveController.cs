@@ -68,6 +68,10 @@ public class GarageSaveController : MonoBehaviour
         if (kb == null)
             return;
 
+        // Le dialogue de remplacement d'arme gere seul Echap et Entree
+        if (LoadoutReplaceDialog.IsOpen || LoadoutReplaceDialog.ClosedThisFrame)
+            return;
+
         if (kb.escapeKey.wasPressedThisFrame)
         {
             HandleEscape();

@@ -14,6 +14,12 @@ using UnityEngine.UI;
 // - Etat du robot en bas a droite : silhouette vue de dessus,
 //   vitesse, masse, appuis au sol
 // - Minimap en haut a droite (MiniMap)
+// - Armes et modules en bas a droite, a gauche de l'etat du
+//   robot (ActionSlot du DS) : un slot par type monte
+//   (RobotLoadoutState, 3 au plus), touche 1 / 2 / 3 dans un
+//   cabochon sous la tuile ; le slot actif passe en accent, son
+//   nom et sa quantite s'affichent au-dessus de la rangee.
+//   Rien n'est affiche si le robot n'a ni arme ni module.
 // Regles du HUD : plaques translucides surface-hud sans bord ni
 // ombre, coin exterieur coupe (hud-chamfer), texte avec
 // shadow-hud, rien d'autre que le reticule au centre.
@@ -52,6 +58,10 @@ public class RobotTestHUD : MonoBehaviour
     // Etat
     private HudLabel speedValue, massValue, gripValue;
     private float speedShown;
+    // Armes et modules
+    private RobotLoadoutState loadout;
+    private readonly List<(Image tile, Image icon, bool tinted, HudLabel count, HudLabel key)> slotViews = new();
+    private HudLabel slotName;
 
     public void Bind(RobotLocomotion locomotion, string robotName, int maxHp, int weightKg)
     {
@@ -62,6 +72,7 @@ public class RobotTestHUD : MonoBehaviour
         BuildReticle();
         BuildHealth();
         BuildStatus(robotName, weightKg);
+        BuildSlots(locomotion != null ? locomotion.GetComponent<RobotLoadoutState>() : null);
         var map = gameObject.AddComponent<MiniMap>();
         map.Build(root, locomotion != null ? locomotion.transform : null);
         SetHealth(health);
@@ -173,6 +184,85 @@ public class RobotTestHUD : MonoBehaviour
         massValue = StatRow(plate, "Mass", x, -88f, colW);
         massValue.Set(BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(weightKg / 1000f), "t"));
         gripValue = StatRow(plate, "Grip", x, -110f, colW);
+    }
+
+    // ---------- Armes et modules (ActionSlot) ----------
+
+    private void BuildSlots(RobotLoadoutState state)
+    {
+        loadout = state;
+        if (state == null || state.slots.Count == 0)
+            return;
+
+        const float tile = BlockforgeTheme.HudSlot, gap = 8f, keyH = 16f, keyGap = 3f;
+        float right = Edge + 252f + BlockforgeTheme.Space4;   // a gauche de la plaque d'etat
+        int n = state.slots.Count;
+        float rowW = n * tile + (n - 1) * gap;
+
+        for (int i = 0; i < n; i++)
+        {
+            var slot = state.slots[i];
+            float x = -right - rowW + i * (tile + gap);   // depuis le bord droit, slot 1 a gauche
+
+            // Tuile : surface-hud, coin bas exterieur coupe ; accent quand active
+            var tileImg = NewImage(root, "Slot_" + (i + 1), HudShapes.Plate(HudCorner.BottomLeft), BlockforgeTheme.Hud.SurfaceHud);
+            tileImg.type = Image.Type.Sliced;
+            Place(tileImg.rectTransform, new Vector2(1f, 0f), new Vector2(x, Edge + keyH + keyGap), new Vector2(tile, tile), new Vector2(0f, 0f));
+
+            bool hasIcon = slot.definition.icon != null;
+            var icon = NewImage(tileImg.rectTransform, "Icon",
+                                hasIcon ? slot.definition.icon : DSAssets.Icon(RobotLoadout.KindIcon(slot.kind)),
+                                hasIcon ? Color.white : BlockforgeTheme.Hud.InkPrimary);
+            icon.preserveAspect = true;
+            Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 2f), hasIcon ? new Vector2(44f, 44f) : new Vector2(24f, 24f));
+
+            var count = Label(tileImg.rectTransform, "Count", DSTextStyle.ReadoutSM, BlockforgeTheme.Hud.InkPrimary,
+                              "×" + slot.Count, TextAlignmentOptions.BottomRight);
+            Place(count.main.rectTransform, new Vector2(1f, 0f), new Vector2(-4f, 2f), new Vector2(tile - 8f, 14f), new Vector2(1f, 0f));
+            AlignShadow(count);
+
+            // Cabochon de la touche sous la tuile
+            var keyPlate = NewImage(root, "Key_" + (i + 1), null, BlockforgeTheme.Hud.SurfaceHud);
+            Place(keyPlate.rectTransform, new Vector2(1f, 0f), new Vector2(x + tile * 0.5f, Edge), new Vector2(20f, keyH), new Vector2(0.5f, 0f));
+            var key = Label(keyPlate.rectTransform, "Label", DSTextStyle.Key, BlockforgeTheme.Hud.InkPrimary,
+                            (i + 1).ToString(), TextAlignmentOptions.Center);
+            Place(key.main.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(20f, keyH));
+            AlignShadow(key);
+
+            slotViews.Add((tileImg, icon, !hasIcon, count, key));
+        }
+
+        // Nom du slot actif au-dessus de la rangee
+        slotName = Label(root, "SlotName", DSTextStyle.Label, BlockforgeTheme.Hud.InkPrimary, "", TextAlignmentOptions.BottomRight);
+        Place(slotName.main.rectTransform, new Vector2(1f, 0f), new Vector2(-right, Edge + keyH + keyGap + tile + 6f),
+              new Vector2(Mathf.Max(rowW, 260f), 18f), new Vector2(1f, 0f));
+        AlignShadow(slotName);
+
+        state.SelectedChanged += _ => RefreshSlots();
+        RefreshSlots();
+    }
+
+    private void RefreshSlots()
+    {
+        if (loadout == null)
+            return;
+        for (int i = 0; i < slotViews.Count; i++)
+        {
+            bool active = i == loadout.SelectedIndex;
+            var view = slotViews[i];
+            view.tile.color = active ? BlockforgeTheme.Hud.Accent : BlockforgeTheme.Hud.SurfaceHud;
+            if (view.tinted)
+                view.icon.color = active ? BlockforgeTheme.Hud.InkOnAccent : BlockforgeTheme.Hud.InkPrimary;
+            view.count.SetColor(active ? BlockforgeTheme.Hud.InkOnAccent : BlockforgeTheme.Hud.InkPrimary);
+            view.count.shadow.enabled = !active;   // pas d'ombre sur l'accent (DS)
+            view.key.SetColor(active ? BlockforgeTheme.Hud.Accent : BlockforgeTheme.Hud.InkPrimary);
+        }
+        var slot = loadout.Selected;
+        if (slot != null && slotName != null)
+        {
+            string muted = ColorUtility.ToHtmlStringRGB(BlockforgeTheme.Hud.InkMuted);
+            slotName.Set($"{slot.definition.blockName} <color=#{muted}>· {RobotLoadout.KindLabel(slot.kind)} ×{slot.Count}</color>");
+        }
     }
 
     private HudLabel StatRow(RectTransform plate, string caption, float x, float y, float width)
