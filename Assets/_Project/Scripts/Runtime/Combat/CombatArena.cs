@@ -44,7 +44,7 @@ public class CombatArena : MonoBehaviour
     }
 
     // Degage la zone : tout objet de la map dont le volume touche le carre (cibles,
-    // conteneurs, couverts, cibles mobiles entieres), avec 6 m de marge autour
+    // conteneurs, couverts, cibles mobiles entieres), avec 10 m de marge autour
     // pour degager les abords, est desactive. Le sol et les
     // grands elements (> 50 m), les marquages au sol et les textes restent.
     private int ClearObstacles(Transform map)
@@ -59,8 +59,8 @@ public class CombatArena : MonoBehaviour
             string n = r.name.ToLowerInvariant();
             if (n.Contains("label") || n.Contains("_text") || n.Contains("marking") || n.Contains("line") || n.Contains("border"))
                 continue;
-            bool overlap = b.max.x >= center.x - halfSize - 6f && b.min.x <= center.x + halfSize + 6f
-                           && b.max.z >= center.z - halfSize - 6f && b.min.z <= center.z + halfSize + 6f
+            bool overlap = b.max.x >= center.x - halfSize - 10f && b.min.x <= center.x + halfSize + 10f
+                           && b.max.z >= center.z - halfSize - 10f && b.min.z <= center.z + halfSize + 10f
                            && b.min.y < center.y + 20f;
             if (!overlap)
                 continue;

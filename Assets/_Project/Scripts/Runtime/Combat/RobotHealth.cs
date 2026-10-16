@@ -5,13 +5,18 @@ using UnityEngine;
 // SANTE DU ROBOT : DEGATS BLOC PAR BLOC (match)
 // Pose sur chaque robot assemble (joueur, ennemi). Chaque bloc
 // (PlacedBlockView) a ses points de vie (BlockDefinition
-// .resistanceHp). Un impact (Damage) touche le bloc le plus
+// .resistanceHp x hpScale : les valeurs du catalogue sont
+// pensees pour la fiche, pas pour des combats de quelques
+// secondes). La carrosserie s'assombrit avec les degats (Tint). Un impact (Damage) touche le bloc le plus
 // proche du point d'impact ; une zone (radius > 0) touche tous
 // les blocs dans le rayon, degats decroissants.
 // - Bloc a 0 : detruit -> invisible, sans collision, eclat de
 //   debris ; un bloc de mouvement detruit ne porte plus
 //   (RobotLocomotion.SetUnitDisabled), une arme detruite ne tire
 //   plus (PlacedBlockView.destroyed)
+// - Connexite : les blocs sont voisins par leurs cases (cells) ;
+//   quand un bloc casse coupe le robot en morceaux, seul le plus
+//   gros morceau (PV) reste, les autres sont detruits
 // - Regeneration : apres regenDelay secondes sans degats, les
 //   blocs se reparent (regenPerSecond en part des PV max,
 //   repartie) et les blocs detruits reviennent des qu'ils ont
@@ -33,6 +38,10 @@ public class RobotHealth : MonoBehaviour
     public float regenPerSecond = 0.12f;
     [Tooltip("Degats minimaux par impact pour qu'un bloc soit atteint")]
     public float minDamage = 1f;
+    [Tooltip("PV d'un bloc = resistanceHp du catalogue x ce facteur (un cube de 1000 -> 100 : ~12 bolts de laser N1, 3 plasmas N1, 1 rail N1)")]
+    public float hpScale = 0.1f;
+    [Tooltip("Couleur d'un bloc a 0 PV : la carrosserie s'assombrit avec les degats")]
+    public Color damagedTint = new(0.22f, 0.2f, 0.19f, 1f);
 
     public class Block
     {
@@ -41,6 +50,8 @@ public class RobotHealth : MonoBehaviour
         public Renderer[] renderers;
         public Collider[] colliders;
         public Vector3 localCenter;
+        public Color[][] baseColors;     // _BaseColor d'origine de chaque materiau (null : pas de base color)
+        public readonly List<Block> neighbours = new();   // blocs en contact par une face (connexite)
         public float Ratio => max > 0f ? hp / max : 0f;
         public bool Destroyed => hp <= 0f;
     }
@@ -70,7 +81,7 @@ public class RobotHealth : MonoBehaviour
         loco = GetComponent<RobotLocomotion>();
         foreach (var view in GetComponentsInChildren<PlacedBlockView>())
         {
-            float max = view.definition != null ? Mathf.Max(1, view.definition.resistanceHp) : 1000f;
+            float max = Mathf.Max(1f, (view.definition != null ? view.definition.resistanceHp : 1000f) * hpScale);
             var b = new Block
             {
                 view = view,
@@ -80,12 +91,48 @@ public class RobotHealth : MonoBehaviour
                 colliders = view.GetComponentsInChildren<Collider>(true),
                 localCenter = transform.InverseTransformPoint(view.transform.position),
             };
+            b.baseColors = new Color[b.renderers.Length][];
+            for (int i = 0; i < b.renderers.Length; i++)
+            {
+                var mats = b.renderers[i].sharedMaterials;
+                b.baseColors[i] = new Color[mats.Length];
+                for (int m = 0; m < mats.Length; m++)
+                    b.baseColors[i][m] = mats[m] != null && mats[m].HasProperty(BaseColorId) ? mats[m].GetColor(BaseColorId) : new Color(0f, 0f, 0f, -1f);
+            }
             blocks.Add(b);
             byView[view] = b;
             MaxHp += max;
         }
         Hp = MaxHp;
+        BuildNeighbours();
         BuildDebris();
+    }
+
+    // Voisinage par les cases occupees (PlacedBlockView.cells) : deux blocs
+    // sont voisins quand une case de l'un touche une case de l'autre par une
+    // face. Un bloc sans voisin (robot d'un seul bloc) n'est jamais detache.
+    private void BuildNeighbours()
+    {
+        var byCell = new Dictionary<Vector3Int, Block>();
+        foreach (var b in blocks)
+        {
+            var cells = b.view.cells ?? new[] { b.view.cell };
+            foreach (var c in cells)
+                byCell[c] = b;
+        }
+        Vector3Int[] dirs = { Vector3Int.right, Vector3Int.left, Vector3Int.up, Vector3Int.down, Vector3Int.forward, Vector3Int.back };
+        foreach (var b in blocks)
+        {
+            var cells = b.view.cells ?? new[] { b.view.cell };
+            foreach (var c in cells)
+            {
+                foreach (var d in dirs)
+                {
+                    if (byCell.TryGetValue(c + d, out var other) && other != b && !b.neighbours.Contains(other))
+                        b.neighbours.Add(other);
+                }
+            }
+        }
     }
 
     private void OnDestroy()
@@ -103,13 +150,13 @@ public class RobotHealth : MonoBehaviour
     {
         if (IsDead || amount < minDamage)
             return;
-        bool any = false;
+        bool any = false, broke = false;
         if (radius <= 0f)
         {
             var target = Nearest(point, 2.5f);
             if (target != null)
             {
-                Apply(target, amount);
+                broke |= Apply(target, amount);
                 any = true;
             }
         }
@@ -122,12 +169,14 @@ public class RobotHealth : MonoBehaviour
                 float d = Vector3.Distance(transform.TransformPoint(b.localCenter), point);
                 if (d > radius)
                     continue;
-                Apply(b, amount * Mathf.Lerp(1f, 0.25f, d / radius));
+                broke |= Apply(b, amount * Mathf.Lerp(1f, 0.25f, d / radius));
                 any = true;
             }
         }
         if (!any)
             return;
+        if (broke)
+            DropDetached();
         LastDamageTime = Time.time;
         Regenerating = false;
         Recompute();
@@ -153,12 +202,107 @@ public class RobotHealth : MonoBehaviour
         return best;
     }
 
-    private void Apply(Block b, float amount)
+    // Retourne vrai si le bloc vient d'etre detruit
+    private bool Apply(Block b, float amount)
     {
         b.hp = Mathf.Max(0f, b.hp - amount);
-        if (b.Destroyed)
+        bool broke = b.Destroyed;
+        if (broke)
             SetDestroyed(b, true);
+        Tint(b);
         BlockChanged?.Invoke(b);
+        return broke;
+    }
+
+    // Un robot coupe en deux n'a plus qu'un corps : seul le plus gros morceau
+    // (somme des PV) reste ; les blocs des autres morceaux, plus attaches a
+    // rien, sont detruits avec leurs debris.
+    private readonly List<Block> island = new();
+    private readonly HashSet<Block> visited = new();
+
+    private void DropDetached()
+    {
+        visited.Clear();
+        List<Block> best = null;
+        float bestHp = -1f;
+        var islands = new List<List<Block>>();
+        foreach (var start in blocks)
+        {
+            if (start.Destroyed || visited.Contains(start))
+                continue;
+            var part = new List<Block>();
+            float hp = 0f;
+            island.Clear();
+            island.Add(start);
+            visited.Add(start);
+            while (island.Count > 0)
+            {
+                var b = island[island.Count - 1];
+                island.RemoveAt(island.Count - 1);
+                part.Add(b);
+                hp += b.hp;
+                foreach (var n in b.neighbours)
+                {
+                    if (!n.Destroyed && visited.Add(n))
+                        island.Add(n);
+                }
+            }
+            islands.Add(part);
+            if (hp > bestHp)
+            {
+                bestHp = hp;
+                best = part;
+            }
+        }
+        if (islands.Count <= 1)
+            return;
+        foreach (var part in islands)
+        {
+            if (part == best)
+                continue;
+            foreach (var b in part)
+            {
+                b.hp = 0f;
+                SetDestroyed(b, true);
+                Tint(b);
+                BlockChanged?.Invoke(b);
+            }
+        }
+    }
+
+    // Un bloc detruit ne repousse que contre un bloc vivant
+    private bool CanRegrow(Block b)
+    {
+        if (!b.Destroyed || b.neighbours.Count == 0)
+            return true;
+        foreach (var n in b.neighbours)
+        {
+            if (!n.Destroyed)
+                return true;
+        }
+        return false;
+    }
+
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static MaterialPropertyBlock propertyBlock;
+
+    // La carrosserie perd sa couleur avec les PV (MaterialPropertyBlock : les
+    // materiaux partages ne sont pas touches)
+    private void Tint(Block b)
+    {
+        if (propertyBlock == null)
+            propertyBlock = new MaterialPropertyBlock();
+        float k = Mathf.Pow(Mathf.Clamp01(b.Ratio), 0.8f);
+        for (int i = 0; i < b.renderers.Length; i++)
+        {
+            var r = b.renderers[i];
+            if (r == null || b.baseColors[i].Length == 0 || b.baseColors[i][0].a < 0f)
+                continue;
+            r.GetPropertyBlock(propertyBlock);
+            Color baseColor = b.baseColors[i][0];
+            propertyBlock.SetColor(BaseColorId, Color.Lerp(damagedTint, baseColor, k));
+            r.SetPropertyBlock(propertyBlock);
+        }
     }
 
     private void SetDestroyed(Block b, bool destroyed)
@@ -251,7 +395,7 @@ public class RobotHealth : MonoBehaviour
         int damaged = 0;
         foreach (var b in blocks)
         {
-            if (b.hp < b.max)
+            if (b.hp < b.max && CanRegrow(b))
                 damaged++;
         }
         if (damaged == 0)
@@ -259,12 +403,13 @@ public class RobotHealth : MonoBehaviour
         float each = budget / damaged;
         foreach (var b in blocks)
         {
-            if (b.hp >= b.max)
+            if (b.hp >= b.max || !CanRegrow(b))
                 continue;
             bool wasDestroyed = b.Destroyed;
             b.hp = Mathf.Min(b.max, b.hp + each);
             if (wasDestroyed && !b.Destroyed)
                 SetDestroyed(b, false);
+            Tint(b);
             BlockChanged?.Invoke(b);
         }
         Recompute();

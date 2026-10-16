@@ -30,6 +30,7 @@ public static class RobotAssembler
         totalWeightKg = 0;
         int unknown = 0;
         bool alongX = RobotSession.MirrorAlongX;
+        var cellBuffer = new List<Vector3Int>();
         bool hasBounds = false;
         Bounds bounds = default;
 
@@ -62,7 +63,20 @@ public static class RobotAssembler
             view.cell = new Vector3Int(placed.x, placed.y, placed.z);
             view.definition = def;
             view.mirrored = placed.mirrored;
-            view.cells = new[] { view.cell };
+            // Cases occupees (boite d'empreinte tournee, puis reflechie pour
+            // un bloc miroir) : sert a la connexite (RobotHealth) et a la
+            // heatmap du HUD
+            BlockFootprint.GetCells(def, view.cell, placed.rotation, cellBuffer);
+            if (placed.mirrored)
+            {
+                Vector3 scale = BlockFootprint.MirrorScale(alongX);
+                for (int i = 0; i < cellBuffer.Count; i++)
+                {
+                    Vector3 d = cellBuffer[i] - view.cell;
+                    cellBuffer[i] = view.cell + Vector3Int.RoundToInt(Vector3.Scale(d, scale));
+                }
+            }
+            view.cells = cellBuffer.ToArray();
 
             var visual = BlockPreviewFactory.CreateVisual(def, cellSize, out _);
             visual.transform.SetParent(block.transform, false);
