@@ -14,8 +14,11 @@ using UnityEngine.UI;
 // - Sante en bas a gauche (HealthBar : pastille, pourcentage en
 //   readout-lg, "Robot health" en label, dix segments inclines ;
 //   success > 50 %, warning <= 50 %, danger-ink <= 25 %)
-// - Etat du robot en bas a droite : silhouette vue de dessus,
-//   vitesse, masse, appuis au sol
+// - Etat du robot en bas a droite : vitesse, masse, appuis au
+//   sol, et la heatmap des blocs vue de dessus (RobotHealth :
+//   vert / jaune / rouge, rouge sombre + croix rouge vif si
+//   detruit), qui ne
+//   s'affiche que robot abime, et 3 s apres le retour a 100 %
 // - Minimap en haut a droite (MiniMap)
 // - Armes et modules en bas a droite, a gauche de l'etat du
 //   robot (ActionSlot du DS) : un slot par type monte
@@ -26,7 +29,7 @@ using UnityEngine.UI;
 // Regles du HUD : plaques translucides surface-hud sans bord ni
 // ombre, coin exterieur coupe (hud-chamfer), texte avec
 // shadow-hud, rien d'autre que le reticule au centre.
-// Pas encore de degats : la sante reste a 100 % (SetHealth).
+// La sante vient de RobotHealth (HealthChanged -> SetHealth).
 // =========================================================
 
 public class RobotTestHUD : MonoBehaviour
@@ -51,7 +54,7 @@ public class RobotTestHUD : MonoBehaviour
     }
 
     private RobotLocomotion loco;
-    private int maxHealth = 1, health = 1;
+    private int maxHealth = 1, health_hp = 1;
     private RectTransform root;
 
     // Sante
@@ -61,6 +64,15 @@ public class RobotTestHUD : MonoBehaviour
     // Etat
     private HudLabel speedValue, massValue, gripValue;
     private float speedShown;
+    private RectTransform statusPlate, statsColumn, silhouetteWell;
+    private float statusFullWidth, statusCompactWidth, statsFullX, statsCompactX;
+    // Heatmap des blocs (vue de dessus) : visible quand le robot est abime
+    private RobotHealth health;
+    private Texture2D heatmap;
+    private Color32[] heatPixels;
+    private int heatCellPx = 14, heatMinX, heatMinZ, heatCols, heatRows;
+    private readonly List<(RobotHealth.Block block, int x0, int x1, int z0, int z1)> heatCells = new();
+    private bool heatDirty = true, heatVisible = true;
     // Energie (anneau autour du reticule)
     private Image energyLeft, energyRight;
     private RobotEnergy energy;
@@ -73,8 +85,9 @@ public class RobotTestHUD : MonoBehaviour
     public void Bind(RobotLocomotion locomotion, string robotName, int maxHp, int weightKg)
     {
         loco = locomotion;
+        health = locomotion != null ? locomotion.GetComponent<RobotHealth>() : null;
         maxHealth = Mathf.Max(1, maxHp);
-        health = maxHealth;
+        health_hp = maxHealth;
         BuildCanvas();
         BuildReticle();
         BuildHealth();
@@ -83,15 +96,23 @@ public class RobotTestHUD : MonoBehaviour
         energy = locomotion != null ? locomotion.GetComponent<RobotEnergy>() : null;
         if (energy != null)
             energy.Refused += () => refusedFlash = 1f;
+        if (health != null)
+        {
+            maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.MaxHp));
+            this.health_hp = Mathf.RoundToInt(health.Hp);
+            health.HealthChanged += () => SetHealth(Mathf.RoundToInt(health.Hp));
+            health.BlockChanged += _ => heatDirty = true;
+        }
+        SetHeatVisible(false, true);
         var map = gameObject.AddComponent<MiniMap>();
         map.Build(root, locomotion != null ? locomotion.transform : null);
-        SetHealth(health);
+        SetHealth(health_hp);
     }
 
     public void SetHealth(int value)
     {
-        health = Mathf.Clamp(value, 0, maxHealth);
-        float ratio = (float)health / maxHealth;
+        health_hp = Mathf.Clamp(value, 0, maxHealth);
+        float ratio = (float)health_hp / maxHealth;
         int percent = Mathf.RoundToInt(ratio * 100f);
         var tone = percent <= 25 ? BlockforgeTheme.Hud.DangerInk : percent <= 50 ? BlockforgeTheme.Hud.Warning : BlockforgeTheme.Hud.Success;
         pct.Set(percent + "%");
@@ -195,9 +216,11 @@ public class RobotTestHUD : MonoBehaviour
         Place(name.main.rectTransform, new Vector2(0f, 1f), new Vector2(pad, -pad + 2f), new Vector2(w - 2 * pad, 16f), new Vector2(0f, 1f));
         AlignShadow(name);
 
-        // Silhouette vue de dessus (avant du robot en haut)
+        // Heatmap des blocs vue de dessus (avant du robot en haut) : un puits qui
+        // n'apparait que quand le robot est abime (SetHeatVisible)
         var well = NewImage(plate, "Silhouette", null, new Color(0f, 0f, 0f, 0.35f));
         Place(well.rectTransform, new Vector2(0f, 0f), new Vector2(pad, pad), new Vector2(sil, sil), new Vector2(0f, 0f));
+        silhouetteWell = well.rectTransform;
         var silhouette = BuildSilhouette(out var aspect);
         if (silhouette != null)
         {
@@ -210,18 +233,85 @@ public class RobotTestHUD : MonoBehaviour
             Place(raw.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
         }
 
-        // Chiffres : vitesse (readout-lg), masse et appuis (readout-md)
+        // Chiffres : vitesse (readout-lg), masse et appuis (readout-md), dans une
+        // colonne qui glisse a gauche quand la heatmap est cachee
         float x = pad + sil + pad, colW = w - x - pad;
-        var speedCaption = Label(plate, "SpeedCaption", DSTextStyle.Caption, BlockforgeTheme.Hud.InkMuted, "Speed", TextAlignmentOptions.TopLeft);
-        Place(speedCaption.main.rectTransform, new Vector2(0f, 1f), new Vector2(x, -34f), new Vector2(colW, 16f), new Vector2(0f, 1f));
+        statusPlate = plate;
+        statusFullWidth = w;
+        statusCompactWidth = pad + colW + pad;
+        statsFullX = x;
+        statsCompactX = pad;
+        statsColumn = new GameObject("Stats", typeof(RectTransform)).GetComponent<RectTransform>();
+        statsColumn.SetParent(plate, false);
+        Place(statsColumn, new Vector2(0f, 1f), new Vector2(x, 0f), new Vector2(colW, h), new Vector2(0f, 1f));
+        var speedCaption = Label(statsColumn, "SpeedCaption", DSTextStyle.Caption, BlockforgeTheme.Hud.InkMuted, "Speed", TextAlignmentOptions.TopLeft);
+        Place(speedCaption.main.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -34f), new Vector2(colW, 16f), new Vector2(0f, 1f));
         AlignShadow(speedCaption);
-        speedValue = Label(plate, "Speed", DSTextStyle.ReadoutLG, BlockforgeTheme.Hud.InkPrimary, "0", TextAlignmentOptions.TopLeft);
-        Place(speedValue.main.rectTransform, new Vector2(0f, 1f), new Vector2(x, -50f), new Vector2(colW, 28f), new Vector2(0f, 1f));
+        speedValue = Label(statsColumn, "Speed", DSTextStyle.ReadoutLG, BlockforgeTheme.Hud.InkPrimary, "0", TextAlignmentOptions.TopLeft);
+        Place(speedValue.main.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -50f), new Vector2(colW, 28f), new Vector2(0f, 1f));
         AlignShadow(speedValue);
 
-        massValue = StatRow(plate, "Mass", x, -88f, colW);
+        massValue = StatRow(statsColumn, "Mass", 0f, -88f, colW);
         massValue.Set(BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(weightKg / 1000f), "t"));
-        gripValue = StatRow(plate, "Grip", x, -110f, colW);
+        gripValue = StatRow(statsColumn, "Grip", 0f, -110f, colW);
+    }
+
+    // Heatmap visible : robot abime, ou guerison terminee depuis moins de 3 s
+    private void SetHeatVisible(bool visible, bool force = false)
+    {
+        if (!force && visible == heatVisible)
+            return;
+        heatVisible = visible;
+        if (silhouetteWell != null)
+            silhouetteWell.gameObject.SetActive(visible);
+        if (statusPlate != null)
+            statusPlate.sizeDelta = new Vector2(visible ? statusFullWidth : statusCompactWidth, statusPlate.sizeDelta.y);
+        if (statsColumn != null)
+            statsColumn.anchoredPosition = new Vector2(visible ? statsFullX : statsCompactX, 0f);
+    }
+
+    private void UpdateHeat()
+    {
+        if (health == null || heatmap == null)
+            return;
+        bool show = health.Damaged || Time.time - health.LastFullTime < 3f;
+        SetHeatVisible(show);
+        if (show && heatDirty)
+            RedrawHeat();
+    }
+
+    private void RedrawHeat()
+    {
+        if (heatmap == null)
+            return;
+        heatDirty = false;
+        System.Array.Clear(heatPixels, 0, heatPixels.Length);
+        Color32 green = BlockforgeTheme.Hud.Success, yellow = BlockforgeTheme.Hud.Warning, red = BlockforgeTheme.Hud.DangerInk;
+        Color32 black = new Color32(70, 14, 14, 255), cross = new Color32(255, 70, 60, 255);
+        int cell = heatCellPx;
+        foreach (var (block, x0, x1, z0, z1) in heatCells)
+        {
+            float r = block.Ratio;
+            Color32 tone = block.Destroyed ? black : r > 0.66f ? green : r > 0.33f ? yellow : red;
+            for (int cx = x0; cx < x1; cx++)
+            {
+                for (int cz = z0; cz < z1; cz++)
+                {
+                    int ox = (cx - heatMinX) * cell, oy = (cz - heatMinZ) * cell;
+                    for (int y = 1; y < cell; y++)
+                    {
+                        for (int x = 1; x < cell; x++)
+                        {
+                            // Bloc detruit : croix rouge vif de 2 px sur fond rouge sombre
+                            bool onCross = block.Destroyed && (Mathf.Abs(x - y) <= 1 || Mathf.Abs(x - (cell - y)) <= 1);
+                            heatPixels[(oy + y) * heatmap.width + ox + x] = onCross ? cross : tone;
+                        }
+                    }
+                }
+            }
+        }
+        heatmap.SetPixels32(heatPixels);
+        heatmap.Apply();
     }
 
     // ---------- Armes et modules (ActionSlot) ----------
@@ -314,60 +404,52 @@ public class RobotTestHUD : MonoBehaviour
         return v;
     }
 
-    // Cases occupees par chaque bloc, vue de dessus ; mouvement plus discret
+    // Cases occupees par chaque bloc, vue de dessus : la texture de la heatmap
+    // (redessinee par UpdateHeat d'apres la sante de chaque bloc : vert, jaune,
+    // rouge, noir barre d'une croix rouge quand il est detruit)
     private Texture2D BuildSilhouette(out float aspect)
     {
         aspect = 1f;
         if (loco == null)
             return null;
-        var cells = new Dictionary<Vector2Int, bool>(); // vrai = structure (prioritaire sur le mouvement)
+        var robotHealth = loco.GetComponent<RobotHealth>();
+        heatCells.Clear();
+        int minX = int.MaxValue, maxX = int.MinValue, minZ = int.MaxValue, maxZ = int.MinValue;
         foreach (var view in loco.GetComponentsInChildren<PlacedBlockView>())
         {
             if (!loco.TryGetLocalBounds(view.transform, out var b))
                 continue;
+            int x0 = Mathf.FloorToInt(b.min.x + 0.05f), x1 = Mathf.Max(Mathf.CeilToInt(b.max.x - 0.05f), x0 + 1);
+            int z0 = Mathf.FloorToInt(b.min.z + 0.05f), z1 = Mathf.Max(Mathf.CeilToInt(b.max.z - 0.05f), z0 + 1);
+            var block = robotHealth != null ? robotHealth.Get(view) : null;
+            if (block == null)
+                block = new RobotHealth.Block { view = view, max = 1f, hp = 1f };
             bool structure = view.definition == null || view.definition.category != BlockCategory.Mouvement;
-            int x0 = Mathf.FloorToInt(b.min.x + 0.05f), x1 = Mathf.CeilToInt(b.max.x - 0.05f);
-            int z0 = Mathf.FloorToInt(b.min.z + 0.05f), z1 = Mathf.CeilToInt(b.max.z - 0.05f);
-            for (int x = x0; x < Mathf.Max(x1, x0 + 1); x++)
-            {
-                for (int z = z0; z < Mathf.Max(z1, z0 + 1); z++)
-                {
-                    var key = new Vector2Int(x, z);
-                    cells[key] = (cells.TryGetValue(key, out var s) && s) || structure;
-                }
-            }
+            // La structure passe apres : elle recouvre les roues qui depassent dessous
+            if (structure)
+                heatCells.Add((block, x0, x1, z0, z1));
+            else
+                heatCells.Insert(0, (block, x0, x1, z0, z1));
+            minX = Mathf.Min(minX, x0); maxX = Mathf.Max(maxX, x1 - 1);
+            minZ = Mathf.Min(minZ, z0); maxZ = Mathf.Max(maxZ, z1 - 1);
         }
-        if (cells.Count == 0)
+        if (heatCells.Count == 0)
             return null;
 
-        int minX = int.MaxValue, maxX = int.MinValue, minZ = int.MaxValue, maxZ = int.MinValue;
-        foreach (var k in cells.Keys)
+        heatMinX = minX;
+        heatMinZ = minZ;
+        heatCols = maxX - minX + 1;
+        heatRows = maxZ - minZ + 1;
+        heatmap = new Texture2D(heatCols * heatCellPx, heatRows * heatCellPx, TextureFormat.RGBA32, false)
         {
-            minX = Mathf.Min(minX, k.x); maxX = Mathf.Max(maxX, k.x);
-            minZ = Mathf.Min(minZ, k.y); maxZ = Mathf.Max(maxZ, k.y);
-        }
-        int cw = maxX - minX + 1, ch = maxZ - minZ + 1;
-        const int cell = 8;
-        var tex = new Texture2D(cw * cell, ch * cell, TextureFormat.RGBA32, false)
-        {
-            name = "RobotSilhouette",
-            filterMode = FilterMode.Bilinear,
+            name = "RobotHeatmap",
+            filterMode = FilterMode.Point,
             wrapMode = TextureWrapMode.Clamp,
         };
-        var px = new Color32[tex.width * tex.height];
-        Color32 solid = BlockforgeTheme.Hud.Success;
-        Color32 soft = new Color(BlockforgeTheme.Hud.Success.r, BlockforgeTheme.Hud.Success.g, BlockforgeTheme.Hud.Success.b, 0.5f);
-        foreach (var kv in cells)
-        {
-            int ox = (kv.Key.x - minX) * cell, oy = (kv.Key.y - minZ) * cell;
-            for (int y = 1; y < cell; y++)
-                for (int x = 1; x < cell; x++)
-                    px[(oy + y) * tex.width + ox + x] = kv.Value ? solid : soft;
-        }
-        tex.SetPixels32(px);
-        tex.Apply();
-        aspect = (float)cw / ch;
-        return tex;
+        heatPixels = new Color32[heatmap.width * heatmap.height];
+        RedrawHeat();
+        aspect = (float)heatCols / heatRows;
+        return heatmap;
     }
 
     // =========================================================
@@ -385,6 +467,7 @@ public class RobotTestHUD : MonoBehaviour
             ? $"{loco.GroundedContacts} / {loco.TotalContacts}"
             : (loco.HasRotors ? "Air" : "–"));
         UpdateEnergy();
+        UpdateHeat();
     }
 
     private void UpdateEnergy()

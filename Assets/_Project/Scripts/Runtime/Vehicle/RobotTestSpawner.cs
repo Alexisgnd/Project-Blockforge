@@ -15,7 +15,11 @@ using UnityEngine;
 // (WeaponFireController), la poussiere au sol (RobotGroundFX), le
 // redressement (RobotRecovery, touche R), le HUD de match
 // (RobotTestHUD : vie, reticule + jauge d'energie, etat du robot,
-// minimap) et branche la camera.
+// heatmap, minimap) et branche la camera. Sante : RobotHealth
+// (detruit -> reapparait au spawn apres respawnSeconds).
+// Au Start, la map recoit ses cibles destructibles
+// (ShootableTarget) et, sur le terrain d'essai, la zone de combat
+// du Combat Yard (CombatArena, robot ennemi).
 // L'apparition est jouee par RobotSpawnSequence : assemblage
 // holographique en levitation, puis chute et controles.
 // Le robot passe sur le calque RobotLayer : la minimap le
@@ -42,9 +46,14 @@ public class RobotTestSpawner : MonoBehaviour
 
     public GameObject Robot { get; private set; }
 
+    [Tooltip("Delai de reapparition du robot joueur detruit (s)")]
+    public float respawnSeconds = 4f;
+
     private readonly Dictionary<string, BlockDefinition> defs = new();
     private GameObject hudHost;
     private int demoIndex;   // 0 = robot du garage (ou robot par defaut), 1.. = robots de demonstration
+    private CombatArena arena;
+    private Coroutine respawnRoutine;
 
     private void Start()
     {
@@ -60,6 +69,53 @@ public class RobotTestSpawner : MonoBehaviour
         var blueprint = RobotSession.Blueprint;
         bool isDefault = blueprint == null || blueprint.blocks == null || blueprint.blocks.Count == 0;
         Spawn(isDefault ? CreateDefaultTestBlueprint() : blueprint, isDefault);
+        PrepareMap();
+    }
+
+    // Cibles destructibles et zone de combat (terrain d'essai uniquement)
+    private void PrepareMap()
+    {
+        GameObject map = null;
+        foreach (var name in new[] { "Map_TestGround", "Map_Canyon", "Map_Arena" })
+        {
+            map = GameObject.Find(name);
+            if (map != null)
+                break;
+        }
+        if (map == null)
+            return;
+        int targets = ShootableTarget.AttachAll(map.transform);
+        if (map.name == "Map_TestGround")
+        {
+            arena = new GameObject("CombatArena").AddComponent<CombatArena>();
+            arena.Player = Robot;
+            arena.Setup(defs, cellSize, map.transform);
+        }
+        Debug.Log($"[RobotTest] {targets} cible(s) destructible(s)" + (arena != null ? ", zone de combat prete (Combat Yard)." : "."));
+    }
+
+    // Robot detruit : reapparait au spawn apres respawnSeconds
+    private void OnPlayerDestroyed()
+    {
+        if (respawnRoutine != null)
+            return;
+        respawnRoutine = StartCoroutine(RespawnPlayer());
+    }
+
+    private System.Collections.IEnumerator RespawnPlayer()
+    {
+        yield return new WaitForSeconds(respawnSeconds);
+        respawnRoutine = null;
+        if (demoIndex == 0)
+        {
+            var bp = RobotSession.Blueprint;
+            bool isDefault = bp == null || bp.blocks == null || bp.blocks.Count == 0;
+            Spawn(isDefault ? CreateDefaultTestBlueprint() : bp, isDefault);
+        }
+        else
+        {
+            Spawn(DemoBlueprints()[demoIndex - 1], false);
+        }
     }
 
     // F5 : robot suivant (robot du garage, puis les demonstrations de chaque famille de mouvement)
@@ -106,6 +162,8 @@ public class RobotTestSpawner : MonoBehaviour
         var driver = Robot.AddComponent<RobotTestDriver>();
         Robot.AddComponent<RobotLoadoutState>();   // armes et modules : slots 1 / 2 / 3
         Robot.AddComponent<RobotEnergy>();         // energie des armes (jauge du reticule)
+        var health = Robot.AddComponent<RobotHealth>();   // degats bloc par bloc, heatmap du HUD
+        health.Destroyed += OnPlayerDestroyed;
         var aim = Robot.AddComponent<WeaponAimController>();   // les armes du slot actif visent le reticule
         var fire = Robot.AddComponent<WeaponFireController>(); // clic gauche : tir (laser, plasma, rail, Tesla)
         var dust = Robot.AddComponent<RobotGroundFX>();        // poussiere des roues / chenilles / pattes
@@ -121,7 +179,12 @@ public class RobotTestSpawner : MonoBehaviour
         if (followCamera == null)
             followCamera = FindAnyObjectByType<RobotFollowCamera>();
         if (followCamera != null)
+        {
             followCamera.SetTarget(Robot.transform);
+            MatchPauseMenu.ApplyToCamera();
+        }
+        if (arena != null)
+            arena.Player = Robot;
 
         // Apparition : assemblage holographique en levitation, puis chute et
         // controles rendus au joueur (pilotage, physique, visee, tir, poussiere)

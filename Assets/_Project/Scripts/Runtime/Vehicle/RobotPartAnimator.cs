@@ -327,6 +327,8 @@ public class RobotPartAnimator : MonoBehaviour
         foreach (var a in animated)
         {
             var u = a.unit;
+            if (u.disabled)
+                continue;
             switch (u.kind)
             {
                 case LocomotionKind.Wheel:

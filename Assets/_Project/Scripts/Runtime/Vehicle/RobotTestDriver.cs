@@ -11,9 +11,9 @@ using UnityEngine.SceneManagement;
 // secondes), clic gauche : tirer (WeaponFireController).
 // Touches physiques W/S/A/D (Z/S/Q/D en AZERTY) ; les fleches
 // marchent aussi.
-// ECHAP libere le curseur ; un second ECHAP (curseur libre)
-// revient au garage (RobotSession.ReturnSceneName) ; un clic
-// gauche reverrouille le curseur.
+// ECHAP ouvre le menu de pause (MatchPauseMenu : reprendre,
+// options, retour au garage, rappel des touches) ; un clic
+// gauche reverrouille le curseur s'il est libre.
 // La physique (suspensions, adherence, portance...) est dans
 // RobotLocomotion, les animations dans RobotPartAnimator.
 // =========================================================
@@ -54,17 +54,17 @@ public class RobotTestDriver : MonoBehaviour
             return;
         }
 
-        if (kb.escapeKey.wasPressedThisFrame)
+        // ECHAP : menu de pause (reprendre, options, retour au garage)
+        if (kb.escapeKey.wasPressedThisFrame && !MatchPauseMenu.IsOpen)
         {
-            if (Cursor.lockState == CursorLockMode.Locked)
-            {
-                SetCursorLocked(false);
-            }
-            else
-            {
-                ReturnToGarage();
-                return;
-            }
+            MatchPauseMenu.Open(this);
+            Send(0f, 0f, 0f, false);
+            return;
+        }
+        if (MatchPauseMenu.IsOpen)
+        {
+            Send(0f, 0f, 0f, false);
+            return;
         }
 
         var mouse = Mouse.current;
@@ -106,11 +106,12 @@ public class RobotTestDriver : MonoBehaviour
     public void ReturnToGarage()
     {
         string scene = string.IsNullOrEmpty(RobotSession.ReturnSceneName) ? fallbackReturnScene : RobotSession.ReturnSceneName;
+        Time.timeScale = 1f;
         SetCursorLocked(false);
         SceneManager.LoadScene(scene);
     }
 
-    private static void SetCursorLocked(bool locked)
+    public static void SetCursorLocked(bool locked)
     {
         Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !locked;

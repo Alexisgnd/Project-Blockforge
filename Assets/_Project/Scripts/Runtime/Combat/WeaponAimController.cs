@@ -23,8 +23,10 @@ using UnityEngine;
 // - Les armes des autres slots reviennent au repos (lacet 0,
 //   tangage 0)
 // Expose les tourelles (bouche, axe du canon) a
-// WeaponFireController. Le rayon de visee traverse les triggers
-// (pieces mobiles des cibles) pour qu'on puisse les viser.
+// WeaponFireController. Le rayon de visee ignore le robot
+// lui-meme mais atteint les autres robots et les pieces mobiles
+// des cibles. useCamera = false : un robot IA fournit son point
+// vise (ManualAimPoint).
 // Les blocs miroir (echelle negative) marchent sans cas
 // particulier : la cible est ramenee dans le repere local du
 // pivot (InverseTransformPoint tient compte du miroir) et la
@@ -62,15 +64,41 @@ public class WeaponAimController : MonoBehaviour
     public IReadOnlyList<Turret> Turrets => turrets;
     private RobotLoadoutState loadout;
     private Camera viewCamera;
-    private int robotLayerMask;
+    private Rigidbody body;
+    private readonly RaycastHit[] hits = new RaycastHit[24];
+
+    [Header("Pilotage externe (IA)")]
+    [Tooltip("Faux : le point vise est donne par ManualAimPoint (robot ennemi) au lieu de la camera")]
+    public bool useCamera = true;
+    public Vector3 ManualAimPoint { get; set; }
 
     public Vector3 AimPoint { get; private set; }
     public bool HasAimHit { get; private set; }
 
+    // Rayon qui ignore les colliders du robot lui-meme (les autres robots comptent)
+    public static bool RaycastIgnoring(Rigidbody self, RaycastHit[] buffer, Vector3 origin, Vector3 dir, float range, out RaycastHit best)
+    {
+        best = default;
+        int n = Physics.RaycastNonAlloc(origin, dir, buffer, range, ~0, QueryTriggerInteraction.Collide);
+        float bestDistance = float.MaxValue;
+        for (int i = 0; i < n; i++)
+        {
+            var h = buffer[i];
+            if (h.collider == null || (self != null && h.collider.attachedRigidbody == self))
+                continue;
+            if (h.distance < bestDistance)
+            {
+                bestDistance = h.distance;
+                best = h;
+            }
+        }
+        return bestDistance < float.MaxValue;
+    }
+
     private void Awake()
     {
         loadout = GetComponent<RobotLoadoutState>();
-        robotLayerMask = ~(1 << RobotTestSpawner.RobotLayer);
+        body = GetComponent<Rigidbody>();
         foreach (var view in GetComponentsInChildren<PlacedBlockView>())
         {
             var turret = BuildTurret(view);
@@ -209,16 +237,25 @@ public class WeaponAimController : MonoBehaviour
     {
         if (turrets.Count == 0)
             return;
-        if (viewCamera == null)
-            viewCamera = Camera.main;
-
-        // Point vise : le reticule (centre de l'ecran)
-        if (viewCamera != null)
+        if (body == null)
+            body = GetComponent<Rigidbody>();
+        if (!useCamera)
         {
-            var origin = viewCamera.transform.position;
-            var dir = viewCamera.transform.forward;
-            HasAimHit = Physics.Raycast(origin, dir, out var hit, maxRange, robotLayerMask, QueryTriggerInteraction.Collide);
-            AimPoint = HasAimHit ? hit.point : origin + dir * maxRange;
+            AimPoint = ManualAimPoint;
+            HasAimHit = true;
+        }
+        else
+        {
+            if (viewCamera == null)
+                viewCamera = Camera.main;
+            // Point vise : le reticule (centre de l'ecran), robot lui-meme ignore
+            if (viewCamera != null)
+            {
+                var origin = viewCamera.transform.position;
+                var dir = viewCamera.transform.forward;
+                HasAimHit = RaycastIgnoring(body, hits, origin, dir, maxRange, out var hit);
+                AimPoint = HasAimHit ? hit.point : origin + dir * maxRange;
+            }
         }
 
         var selected = loadout != null ? loadout.Selected : null;
@@ -227,7 +264,7 @@ public class WeaponAimController : MonoBehaviour
         {
             if (t.pivot == null)
                 continue;
-            bool active = selected != null && selected.blocks.Contains(t.view);
+            bool active = selected != null && selected.blocks.Contains(t.view) && !t.view.destroyed;
             float wantedYaw = 0f, wantedPitch = 0f;
             if (active)
             {

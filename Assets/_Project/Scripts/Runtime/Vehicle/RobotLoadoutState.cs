@@ -26,6 +26,9 @@ public class RobotLoadoutState : MonoBehaviour
         public int Count => blocks.Count;
     }
 
+    [Tooltip("Faux pour un robot pilote par une IA : les touches 1/2/3 ne le concernent pas")]
+    public bool acceptInput = true;
+
     public readonly List<Slot> slots = new();
     public int SelectedIndex { get; private set; } = -1;
     public Slot Selected => SelectedIndex >= 0 && SelectedIndex < slots.Count ? slots[SelectedIndex] : null;
@@ -72,7 +75,7 @@ public class RobotLoadoutState : MonoBehaviour
     private void Update()
     {
         var kb = Keyboard.current;
-        if (kb == null || slots.Count == 0)
+        if (!acceptInput || kb == null || slots.Count == 0)
             return;
         if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame) Select(0);
         else if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame) Select(1);

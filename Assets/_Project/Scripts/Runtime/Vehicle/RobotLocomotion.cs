@@ -36,7 +36,8 @@ using UnityEngine;
 // partir de l'etat expose ici (vitesse aux contacts, compression,
 // portance, poussee) ; RobotGroundFX lit la derive laterale de
 // chaque contact (slip) et la part d'adherence consommee par la
-// traction (traction) pour la poussiere des roues.
+// traction (traction) pour la poussiere des roues. Un bloc de
+// mouvement detruit (RobotHealth -> SetUnitDisabled) ne porte plus.
 // =========================================================
 
 public enum LocomotionKind { Wheel, Track, Leg, Hover, Rotor, Thruster, Rudder }
@@ -71,6 +72,7 @@ public class LocomotionUnit
     public float groundSpeed;        // m/s le long de l'avant (moyenne des contacts)
     public float traction;           // 0..1 : part de l'adherence consommee par la traction (1 = patine)
     public bool anyGrounded;
+    public bool disabled;            // bloc detruit (RobotHealth) : ne porte plus, ne pousse plus
     // Geometrie mesuree au montage (repere de la racine)
     public Vector3 center;           // centre du visuel
     public Vector3 axis;             // axe propre : essieu, axe de rotor, axe de poussee
@@ -326,7 +328,7 @@ public class RobotLocomotion : MonoBehaviour
         // ---------- Suspensions, adherence, traction ----------
         foreach (var unit in units)
         {
-            if (unit.contacts.Count == 0)
+            if (unit.contacts.Count == 0 || unit.disabled)
                 continue;
             float unitSpeed = 0f;
             float unitTraction = 0f;
@@ -423,9 +425,52 @@ public class RobotLocomotion : MonoBehaviour
         ApplyRudders(v, up, forward);
     }
 
+    // Bloc de mouvement detruit ou repare (RobotHealth) : la charge se repartit
+    // sur les appuis restants
+    public void SetUnitDisabled(PlacedBlockView view, bool disabled)
+    {
+        bool changed = false;
+        foreach (var u in units)
+        {
+            if (u.view == view && u.disabled != disabled)
+            {
+                u.disabled = disabled;
+                u.anyGrounded = false;
+                foreach (var c in u.contacts)
+                {
+                    c.grounded = false;
+                    c.compression = c.lastCompression = 0f;
+                }
+                changed = true;
+            }
+        }
+        if (!changed || Body == null)
+            return;
+        int supporting = 0;
+        foreach (var u in units)
+        {
+            if (!u.disabled)
+                supporting += u.contacts.Count;
+        }
+        TotalContacts = supporting;
+        HasRotors = units.Exists(u => u.kind == LocomotionKind.Rotor && !u.disabled);
+        float share = Body.mass / Mathf.Max(1, supporting);
+        float g = -Physics.gravity.y;
+        foreach (var u in units)
+        {
+            foreach (var c in u.contacts)
+            {
+                float sag = u.kind == LocomotionKind.Hover ? 0.5f : GroundSag;
+                c.stiffness = share * g / Mathf.Max(0.02f, sag * c.travel);
+                float ratio = u.kind == LocomotionKind.Hover ? 0.35f : 0.55f;
+                c.damping = 2f * Mathf.Sqrt(c.stiffness * share) * ratio;
+            }
+        }
+    }
+
     private void ApplyRotors(float dt, Vector3 up, Vector3 forward, float yawRate)
     {
-        var rotors = units.FindAll(u => u.kind == LocomotionKind.Rotor);
+        var rotors = units.FindAll(u => u.kind == LocomotionKind.Rotor && !u.disabled);
         if (rotors.Count == 0)
             return;
 
@@ -464,7 +509,7 @@ public class RobotLocomotion : MonoBehaviour
 
     private void ApplyThrusters(Vector3 up, Vector3 forward)
     {
-        var thrusters = units.FindAll(u => u.kind == LocomotionKind.Thruster);
+        var thrusters = units.FindAll(u => u.kind == LocomotionKind.Thruster && !u.disabled);
         if (thrusters.Count == 0)
             return;
         float speed = Body.linearVelocity.magnitude;
@@ -483,7 +528,7 @@ public class RobotLocomotion : MonoBehaviour
 
     private void ApplyRudders(Vector3 v, Vector3 up, Vector3 forward)
     {
-        var rudders = units.FindAll(u => u.kind == LocomotionKind.Rudder);
+        var rudders = units.FindAll(u => u.kind == LocomotionKind.Rudder && !u.disabled);
         if (rudders.Count == 0)
             return;
         float vf = Vector3.Dot(v, forward);

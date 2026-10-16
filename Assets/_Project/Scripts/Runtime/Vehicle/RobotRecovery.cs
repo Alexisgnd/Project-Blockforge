@@ -7,7 +7,8 @@ using UnityEngine;
 // Touche R (RobotTestDriver -> Begin). Le robot est souleve en
 // levitation (corps cinematique, liftHeight), remis a plat en
 // gardant son cap, puis relache : il retombe sur ses appuis.
-// Pendant la manoeuvre la locomotion est coupee.
+// Pendant la manoeuvre la locomotion est coupee. Refuse en l'air
+// (seulement au sol, meme retourne) et pendant la recharge.
 // Effets (particules additives Blockforge/DustParticle, teinte
 // accent) : anneau d'impulsion au sol au depart, panache
 // d'energie qui monte autour du robot pendant la rotation,
@@ -56,7 +57,8 @@ public class RobotRecovery : MonoBehaviour
         if (plumeMat != null) Destroy(plumeMat);
     }
 
-    // Lance le redressement si possible (false : deja en cours, ou en recharge)
+    // Lance le redressement si possible (false : deja en cours, en recharge, ou en
+    // l'air : il faut etre au sol, meme retourne)
     public bool Begin()
     {
         if (Running || Time.time < ReadyAt)
@@ -64,8 +66,34 @@ public class RobotRecovery : MonoBehaviour
         var seq = GetComponent<RobotSpawnSequence>();
         if (seq != null && seq.Running)
             return false;
+        var health = GetComponent<RobotHealth>();
+        if (health != null && health.IsDead)
+            return false;
+        if (!OnGround())
+        {
+            Toast.Warning("Self-righting only works on the ground.");
+            return false;
+        }
         StartCoroutine(Run());
         return true;
+    }
+
+    // Au sol : un appui porte, ou le decor est a portee sous le robot (retourne,
+    // couche sur le flanc, pose sur son toit)
+    private bool OnGround()
+    {
+        if (loco != null && loco.GroundedContacts > 0)
+            return true;
+        float height = loco != null ? loco.RobotHeight : 1f;
+        Vector3 origin = body != null ? body.worldCenterOfMass : transform.position;
+        float reach = height * 0.8f + 0.6f;
+        int mask = ~(1 << RobotTestSpawner.RobotLayer);
+        foreach (var dir in new[] { Vector3.down, -transform.up, transform.up, transform.right, -transform.right, transform.forward, -transform.forward })
+        {
+            if (Physics.Raycast(origin, dir, reach, mask, QueryTriggerInteraction.Ignore))
+                return true;
+        }
+        return false;
     }
 
     private IEnumerator Run()

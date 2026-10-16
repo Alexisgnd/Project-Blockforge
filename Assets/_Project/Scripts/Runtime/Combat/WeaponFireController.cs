@@ -23,9 +23,11 @@ using UnityEngine.InputSystem;
 //            consommation continue
 // Chaque tir part de la bouche de la tourelle (WeaponAimController)
 // vers le point vise si le canon y est presque aligne, sinon dans
-// l'axe du canon. Les cibles mobiles touchees recoivent Hit()
-// (MovingTarget : un pop-up se couche). Les robots n'ont pas
-// encore de degats : les impacts sur un bloc n'ont qu'un effet.
+// l'axe du canon. Une cible touchee (ShootableTarget) est
+// detruite puis reapparait ; un robot touche (RobotHealth) perd
+// des PV sur le bloc atteint (zone pour le plasma). Le robot
+// tireur ignore ses propres colliders. manual = true : un robot
+// IA tient FireHeld au lieu du clic.
 // Effets : traits = LineRenderer (shader Blockforge/Hologram,
 // mode aretes = couleur pleine additive), etincelles = particules
 // additives (Blockforge/DustParticle), tout en espace monde.
@@ -50,11 +52,17 @@ public class WeaponFireController : MonoBehaviour
     [Header("Portee")]
     public float maxRange = 320f;
 
+    [Header("Pilotage externe (IA)")]
+    [Tooltip("Vrai : le tir vient de FireHeld (robot ennemi) au lieu du clic gauche")]
+    public bool manual;
+    public bool FireHeld { get; set; }
+
     private RobotLoadoutState loadout;
     private RobotEnergy energy;
     private WeaponAimController aim;
+    private RobotHealth health;
     private Rigidbody body;
-    private int hitMask;
+    private readonly RaycastHit[] hits = new RaycastHit[24];
 
     private float nextShot;
     private int roundRobin;
@@ -99,7 +107,7 @@ public class WeaponFireController : MonoBehaviour
         energy = GetComponent<RobotEnergy>();
         aim = GetComponent<WeaponAimController>();
         body = GetComponent<Rigidbody>();
-        hitMask = ~(1 << RobotTestSpawner.RobotLayer);
+        health = GetComponent<RobotHealth>();
         BuildFX();
     }
 
@@ -120,8 +128,20 @@ public class WeaponFireController : MonoBehaviour
     private void Update()
     {
         UpdateBeams();
-        var mouse = Mouse.current;
-        bool firing = mouse != null && mouse.leftButton.isPressed && Cursor.lockState == CursorLockMode.Locked;
+        if (health == null)
+            health = GetComponent<RobotHealth>();
+        if (health != null && health.IsDead)
+            return;
+        bool firing;
+        if (manual)
+        {
+            firing = FireHeld;
+        }
+        else
+        {
+            var mouse = Mouse.current;
+            firing = mouse != null && mouse.leftButton.isPressed && Cursor.lockState == CursorLockMode.Locked;
+        }
         if (!firing)
             return;
 
@@ -144,7 +164,7 @@ public class WeaponFireController : MonoBehaviour
         var turrets = new List<WeaponAimController.Turret>();
         foreach (var t in aim.Turrets)
         {
-            if (slot.blocks.Contains(t.view))
+            if (slot.blocks.Contains(t.view) && !t.view.destroyed)
                 turrets.Add(t);
         }
         if (turrets.Count == 0)
@@ -176,7 +196,7 @@ public class WeaponFireController : MonoBehaviour
     private void FireHitscan(Vector3 muzzle, Vector3 dir, Stats stats, Material material, Color color, float width, float seconds, int sparkCount)
     {
         Vector3 end = muzzle + dir * maxRange;
-        if (Physics.Raycast(muzzle, dir, out var hit, maxRange, hitMask, QueryTriggerInteraction.Collide))
+        if (WeaponAimController.RaycastIgnoring(body, hits, muzzle, dir, maxRange, out var hit))
         {
             end = hit.point;
             ApplyHit(hit.collider, hit.point, hit.normal, stats, color, sparkCount);
@@ -199,7 +219,7 @@ public class WeaponFireController : MonoBehaviour
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
         var bolt = go.AddComponent<WeaponProjectile>();
-        bolt.Launch(this, dir * stats.speed, stats, hitMask, beamMaterial, trailTime: 0.06f, trailWidth: 0.12f, pulse: false, alignToVelocity: true);
+        bolt.Launch(this, body, dir * stats.speed, stats, beamMaterial, trailTime: 0.06f, trailWidth: 0.12f, pulse: false, alignToVelocity: true);
         Burst(sparks, muzzle, dir, 4, LaserColor, 0.08f, 0.14f, 3f, 6f, 0.12f);
     }
 
@@ -215,7 +235,7 @@ public class WeaponFireController : MonoBehaviour
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
         var bolt = go.AddComponent<WeaponProjectile>();
-        bolt.Launch(this, dir * stats.speed, stats, hitMask, plasmaMaterial, trailTime: 0.22f, trailWidth: 0.34f, pulse: true, alignToVelocity: false);
+        bolt.Launch(this, body, dir * stats.speed, stats, plasmaMaterial, trailTime: 0.22f, trailWidth: 0.34f, pulse: true, alignToVelocity: false);
         Burst(sparks, muzzle, dir, 6, PlasmaColor, 0.1f, 0.18f, 2f, 5f, 0.14f);
     }
 
@@ -225,6 +245,8 @@ public class WeaponFireController : MonoBehaviour
             return;
         foreach (var view in slot.blocks)
         {
+            if (view.destroyed)
+                continue;
             var visual = BlockColliders.Visual(view.transform);
             Vector3 center = visual != null && TryBounds(visual, out var b) ? b.center : view.transform.position;
             // Arcs autour de la lame, en continu
@@ -236,9 +258,11 @@ public class WeaponFireController : MonoBehaviour
         nextTeslaTick = Time.time + 1f / stats.rate;
         foreach (var view in slot.blocks)
         {
+            if (view.destroyed)
+                continue;
             var visual = BlockColliders.Visual(view.transform);
             Vector3 center = visual != null && TryBounds(visual, out var b) ? b.center : view.transform.position;
-            foreach (var col in Physics.OverlapSphere(center, stats.splash, hitMask, QueryTriggerInteraction.Collide))
+            foreach (var col in Physics.OverlapSphere(center, stats.splash, ~0, QueryTriggerInteraction.Collide))
             {
                 if (col.attachedRigidbody == body)
                     continue;
@@ -254,22 +278,30 @@ public class WeaponFireController : MonoBehaviour
             body.AddForceAtPosition(-dir * (body.mass * strength), at, ForceMode.Impulse);
     }
 
-    // Impact : cible mobile touchee (Hit), zone eventuelle, etincelles
+    // Impact : cible touchee (ShootableTarget : detruite puis reapparait), robot
+    // touche (RobotHealth : degats au bloc), zone eventuelle, etincelles
     public void ApplyHit(Collider collider, Vector3 point, Vector3 normal, Stats stats, Color color, int sparkCount)
     {
         if (collider != null)
         {
-            var target = collider.GetComponentInParent<MovingTarget>();
+            var target = collider.GetComponentInParent<ShootableTarget>();
             if (target != null)
                 target.Hit(stats.damage);
+            var robot = collider.GetComponentInParent<RobotHealth>();
+            if (robot != null && robot.gameObject != gameObject)
+                robot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f);
         }
         if (stats.splash > 0f && stats.kind == Kind.Plasma)
         {
-            foreach (var col in Physics.OverlapSphere(point, stats.splash, hitMask, QueryTriggerInteraction.Collide))
+            var hitRobots = new HashSet<RobotHealth>();
+            foreach (var col in Physics.OverlapSphere(point, stats.splash, ~0, QueryTriggerInteraction.Collide))
             {
-                var target = col.GetComponentInParent<MovingTarget>();
+                var target = col.GetComponentInParent<ShootableTarget>();
                 if (target != null)
                     target.Hit(stats.damage * 0.5f);
+                var robot = col.GetComponentInParent<RobotHealth>();
+                if (robot != null && robot.gameObject != gameObject && hitRobots.Add(robot) && (collider == null || robot != collider.GetComponentInParent<RobotHealth>()))
+                    robot.Damage(point, stats.damage * 0.6f, stats.splash);
             }
             Burst(plasmaBurst, point, normal, 18, PlasmaColor, 0.3f, 0.7f, 2f, 7f, 0.45f);
             Burst(sparks, point, normal, 10, Color.white, 0.08f, 0.16f, 4f, 9f, 0.25f);
