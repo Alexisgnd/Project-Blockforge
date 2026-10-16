@@ -163,6 +163,7 @@ public class RobotTestSpawner : MonoBehaviour
         Robot.AddComponent<RobotLoadoutState>();   // armes et modules : slots 1 / 2 / 3
         Robot.AddComponent<RobotEnergy>();         // energie des armes (jauge du reticule)
         var health = Robot.AddComponent<RobotHealth>();   // degats bloc par bloc, heatmap du HUD
+        Robot.AddComponent<RobotDamageFX>();             // arcs, fumee, explosions, morceaux
         health.Destroyed += OnPlayerDestroyed;
         var aim = Robot.AddComponent<WeaponAimController>();   // les armes du slot actif visent le reticule
         var fire = Robot.AddComponent<WeaponFireController>(); // clic gauche : tir (laser, plasma, rail, Tesla)

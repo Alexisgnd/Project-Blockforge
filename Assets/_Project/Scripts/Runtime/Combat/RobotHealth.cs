@@ -292,7 +292,7 @@ public class RobotHealth : MonoBehaviour
     {
         if (propertyBlock == null)
             propertyBlock = new MaterialPropertyBlock();
-        float k = Mathf.Pow(Mathf.Clamp01(b.Ratio), 0.8f);
+        float k = Mathf.Clamp01(b.Ratio);
         for (int i = 0; i < b.renderers.Length; i++)
         {
             var r = b.renderers[i];
@@ -300,7 +300,9 @@ public class RobotHealth : MonoBehaviour
                 continue;
             r.GetPropertyBlock(propertyBlock);
             Color baseColor = b.baseColors[i][0];
-            propertyBlock.SetColor(BaseColorId, Color.Lerp(damagedTint, baseColor, k));
+            // A 0 PV le bloc garde un tiers de sa couleur : abime, pas noir
+            Color worst = Color.Lerp(damagedTint, baseColor, 0.35f);
+            propertyBlock.SetColor(BaseColorId, Color.Lerp(worst, baseColor, k));
             r.SetPropertyBlock(propertyBlock);
         }
     }
@@ -369,6 +371,21 @@ public class RobotHealth : MonoBehaviour
         Destroyed?.Invoke();
     }
 
+    // Centre des blocs encore en vie (cible des IA) ; Center() sinon
+    public Vector3 AliveCenter()
+    {
+        Vector3 sum = Vector3.zero;
+        int n = 0;
+        foreach (var b in blocks)
+        {
+            if (b.Destroyed)
+                continue;
+            sum += b.localCenter;
+            n++;
+        }
+        return n > 0 ? sum / n : Center();
+    }
+
     public Vector3 Center()
     {
         if (blocks.Count == 0)
@@ -401,6 +418,7 @@ public class RobotHealth : MonoBehaviour
         if (damaged == 0)
             return;
         float each = budget / damaged;
+        bool regrown = false;
         foreach (var b in blocks)
         {
             if (b.hp >= b.max || !CanRegrow(b))
@@ -408,11 +426,65 @@ public class RobotHealth : MonoBehaviour
             bool wasDestroyed = b.Destroyed;
             b.hp = Mathf.Min(b.max, b.hp + each);
             if (wasDestroyed && !b.Destroyed)
+            {
                 SetDestroyed(b, false);
+                regrown = true;
+            }
             Tint(b);
             BlockChanged?.Invoke(b);
         }
         Recompute();
+        if (regrown)
+            Resettle();
+    }
+
+    // Un robot reduit a quelques blocs tombe de travers, voire le nez dans le
+    // sol : quand des blocs repoussent, on s'assure qu'ils ne reapparaissent
+    // pas dans le decor. Si le robot est penche ou qu'un bloc vivant traverse
+    // le sol, il est remis d'aplomb (lacet conserve) et pose sur le sol.
+    private void Resettle()
+    {
+        var body = GetComponent<Rigidbody>();
+        if (body == null || body.isKinematic)
+            return;
+        int mask = ~((1 << RobotTestSpawner.RobotLayer) | (1 << 2));   // ni robots, ni debris (Ignore Raycast)
+        bool tilted = Vector3.Angle(transform.up, Vector3.up) > 20f;
+        bool buried = false;
+        Vector3 half = Vector3.one * 0.42f;
+        foreach (var b in blocks)
+        {
+            if (b.Destroyed)
+                continue;
+            if (Physics.CheckBox(transform.TransformPoint(b.localCenter), half, transform.rotation, mask, QueryTriggerInteraction.Ignore))
+            {
+                buried = true;
+                break;
+            }
+        }
+        if (!tilted && !buried)
+            return;
+
+        // D'aplomb, puis pose : le bas des blocs vivants a 10 cm du sol
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        float minY = float.MaxValue;
+        Vector3 center = transform.TransformPoint(AliveCenter());
+        foreach (var b in blocks)
+        {
+            if (!b.Destroyed)
+                minY = Mathf.Min(minY, transform.TransformPoint(b.localCenter).y - 0.5f);
+        }
+        if (minY == float.MaxValue)
+            return;
+        float groundY = Physics.Raycast(center + Vector3.up * 30f, Vector3.down, out var hit, 80f, mask, QueryTriggerInteraction.Ignore)
+            ? hit.point.y
+            : minY;
+        float lift = groundY + 0.1f - minY;
+        if (lift > 0f)
+            transform.position += Vector3.up * lift;
+        body.position = transform.position;
+        body.rotation = transform.rotation;
+        body.linearVelocity = Vector3.zero;
+        body.angularVelocity = Vector3.zero;
     }
 
     // ---------- Debris ----------

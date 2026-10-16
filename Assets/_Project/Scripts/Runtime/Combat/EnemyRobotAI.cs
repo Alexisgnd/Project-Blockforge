@@ -76,7 +76,8 @@ public class EnemyRobotAI : MonoBehaviour
         }
 
         // Visee : centre du joueur, erreur renouvelee
-        Vector3 target = playerHealth != null ? player.transform.TransformPoint(playerHealth.Center()) : player.transform.position + Vector3.up * 0.8f;
+        // Vise ce qu'il reste du joueur : centre des blocs encore en vie
+        Vector3 target = playerHealth != null ? player.transform.TransformPoint(playerHealth.AliveCenter()) : player.transform.position + Vector3.up * 0.8f;
         if (Time.time >= nextAimError)
         {
             aimOffset = Random.insideUnitSphere * aimError;

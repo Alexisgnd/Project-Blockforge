@@ -207,6 +207,7 @@ public class CombatArena : MonoBehaviour
         fire.manual = true;
         Enemy.AddComponent<RobotGroundFX>();
         var health = Enemy.AddComponent<RobotHealth>();
+        Enemy.AddComponent<RobotDamageFX>();
         health.Destroyed += OnEnemyDestroyed;
         var ai = Enemy.AddComponent<EnemyRobotAI>();
         ai.arena = this;

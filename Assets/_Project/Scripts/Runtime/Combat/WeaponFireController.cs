@@ -73,7 +73,7 @@ public class WeaponFireController : MonoBehaviour
     private readonly List<(LineRenderer line, float until)> beams = new();
     private readonly Stack<LineRenderer> beamPool = new();
     private Transform fxRoot;
-    private ParticleSystem sparks, plasmaBurst, teslaArcs;
+    private ParticleSystem sparks, plasmaBurst, teslaArcs, muzzleFlash, muzzleSmoke;
     private ParticleSystem.EmitParams emit;
 
     private static readonly Regex TierPattern = new(@"_N(\d)", RegexOptions.IgnoreCase);
@@ -202,10 +202,18 @@ public class WeaponFireController : MonoBehaviour
             ApplyHit(hit.collider, hit.point, hit.normal, stats, color, sparkCount);
         }
         ShowBeam(muzzle, end, material, width, seconds);
-        Burst(sparks, muzzle, dir, 4, color, 0.08f, 0.14f, 3f, 6f, 0.12f);
+        MuzzleFX(muzzle, dir, color, 1.8f);
     }
 
     // Bolt laser : capsule etiree dans l'axe du tir, courte trainee, tout droit
+    // Depart du coup : flash en bout de canon, etincelles, petite bouffee
+    private void MuzzleFX(Vector3 muzzle, Vector3 dir, Color color, float scale)
+    {
+        Burst(muzzleFlash, muzzle + dir * 0.2f, dir, 2, color, 0.28f * scale, 0.45f * scale, 0f, 0.5f, 0.07f);
+        Burst(sparks, muzzle + dir * 0.1f, dir, Mathf.RoundToInt(6 * scale), color, 0.06f, 0.13f, 4f, 9f, 0.14f);
+        Burst(muzzleSmoke, muzzle + dir * 0.25f, dir, Mathf.RoundToInt(2 * scale), color, 0.15f * scale, 0.3f * scale, 0.6f, 1.4f, 0.5f);
+    }
+
     private void FireLaser(Vector3 muzzle, Vector3 dir, Stats stats)
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -220,7 +228,7 @@ public class WeaponFireController : MonoBehaviour
         r.receiveShadows = false;
         var bolt = go.AddComponent<WeaponProjectile>();
         bolt.Launch(this, body, dir * stats.speed, stats, beamMaterial, trailTime: 0.06f, trailWidth: 0.12f, pulse: false, alignToVelocity: true);
-        Burst(sparks, muzzle, dir, 4, LaserColor, 0.08f, 0.14f, 3f, 6f, 0.12f);
+        MuzzleFX(muzzle, dir, LaserColor, 0.8f);
     }
 
     private void FirePlasma(Vector3 muzzle, Vector3 dir, Stats stats)
@@ -236,7 +244,7 @@ public class WeaponFireController : MonoBehaviour
         r.receiveShadows = false;
         var bolt = go.AddComponent<WeaponProjectile>();
         bolt.Launch(this, body, dir * stats.speed, stats, plasmaMaterial, trailTime: 0.22f, trailWidth: 0.34f, pulse: true, alignToVelocity: false);
-        Burst(sparks, muzzle, dir, 6, PlasmaColor, 0.1f, 0.18f, 2f, 5f, 0.14f);
+        MuzzleFX(muzzle, dir, PlasmaColor, 1.4f);
     }
 
     private void FireTesla(RobotLoadoutState.Slot slot, Stats stats)
@@ -344,6 +352,8 @@ public class WeaponFireController : MonoBehaviour
             sparks = BuildParticles(dust, "Sparks", 400, stretch: true, new Color(0.8f, 0.95f, 1f));
             plasmaBurst = BuildParticles(dust, "PlasmaBurst", 200, stretch: false, PlasmaColor);
             teslaArcs = BuildParticles(dust, "TeslaArcs", 300, stretch: true, TeslaColor);
+            muzzleFlash = BuildParticles(dust, "MuzzleFlash", 80, stretch: false, new Color(1f, 0.93f, 0.8f));
+            muzzleSmoke = BuildParticles(dust, "MuzzleSmoke", 120, stretch: false, new Color(0.5f, 0.5f, 0.52f, 0.3f), additive: false);
         }
     }
 
@@ -364,7 +374,7 @@ public class WeaponFireController : MonoBehaviour
         return m;
     }
 
-    private ParticleSystem BuildParticles(Shader shader, string name, int max, bool stretch, Color tint)
+    private ParticleSystem BuildParticles(Shader shader, string name, int max, bool stretch, Color tint, bool additive = true)
     {
         var go = new GameObject(name);
         go.transform.SetParent(fxRoot, false);
@@ -389,9 +399,9 @@ public class WeaponFireController : MonoBehaviour
         limit.limit = 1f;
 
         var mat = new Material(shader) { name = name + " (instance)" };
-        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
-        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.One);
-        mat.SetFloat("_Additive", 1f);
+        mat.SetFloat("_SrcBlend", (float)(additive ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.SrcAlpha));
+        mat.SetFloat("_DstBlend", (float)(additive ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha));
+        mat.SetFloat("_Additive", additive ? 1f : 0f);
         mat.SetFloat("_Softness", stretch ? 0.9f : 0.8f);
         mat.SetFloat("_FadeIn", 0.05f);
         mat.SetFloat("_FadeOut", 0.3f);
