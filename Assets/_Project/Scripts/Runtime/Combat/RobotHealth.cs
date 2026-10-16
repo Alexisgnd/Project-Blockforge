@@ -68,6 +68,7 @@ public class RobotHealth : MonoBehaviour
 
     public event System.Action<Block> BlockChanged;      // PV d'un bloc modifies (detruit / repare compris)
     public event System.Action HealthChanged;
+    public event System.Action<Vector3, float> Hit;   // impact subi (position du tireur ou point d'impact, degats) : HUD
     public event System.Action Destroyed;
 
     private RobotLocomotion loco;
@@ -146,7 +147,8 @@ public class RobotHealth : MonoBehaviour
     // ---------- Degats ----------
 
     // Impact en 'point' ; radius > 0 : zone (degats decroissants jusqu'au bord)
-    public void Damage(Vector3 point, float amount, float radius = 0f)
+    // from : position du tireur (direction affichee par le HUD), sinon le point d'impact
+    public void Damage(Vector3 point, float amount, float radius = 0f, Vector3? from = null)
     {
         if (IsDead || amount < minDamage)
             return;
@@ -178,6 +180,7 @@ public class RobotHealth : MonoBehaviour
         if (broke)
             DropDetached();
         LastDamageTime = Time.time;
+        Hit?.Invoke(from ?? point, amount);
         Regenerating = false;
         Recompute();
         if (Hp <= MaxHp * destroyFraction)

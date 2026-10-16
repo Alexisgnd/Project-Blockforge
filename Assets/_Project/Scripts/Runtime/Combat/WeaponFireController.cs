@@ -297,7 +297,7 @@ public class WeaponFireController : MonoBehaviour
                 target.Hit(stats.damage);
             var robot = collider.GetComponentInParent<RobotHealth>();
             if (robot != null && robot.gameObject != gameObject)
-                robot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f);
+                robot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position);
         }
         if (stats.splash > 0f && stats.kind == Kind.Plasma)
         {
@@ -309,7 +309,7 @@ public class WeaponFireController : MonoBehaviour
                     target.Hit(stats.damage * 0.5f);
                 var robot = col.GetComponentInParent<RobotHealth>();
                 if (robot != null && robot.gameObject != gameObject && hitRobots.Add(robot) && (collider == null || robot != collider.GetComponentInParent<RobotHealth>()))
-                    robot.Damage(point, stats.damage * 0.6f, stats.splash);
+                    robot.Damage(point, stats.damage * 0.6f, stats.splash, transform.position);
             }
             Burst(plasmaBurst, point, normal, 18, PlasmaColor, 0.3f, 0.7f, 2f, 7f, 0.45f);
             Burst(sparks, point, normal, 10, Color.white, 0.08f, 0.16f, 4f, 9f, 0.25f);

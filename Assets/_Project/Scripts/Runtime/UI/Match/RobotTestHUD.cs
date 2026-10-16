@@ -31,7 +31,9 @@ using UnityEngine.UI;
 // Regles du HUD : plaques translucides surface-hud sans bord ni
 // ombre, coin exterieur coupe (hud-chamfer), texte avec
 // shadow-hud, rien d'autre que le reticule au centre.
-// La sante vient de RobotHealth (HealthChanged -> SetHealth).
+// La sante vient de RobotHealth (HealthChanged -> SetHealth) ; les impacts
+// (Hit) allument une vignette rouge en forme d'oeil sur les bords de l'ecran
+// et un arc autour du reticule qui pointe vers la source (et suit la camera).
 // =========================================================
 
 public class RobotTestHUD : MonoBehaviour
@@ -82,6 +84,11 @@ public class RobotTestHUD : MonoBehaviour
     private GameObject enemyShown;
     private CombatArena arena;
     private float nextArenaLookup;
+    // Degats subis : vignette "oeil rouge" et arcs vers la source
+    private Image vignette;
+    private float vignetteLevel;
+    private readonly List<(Image arc, Vector3 point, float born, float life)> hitArcs = new();
+    private readonly Stack<Image> arcPool = new();
     // Energie (anneau autour du reticule)
     private Image energyLeft, energyRight;
     private RobotEnergy energy;
@@ -98,6 +105,7 @@ public class RobotTestHUD : MonoBehaviour
         maxHealth = Mathf.Max(1, maxHp);
         health_hp = maxHealth;
         BuildCanvas();
+        BuildVignette();
         BuildReticle();
         BuildHealth();
         BuildStatus(robotName, weightKg);
@@ -111,6 +119,7 @@ public class RobotTestHUD : MonoBehaviour
             this.health_hp = Mathf.RoundToInt(health.Hp);
             health.HealthChanged += () => SetHealth(Mathf.RoundToInt(health.Hp));
             health.BlockChanged += _ => heatmap.Dirty = true;
+            health.Hit += OnHit;
         }
         SetHeatVisible(false, true);
         var map = gameObject.AddComponent<MiniMap>();
@@ -157,6 +166,97 @@ public class RobotTestHUD : MonoBehaviour
         var ring = NewImage(root, "Reticle", HudShapes.Reticle(), BlockforgeTheme.Hud.InkPrimary);
         Place(ring.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(64f, 64f));
         BuildEnergy();
+    }
+
+    // ---------- Degats subis ----------
+
+    // Vignette rouge en forme d'oeil sur tout l'ecran (sous le reste du HUD)
+    private void BuildVignette()
+    {
+        vignette = NewImage(root, "DamageVignette", HudShapes.Vignette(), BlockforgeTheme.Hud.DangerInk);
+        var rt = vignette.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        vignette.color = new Color(vignette.color.r, vignette.color.g, vignette.color.b, 0f);
+        vignette.raycastTarget = false;
+        vignette.transform.SetAsFirstSibling();
+    }
+
+    // Impact subi : la vignette monte (selon les degats) et un arc autour du
+    // reticule pointe vers la source ; un impact proche d'un arc en cours le
+    // ravive au lieu d'en ajouter un
+    private void OnHit(Vector3 point, float amount)
+    {
+        if (health == null || health.IsDead)
+            return;
+        float strength = Mathf.Clamp01(0.3f + amount / Mathf.Max(1f, health.MaxHp * 0.08f));
+        vignetteLevel = Mathf.Max(vignetteLevel, strength);
+        if (loco == null)
+            return;
+        float angle = HitAngle(point);
+        for (int i = 0; i < hitArcs.Count; i++)
+        {
+            if (Mathf.Abs(Mathf.DeltaAngle(angle, HitAngle(hitArcs[i].point))) < 25f)
+            {
+                hitArcs[i] = (hitArcs[i].arc, point, Time.time, 1.1f);
+                return;
+            }
+        }
+        var arc = arcPool.Count > 0 ? arcPool.Pop() : NewHitArc();
+        arc.gameObject.SetActive(true);
+        hitArcs.Add((arc, point, Time.time, 1.1f));
+    }
+
+    private Image NewHitArc()
+    {
+        var arc = NewImage(root, "HitArc", HudShapes.Arc(46, 6, 70), BlockforgeTheme.Hud.DangerInk);
+        Place(arc.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(108f, 108f));
+        arc.raycastTarget = false;
+        return arc;
+    }
+
+    // Angle ecran (degres, 0 = devant, positif = a droite) entre la direction de
+    // la camera et la source : l'arc tourne quand on bouge tant qu'il est affiche
+    private float HitAngle(Vector3 point)
+    {
+        var cam = Camera.main;
+        Vector3 forward = cam != null ? cam.transform.forward : loco.transform.forward;
+        forward.y = 0f;
+        Vector3 to = point - loco.transform.position;
+        to.y = 0f;
+        if (forward.sqrMagnitude < 1e-4f || to.sqrMagnitude < 1e-4f)
+            return 0f;
+        return Vector3.SignedAngle(forward.normalized, to.normalized, Vector3.up);
+    }
+
+    private void UpdateDamageFX()
+    {
+        if (vignette != null)
+        {
+            vignetteLevel = Mathf.MoveTowards(vignetteLevel, 0f, Time.deltaTime * 1.4f);
+            var c = vignette.color;
+            float shown = BlockforgeTheme.ReduceMotion ? vignetteLevel * 0.6f : vignetteLevel;
+            vignette.color = new Color(c.r, c.g, c.b, shown * 0.6f);
+            vignette.enabled = shown > 0.005f;
+        }
+        for (int i = hitArcs.Count - 1; i >= 0; i--)
+        {
+            var (arc, point, born, life) = hitArcs[i];
+            float t = (Time.time - born) / life;
+            if (t >= 1f)
+            {
+                arc.gameObject.SetActive(false);
+                arcPool.Push(arc);
+                hitArcs.RemoveAt(i);
+                continue;
+            }
+            arc.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -HitAngle(point));
+            float a = t < 0.15f ? t / 0.15f : 1f - Mathf.InverseLerp(0.45f, 1f, t);
+            var c = arc.color;
+            arc.color = new Color(c.r, c.g, c.b, a);
+            arc.rectTransform.localScale = Vector3.one * (1f + 0.12f * (1f - Mathf.Clamp01(t / 0.2f)));
+        }
     }
 
     // Jauge d'energie des armes autour du reticule : un anneau coupe a la
@@ -483,6 +583,7 @@ public class RobotTestHUD : MonoBehaviour
         UpdateEnergy();
         UpdateHeat();
         UpdateEnemy();
+        UpdateDamageFX();
     }
 
     private void UpdateEnergy()
