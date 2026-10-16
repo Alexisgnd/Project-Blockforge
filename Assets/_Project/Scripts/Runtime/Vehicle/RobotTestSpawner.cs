@@ -10,8 +10,12 @@ using UnityEngine;
 // SpawnPoint (un peu au-dessus : les suspensions se posent),
 // lui ajoute la physique (RobotLocomotion), l'animation des
 // blocs de mouvement (RobotPartAnimator), le pilotage
-// (RobotTestDriver), le HUD de match (RobotTestHUD : vie,
+// (RobotTestDriver), les slots d'armes (RobotLoadoutState), la
+// visee des armes (WeaponAimController), la poussiere au sol
+// (RobotGroundFX), le HUD de match (RobotTestHUD : vie,
 // reticule, etat du robot, minimap) et branche la camera.
+// L'apparition est jouee par RobotSpawnSequence : assemblage
+// holographique en levitation, puis chute et controles.
 // Le robot passe sur le calque RobotLayer : la minimap le
 // remplace par son marqueur au lieu de le photographier.
 // F5 : passe au robot suivant (le robot du garage, puis des
@@ -97,8 +101,14 @@ public class RobotTestSpawner : MonoBehaviour
         var locomotion = Robot.AddComponent<RobotLocomotion>();
         locomotion.Setup(cellSize, weightKg);
         Robot.AddComponent<RobotPartAnimator>().Build(locomotion);
-        Robot.AddComponent<RobotTestDriver>();
+        var driver = Robot.AddComponent<RobotTestDriver>();
         Robot.AddComponent<RobotLoadoutState>();   // armes et modules : slots 1 / 2 / 3
+        var aim = Robot.AddComponent<WeaponAimController>();   // les armes du slot actif visent le reticule
+        var dust = Robot.AddComponent<RobotGroundFX>();        // poussiere des roues / chenilles / pattes
+
+        // Apparition : assemblage holographique en levitation, puis chute et
+        // controles rendus au joueur (pilotage, physique, visee, poussiere)
+        Robot.AddComponent<RobotSpawnSequence>().Begin(new Behaviour[] { driver, locomotion, aim, dust });
 
         // HUD de match (theme hud du design system), recree avec le robot
         int maxHealth = 0;

@@ -34,7 +34,9 @@ using UnityEngine;
 // survol gardent tout leur debattement : elles doivent flotter.
 // Les animations des pieces sont faites par RobotPartAnimator a
 // partir de l'etat expose ici (vitesse aux contacts, compression,
-// portance, poussee).
+// portance, poussee) ; RobotGroundFX lit la derive laterale de
+// chaque contact (slip) et la part d'adherence consommee par la
+// traction (traction) pour la poussiere des roues.
 // =========================================================
 
 public enum LocomotionKind { Wheel, Track, Leg, Hover, Rotor, Thruster, Rudder }
@@ -50,6 +52,8 @@ public class LocomotionContact
     public float lastCompression;
     public Vector3 point, normal;
     public float forwardSpeed;       // vitesse du sol sous le contact, le long de l'avant du robot (m/s)
+    public float slip;               // derive laterale (m/s, signee) par rapport au virage demande : derapage
+    public Vector3 lateral;          // direction laterale du sol sous le contact (monde)
 }
 
 public class LocomotionUnit
@@ -65,6 +69,7 @@ public class LocomotionUnit
     // Etat lu par RobotPartAnimator
     public float output;             // 0..1 : poussee, portance ou activite
     public float groundSpeed;        // m/s le long de l'avant (moyenne des contacts)
+    public float traction;           // 0..1 : part de l'adherence consommee par la traction (1 = patine)
     public bool anyGrounded;
     // Geometrie mesuree au montage (repere de la racine)
     public Vector3 center;           // centre du visuel
@@ -324,6 +329,7 @@ public class RobotLocomotion : MonoBehaviour
             if (unit.contacts.Count == 0)
                 continue;
             float unitSpeed = 0f;
+            float unitTraction = 0f;
             int unitGrounded = 0;
             float share = Body.mass / Mathf.Max(1, TotalContacts);
 
@@ -335,6 +341,7 @@ public class RobotLocomotion : MonoBehaviour
                 {
                     c.compression = 0f;
                     c.lastCompression = 0f;
+                    c.slip = 0f;
                     continue;
                 }
 
@@ -365,6 +372,8 @@ public class RobotLocomotion : MonoBehaviour
                 Vector3 r = hit.point - Body.worldCenterOfMass;
                 Vector3 turnVelocity = Vector3.Cross(up * targetYaw, r);
                 float slip = Vector3.Dot(pv - turnVelocity, lat);
+                c.slip = slip;
+                c.lateral = lat;
                 float maxForce = unit.friction * Mathf.Max(load, share * 2f);
                 float lateral = Mathf.Clamp(-slip * share * unit.lateralGrip / dt, -maxForce, maxForce);
 
@@ -372,6 +381,8 @@ public class RobotLocomotion : MonoBehaviour
                 float target = throttle * unit.maxSpeed * boostK;
                 float response = Mathf.Abs(throttle) > 0.05f ? 1f : 0.35f;
                 float longi = Mathf.Clamp((target - vf) * response, -unit.driveAccel, unit.driveAccel) * share;
+                // Part de l'adherence consommee (RobotGroundFX : poussiere d'acceleration)
+                unitTraction += Mathf.Clamp01(Mathf.Abs(longi) / Mathf.Max(maxForce, 1e-3f));
                 longi = Mathf.Clamp(longi, -maxForce, maxForce);
 
                 // Appliquees a la hauteur du centre de masse : ni roulis dans les
@@ -381,6 +392,7 @@ public class RobotLocomotion : MonoBehaviour
             }
 
             unit.anyGrounded = unitGrounded > 0;
+            unit.traction = unitGrounded > 0 ? unitTraction / unitGrounded : 0f;
             unit.groundSpeed = unitGrounded > 0 ? unitSpeed / unitGrounded : Mathf.Lerp(unit.groundSpeed, throttle * unit.maxSpeed * boostK, 2f * dt);
             unit.output = unit.kind == LocomotionKind.Hover ? (unit.anyGrounded ? 0.6f : 0.3f) + 0.4f * Mathf.Abs(throttle) : Mathf.Abs(throttle);
         }
