@@ -7,11 +7,18 @@ using UnityEngine.UI;
 // MINIMAP (HUD de match, en haut a droite)
 // - La carte est photographiee une fois, vue de dessus, par une
 //   camera orthographique HDRP (sans brouillard ni post-effets),
-//   pendant une seconde pour laisser l'exposition se poser, puis
-//   la camera s'eteint : la carte est statique, la texture reste
-// - Cadrage : la zone jouable (le decor exterieur du canyon,
-//   BACKGROUND_NON_PLAYABLE, est ignore) ; le robot (calque
-//   RobotTestSpawner.RobotLayer) n'est jamais photographie
+//   pendant une seconde pour laisser l'exposition se poser (au
+//   moins 24 images : le temps de chaque image est plafonne a
+//   1/20 s), puis la camera s'eteint : la carte est statique,
+//   la texture reste
+// - Cadrage : la zone jouable de la map (Map_TestGround,
+//   Map_Canyon ou Map_Arena). Sont ignores le decor exterieur
+//   du canyon (BACKGROUND_NON_PLAYABLE), les montagnes de fond
+//   du terrain d'essai (Backdrop_*, anneau jusqu'a 6 km : sans
+//   ce filtre la photo couvrait 12 km et la minimap restait
+//   vide) et les rendus desactives (murs invisibles Bounds_*) ;
+//   le robot (calque RobotTestSpawner.RobotLayer) n'est jamais
+//   photographie
 // - Affichage nord en haut, centre sur le robot (fenetre de
 //   'range' metres) ; le robot est une fleche accent au centre
 //   qui tourne avec son cap
@@ -24,8 +31,9 @@ public class MiniMap : MonoBehaviour
     public int resolution = 1024;
     public float settleSeconds = 1.2f;
 
-    private static readonly string[] MapRoots = { "Map_Canyon", "Map_Arena" };
+    private static readonly string[] MapRoots = { "Map_TestGround", "Map_Canyon", "Map_Arena" };
     private const string NonPlayableGroup = "BACKGROUND_NON_PLAYABLE";
+    private const string BackdropPrefix = "Backdrop";
 
     private Transform robot;
     private Camera mapCamera;
@@ -90,7 +98,7 @@ public class MiniMap : MonoBehaviour
     {
         if (!TryGetMapBounds(out var bounds))
         {
-            Debug.LogWarning("[MiniMap] Aucune carte trouvee (Map_Canyon / Map_Arena) : minimap vide.");
+            Debug.LogWarning("[MiniMap] Aucune carte trouvee (Map_TestGround / Map_Canyon / Map_Arena) : minimap vide.");
             return;
         }
         center = bounds.center;
@@ -153,7 +161,7 @@ public class MiniMap : MonoBehaviour
         bool any = false;
         foreach (var r in renderers)
         {
-            if (r.gameObject.layer == RobotTestSpawner.RobotLayer || InNonPlayable(r.transform))
+            if (!r.enabled || r.gameObject.layer == RobotTestSpawner.RobotLayer || InNonPlayable(r.transform))
                 continue;
             if (!any)
             {
@@ -172,7 +180,7 @@ public class MiniMap : MonoBehaviour
     {
         for (; t != null; t = t.parent)
         {
-            if (t.name == NonPlayableGroup)
+            if (t.name == NonPlayableGroup || t.name.StartsWith(BackdropPrefix, System.StringComparison.OrdinalIgnoreCase))
                 return true;
         }
         return false;
@@ -184,7 +192,10 @@ public class MiniMap : MonoBehaviour
     {
         if (mapCamera != null && mapCamera.enabled)
         {
-            settle -= Time.unscaledDeltaTime;
+            // Pas de temps plafonne : au lancement direct de la scene, les
+            // premieres images durent plusieurs secondes (chargement, shaders)
+            // et la camera s'eteignait avant d'avoir rendu la carte
+            settle -= Mathf.Min(Time.unscaledDeltaTime, 1f / 20f);
             if (settle <= 0f)
                 mapCamera.enabled = false; // la carte est statique : la derniere image reste dans la texture
         }
