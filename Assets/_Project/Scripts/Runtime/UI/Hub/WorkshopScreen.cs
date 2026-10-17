@@ -134,11 +134,13 @@ public sealed class WorkshopScreen : HubScreen
 
         var body = kit.Column(column, "Body", W.BodyGap, TextAnchor.UpperLeft, UIKit.Pad(W.BodyPadX, W.BodyPadX, W.BodyPadTop, W.BodyPadBottom));
         c.Name = kit.Text(body, "Name", DSTextStyle.TitleMD, kit.P.InkPrimary, "");
+        UIKit.Ellipsis(c.Name);
         UIKit.Fixed(c.Name, -1f, BlockforgeTheme.Type.TitleMd.LineHeight);
         var by = kit.Row(body, "By", BlockforgeTheme.Gap.Small, TextAnchor.MiddleLeft);
         UIKit.Fixed(by, -1f, BlockforgeTheme.Type.Caption.LineHeight);
         kit.Icon(by, "Icon", "user", BlockforgeTheme.IconSize.Xs, kit.P.InkMuted);
         c.By = kit.Text(by, "Author", DSTextStyle.Caption, kit.P.InkMuted, "");
+        UIKit.Ellipsis(c.By);
         var row = kit.Row(body, "Row", BlockforgeTheme.Space2, TextAnchor.MiddleLeft, UIKit.Pad(0f, 0f, BlockforgeTheme.Space1, 0f));
         UIKit.Fixed(row, -1f, BlockforgeTheme.Type.Caption.LineHeight + BlockforgeTheme.Space1);
         c.Cpu = Stat(row, "cpu", kit.P.InkSecondary, W.StatSize, 500);

@@ -110,7 +110,7 @@ public sealed class MatchEndOverlay : MonoBehaviour
         var score = kit.Row(verdictRect, "Score", O.ScoreGap, TextAnchor.MiddleCenter);
         UIKit.Fixed(score, -1f, O.ScoreSize);
         var ally = kit.Mono(score, "Ally", O.ScoreSize, 600, P.TeamAlly, BlockforgeTheme.Num(Result.AllyScore), TextAlignmentOptions.Center);
-        var dash = kit.Mono(score, "Dash", O.DashSize, 600, P.InkMuted, "–", TextAlignmentOptions.Center);
+        var dash = kit.Mono(score, "Dash", O.DashSize, 600, P.InkMuted, "–", TextAlignmentOptions.Midline);
         var enemy = kit.Mono(score, "Enemy", O.ScoreSize, 600, P.TeamEnemy, BlockforgeTheme.Num(Result.EnemyScore), TextAlignmentOptions.Center);
         UIKit.HudShadow(ally, true);
         UIKit.HudShadow(dash, true);
@@ -182,6 +182,7 @@ public sealed class MatchEndOverlay : MonoBehaviour
         {
             kit.Avatar(who, "Avatar", O.AwardAvatar, winner.IsLocal ? P.Accent : teamColor, BlockforgeTheme.IconSize.Xs);
             var name = kit.Text(who, "Name", DSTextStyle.TitleMD, winner.IsLocal ? P.Accent : P.InkPrimary, winner.DisplayName);
+            UIKit.Ellipsis(name);
             UIKit.Flexible(name);
             UIKit.HudShadow(name);
         }

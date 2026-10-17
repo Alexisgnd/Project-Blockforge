@@ -423,6 +423,9 @@ public class DSElement : MonoBehaviour,
                     look.border = P.BorderStrong;
                     look.icon = P.InkSecondary;
                 }
+                // Noeud selectionne : bord focus-ring (la selection suit le clavier et la souris)
+                if (selected)
+                    look.border = P.FocusRing;
                 break;
             case DSRole.Stepper:
                 look.fill = clear;

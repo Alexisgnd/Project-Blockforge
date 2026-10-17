@@ -145,6 +145,12 @@ public static partial class BlockforgeTheme
     // "9:12" pour 9 min 12 s
     public static string Clock(System.TimeSpan span) => $"{(int)span.TotalMinutes}:{span.Seconds:00}";
 
+    // Alpha d'un voile decoratif tres leger (grille, cellules) : en espace lineaire
+    // (HDRP), un blanc a 7 % ressort comme ~30 % ; on ramene l'alpha a l'effet
+    // percu en sRGB, celui des maquettes
+    public static float OverlayAlpha(float srgbAlpha) =>
+        QualitySettings.activeColorSpace == ColorSpace.Linear ? Mathf.GammaToLinearSpace(srgbAlpha) : srgbAlpha;
+
     // Texte colore (balise TMP) : la couleur reste un jeton
     public static string Tint(string text, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGBA(color)}>{text}</color>";
 

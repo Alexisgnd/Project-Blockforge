@@ -197,6 +197,7 @@ public sealed class ScoreboardWidget
             kit.TeamMark(who, team, BlockforgeTheme.IconSize.Sm, p.IsLocal);
             var nameSpec = new TypeSpec(FontFamily.Sans, B.PlayerSize, B.RowHeight, p.IsLocal ? 600 : 500, 0f);
             var nameText = kit.Text(who, "Name", nameSpec, kit.P.InkPrimary, p.DisplayName);
+            UIKit.Ellipsis(nameText);
             UIKit.Flexible(nameText);
             UIKit.HudShadow(nameText);
             for (int c = 0; c < n; c++)

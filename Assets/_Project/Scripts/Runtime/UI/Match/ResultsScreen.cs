@@ -74,7 +74,7 @@ public sealed class ResultsScreen : MonoBehaviour
         backdrop.SetColors(P.SurfaceRaised, P.SurfaceBase);
         backdrop.raycastTarget = true; // bloque les clics vers le HUD et l'overlay
 
-        var grid = kit.Image(rt, "Grid", BlockforgeTheme.WithAlpha(P.InkPrimary, R.GridAlpha), GridSprite());
+        var grid = kit.Image(rt, "Grid", BlockforgeTheme.WithAlpha(P.InkPrimary, BlockforgeTheme.OverlayAlpha(R.GridAlpha)), GridSprite());
         grid.type = Image.Type.Tiled;
         UIKit.Stretch(grid.rectTransform);
 
@@ -122,9 +122,13 @@ public sealed class ResultsScreen : MonoBehaviour
         UIKit.HudShadow(word);
         // Le score n'apparait qu'ici : 24 px a droite du mot, meme ligne de base
         var score = kit.Row(h1, "Score", R.ScoreGap, TextAnchor.LowerLeft, UIKit.Pad(R.ScoreOffset - BlockforgeTheme.Space4, 0f, 0f, 0f));
-        var ally = kit.Mono(score, "Ally", R.ScoreSize, 600, P.TeamAlly, BlockforgeTheme.Num(Result.AllyScore), TextAlignmentOptions.BottomLeft);
-        var dash = kit.Mono(score, "Dash", R.DashSize, 600, P.InkMuted, "–", TextAlignmentOptions.BottomLeft);
-        var enemy = kit.Mono(score, "Enemy", R.ScoreSize, 600, P.TeamEnemy, BlockforgeTheme.Num(Result.EnemyScore), TextAlignmentOptions.BottomLeft);
+        var ally = kit.Mono(score, "Ally", R.ScoreSize, 600, P.TeamAlly, BlockforgeTheme.Num(Result.AllyScore), TextAlignmentOptions.MidlineLeft);
+        UIKit.Fixed(ally, -1f, R.ScoreSize);
+        var dash = kit.Mono(score, "Dash", R.DashSize, 600, P.InkMuted, "–", TextAlignmentOptions.MidlineLeft);
+        // Meme hauteur de ligne que les scores : le tiret se centre sur eux au lieu de tomber sur la ligne de base
+        UIKit.Fixed(dash, -1f, R.ScoreSize);
+        var enemy = kit.Mono(score, "Enemy", R.ScoreSize, 600, P.TeamEnemy, BlockforgeTheme.Num(Result.EnemyScore), TextAlignmentOptions.MidlineLeft);
+        UIKit.Fixed(enemy, -1f, R.ScoreSize);
         UIKit.HudShadow(ally);
         UIKit.HudShadow(dash);
         UIKit.HudShadow(enemy);
@@ -189,7 +193,7 @@ public sealed class ResultsScreen : MonoBehaviour
         kit.Avatar(column, "Avatar", avatarSize, isFirst ? P.Accent : teamColor, isFirst ? R.AvatarIconFirst : R.AvatarIcon);
 
         var name = kit.Text(column, "Name", BlockforgeTheme.Type.TitleLg.With(isFirst ? R.NameFirstSize : R.NameSize, 600), isFirst ? P.Accent : P.InkPrimary, p.DisplayName, TextAlignmentOptions.Center);
-        UIKit.Fixed(name, -1f, (isFirst ? R.NameFirstSize : R.NameSize) + BlockforgeTheme.Space1);
+        UIKit.Fixed(name, -1f, Mathf.Ceil((isFirst ? R.NameFirstSize : R.NameSize) * 1.35f));
         UIKit.HudShadow(name);
 
         var badgeHost = kit.Row(column, "BadgeRow", 0f, TextAnchor.MiddleCenter);
@@ -345,7 +349,7 @@ public sealed class ResultsScreen : MonoBehaviour
         if (BlockforgeTheme.ReduceMotion)
         {
             foreach (var (cell, _) in cells)
-                cell.color = BlockforgeTheme.WithAlpha(cell.color, R.CellStatic);
+                cell.color = BlockforgeTheme.WithAlpha(cell.color, BlockforgeTheme.OverlayAlpha(R.CellStatic));
             yield break;
         }
         float t0 = Time.unscaledTime;
@@ -356,7 +360,7 @@ public sealed class ResultsScreen : MonoBehaviour
             {
                 float phase = Mathf.Repeat(now - delay, R.CellLoop) / R.CellLoop; // 0 -> 7 % a 40 %, plateau jusqu'a 60 %, retour a 0
                 float a = phase < 0.4f ? phase / 0.4f : phase < 0.6f ? 1f : 1f - (phase - 0.6f) / 0.4f;
-                cell.color = BlockforgeTheme.WithAlpha(cell.color, R.CellPeak * Mathf.SmoothStep(0f, 1f, a));
+                cell.color = BlockforgeTheme.WithAlpha(cell.color, BlockforgeTheme.OverlayAlpha(R.CellPeak) * Mathf.SmoothStep(0f, 1f, a));
             }
             yield return null;
         }

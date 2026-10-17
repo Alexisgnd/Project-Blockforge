@@ -39,6 +39,10 @@ public abstract class HubScreen : MonoBehaviour
             return;
         built = true;
         Group = kit.Group(Root);
+        // Construit actif : sur un objet inactif, TMP mesure une largeur nulle et
+        // les onglets / boutons dimensionnes sur leur libelle sortent vides
+        Group.alpha = 0f;
+        gameObject.SetActive(true);
         Root.gameObject.AddComponent<TabFocusCycler>();
 
         // Fond surface-base : le hangar 3D du menu ne transparait pas sous l'ecran

@@ -281,7 +281,7 @@ public sealed class StoreScreen : HubScreen
         int i = index;
         it.Card = kit.PartCard(it.Rect, "Card", "", Category.Weapon, Grade.Raw, "", () => Select(items[i].Data, true));
         var price = kit.Row(it.Rect, "Price", BlockforgeTheme.Space2, TextAnchor.MiddleLeft, UIKit.Pad(S.PricePadX, 0f));
-        UIKit.Fixed(price, BlockforgeTheme.TileMd, BlockforgeTheme.Type.Caption.LineHeight);
+        UIKit.Fixed(price, -1f, BlockforgeTheme.Type.Caption.LineHeight);
         var cr = kit.Row(price, "Credits", BlockforgeTheme.Gap.IconText, TextAnchor.MiddleLeft);
         kit.Icon(cr, "Icon", "credits", BlockforgeTheme.IconSize.Sm, kit.P.GradeMasterwork);
         it.Price = kit.Mono(cr, "Value", S.PriceSize, 600, kit.P.GradeMasterwork, "");

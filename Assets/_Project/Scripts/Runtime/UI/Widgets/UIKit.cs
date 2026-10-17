@@ -278,7 +278,9 @@ public sealed class UIKit
         text.alignment = align;
         text.raycastTarget = false;
         text.textWrappingMode = wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
-        text.overflowMode = wrap ? TextOverflowModes.Overflow : TextOverflowModes.Ellipsis;
+        // Overflow : en Ellipsis, TMP efface tout le texte des que sa ligne depasse la
+        // hauteur du rectangle. Les noms longs passent par UIKit.Ellipsis().
+        text.overflowMode = TextOverflowModes.Overflow;
         return text;
     }
 
@@ -292,7 +294,7 @@ public sealed class UIKit
         text.alignment = align;
         text.raycastTarget = false;
         text.textWrappingMode = wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
-        text.overflowMode = wrap ? TextOverflowModes.Overflow : TextOverflowModes.Ellipsis;
+        text.overflowMode = TextOverflowModes.Overflow;
         if (wrap)
             text.lineSpacing = 0f;
         return text;
@@ -329,10 +331,14 @@ public sealed class UIKit
         mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, soft ? 0.6f : 0.35f);
     }
 
+    // Coupe un nom trop long par « … » ; le rectangle doit etre au moins aussi haut que
+    // la ligne (sinon TMP n'affiche rien) : la hauteur minimale est posee ici.
     public static void Ellipsis(TMP_Text text)
     {
         text.textWrappingMode = TextWrappingModes.NoWrap;
         text.overflowMode = TextOverflowModes.Ellipsis;
+        var le = GetOrAdd<LayoutElement>(text.gameObject);
+        le.minHeight = Mathf.Max(le.minHeight, Mathf.Ceil(text.fontSize * 1.35f));
     }
 
     // Largeur preferee d'un texte (apres mise en forme)

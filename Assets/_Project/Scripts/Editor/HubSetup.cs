@@ -39,7 +39,7 @@ public static class HubSetup
 
         var scene = EditorSceneManager.OpenScene(BlockforgeScenes.MainMenu, OpenSceneMode.Single);
         int fixedScalers = 0;
-        foreach (var scaler in UnityEngine.Object.FindObjectsByType<CanvasScaler>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var scaler in UnityEngine.Object.FindObjectsByType<CanvasScaler>(FindObjectsInactive.Include))
         {
             if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize || Mathf.Approximately(scaler.matchWidthOrHeight, 1f))
                 continue;

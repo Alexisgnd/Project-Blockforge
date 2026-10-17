@@ -190,9 +190,11 @@ public static partial class DSWidgets
         var ink = solid ? kit.P.InkOnBright : color;
         if (!string.IsNullOrEmpty(icon))
             kit.Icon(row, "Icon", icon, BlockforgeTheme.IconSize.Sm, ink);
-        var text = kit.Text(row, "Label", DSTextStyle.Label, ink, label, TextAlignmentOptions.Center);
+        kit.Text(row, "Label", DSTextStyle.Label, ink, label, TextAlignmentOptions.Center);
         UIKit.Fixed(row, -1f, BlockforgeTheme.ControlSm);
         UIKit.Fit(row, true, false);
+        // Hauteur aussi hors layout (puce posee en absolu sur un apercu, MVP du podium)
+        row.sizeDelta = new Vector2(row.sizeDelta.x, BlockforgeTheme.ControlSm);
         return row;
     }
 
@@ -604,7 +606,7 @@ public static partial class DSWidgets
     // Ferme la liste sur Echap ou clic ailleurs
     public sealed class SelectPopupCloser : MonoBehaviour
     {
-        public SelectWidget Owner;
+        [System.NonSerialized] public SelectWidget Owner;
 
         private void Update()
         {
@@ -794,8 +796,10 @@ public static partial class DSWidgets
             if (o.Count >= 0)
                 w.SetCount(o.Id, o.Count);
         }
-        UIKit.Fixed(w.Rect, -1f, height);
-        UIKit.Fit(w.Rect, true, false);
+        // Pas de ContentSizeFitter sous un layout parent : il recentrerait la rangee
+        float total = gap * Mathf.Max(0, w.Buttons.Count - 1);
+        foreach (var b in w.Buttons) total += b.Rect.GetComponent<LayoutElement>().preferredWidth;
+        UIKit.Fixed(w.Rect, total, height);
         w.Set(value, false);
         return w;
     }

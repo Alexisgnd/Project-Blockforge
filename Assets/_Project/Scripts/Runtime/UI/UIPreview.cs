@@ -56,13 +56,13 @@ public sealed class UIPreview : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.digit1Key.wasPressedThisFrame) Open(Screen.Victory);
-        if (kb.digit2Key.wasPressedThisFrame) Open(Screen.Defeat);
-        if (kb.digit0Key.wasPressedThisFrame) Open(Screen.Draw);
-        if (kb.digit3Key.wasPressedThisFrame) Open(Screen.Results);
-        if (kb.digit4Key.wasPressedThisFrame) Open(Screen.Workshop);
-        if (kb.digit5Key.wasPressedThisFrame) Open(Screen.Store);
-        if (kb.digit6Key.wasPressedThisFrame) Open(Screen.TechTree);
+        if ((kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)) Open(Screen.Victory);
+        if ((kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame)) Open(Screen.Defeat);
+        if ((kb.digit0Key.wasPressedThisFrame || kb.numpad0Key.wasPressedThisFrame)) Open(Screen.Draw);
+        if ((kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame)) Open(Screen.Results);
+        if ((kb.digit4Key.wasPressedThisFrame || kb.numpad4Key.wasPressedThisFrame)) Open(Screen.Workshop);
+        if ((kb.digit5Key.wasPressedThisFrame || kb.numpad5Key.wasPressedThisFrame)) Open(Screen.Store);
+        if ((kb.digit6Key.wasPressedThisFrame || kb.numpad6Key.wasPressedThisFrame)) Open(Screen.TechTree);
         if (kb.hKey.wasPressedThisFrame) hint.gameObject.SetActive(!hint.gameObject.activeSelf);
         if (kb.mKey.wasPressedThisFrame)
         {

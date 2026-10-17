@@ -87,7 +87,7 @@ public sealed class MatchEndFlow : MonoBehaviour
         // 0 ms : plus rien du HUD, arene figee, curseur libre
         if (hudRoot != null)
             hudRoot.SetActive(false);
-        foreach (var hud in FindObjectsByType<RobotTestHUD>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        foreach (var hud in FindObjectsByType<RobotTestHUD>(FindObjectsInactive.Exclude))
             hud.gameObject.SetActive(false);
         Time.timeScale = 0f;
         RobotTestDriver.SetCursorLocked(false);

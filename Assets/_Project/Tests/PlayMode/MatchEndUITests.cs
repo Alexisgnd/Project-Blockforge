@@ -40,7 +40,7 @@ namespace Blockforge.Tests
             BlockforgeTheme.ReduceMotion = reduceMotion;
             Time.timeScale = 1f;
             Object.Destroy(canvasGo);
-            foreach (var flow in Object.FindObjectsByType<MatchEndFlow>(FindObjectsSortMode.None))
+            foreach (var flow in Object.FindObjectsByType<MatchEndFlow>())
                 Object.Destroy(flow.gameObject);
             MetaServices.Reset();
         }
