@@ -54,6 +54,13 @@ public class RobotTestDriver : MonoBehaviour
             return;
         }
 
+        // Fin de match en cours : plus de pilotage ni de pause (Echap ne ramene pas a l'arene)
+        if (MatchEndFlow.IsRunning)
+        {
+            Send(0f, 0f, 0f, false);
+            return;
+        }
+
         // ECHAP : menu de pause (reprendre, options, retour au garage)
         if (kb.escapeKey.wasPressedThisFrame && !MatchPauseMenu.IsOpen)
         {

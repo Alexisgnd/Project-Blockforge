@@ -97,7 +97,7 @@ namespace Blockforge.Meta
         public int credits = 12480;
         public int techPoints = 1240;
         public int level = 14;
-        public int xpInLevel = 1830;
+        public int xpInLevel = 2450; // apres le gain du match
         public int xpForNextLevel = 3000;
 
         [Header("Match de demonstration")]

@@ -175,6 +175,8 @@ public class RobotTestSpawner : MonoBehaviour
             maxHealth += view.definition != null ? view.definition.resistanceHp : 0;
         hudHost = new GameObject("MatchHUD_" + blueprint.name);
         hudHost.AddComponent<RobotTestHUD>().Bind(locomotion, blueprint.name, maxHealth, weightKg);
+        // Fin de match (overlay Victory / Defeat puis resultats) : au-dessus du HUD, inactif jusqu'a MatchEnded
+        MatchEndFlow.Install(hudHost, "MainMenu");
 
         if (followCamera == null)
             followCamera = FindAnyObjectByType<RobotFollowCamera>();
