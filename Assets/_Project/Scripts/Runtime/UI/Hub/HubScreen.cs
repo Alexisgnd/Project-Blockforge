@@ -41,6 +41,11 @@ public abstract class HubScreen : MonoBehaviour
         Root.gameObject.AddComponent<TabFocusCycler>();
         var H = BlockforgeTheme.Hub;
 
+        // Fond surface-base : le hangar 3D du menu ne transparait pas sous l'ecran
+        var background = kit.Image(Root, "Background", kit.P.SurfaceBase);
+        UIKit.Stretch(background.rectTransform);
+        background.raycastTarget = true;
+
         Body = kit.Row(Root, "Body", H.ColumnGap, TextAnchor.UpperLeft, UIKit.Pad(H.PadSide, H.PadSide, H.PadTop, H.PadBottom), true, true, true);
         UIKit.Stretch(Body);
 

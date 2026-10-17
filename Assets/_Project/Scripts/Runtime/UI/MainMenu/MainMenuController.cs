@@ -9,6 +9,11 @@ using UnityEngine.SceneManagement;
 // sections de la navigation du haut (Home, Play, Build, Tech
 // tree, Workshop, Store) et les infos du joueur dans le header
 // (puce joueur, credits).
+// Tech tree, Workshop et Store sont des HubScreen crees au
+// lancement sous le header (HubScreenHost) : ils restent vivants
+// entre deux onglets et se fondent en 220 ms. Le header serialise
+// est adopte par TopBar (Q / E et gachettes pour changer d'onglet) ;
+// le solde de credits suit le portefeuille (MetaServices.Wallet).
 // =========================================================
 
 public class MainMenuController : MonoBehaviour
@@ -45,6 +50,11 @@ public class MainMenuController : MonoBehaviour
     // Onglet -> composant DS (Tabs nav), construit depuis les enfants "Nav_XXX"
     private readonly Dictionary<string, DSElement> navTabs = new();
 
+    // Ecrans du hub (Tech tree, Workshop, Store) et header adopte
+    private HubScreenHost hubScreens;
+    private TopBar topBar;
+    private Blockforge.Meta.IWallet wallet;
+
     private void Awake()
     {
         // Scene reservee aux joueurs connectes
@@ -74,6 +84,8 @@ public class MainMenuController : MonoBehaviour
         // Tabs nav : souligne en accent, jamais de rangee sans selection
         foreach (var pair in navTabs)
             pair.Value.Selected = pair.Key == section;
+        if (topBar != null && TopBar.TryParse(section, out var s))
+            topBar.Active = s;
     }
 
     private void OnEnable()
@@ -94,6 +106,60 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (wallet != null)
+            wallet.CreditsChanged -= OnCreditsChanged;
+    }
+
+    private void OnCreditsChanged(int credits)
+    {
+        if (creditsText != null)
+            creditsText.text = BlockforgeTheme.Num(credits);
+    }
+
+    // Hote des ecrans du hub, sous le header ; le header devient une TopBar (Q / E)
+    private void SetupHubScreens()
+    {
+        var nav = navButtonsRoot != null ? navButtonsRoot.parent : GameObject.Find("TopNavigation")?.transform;
+        if (nav == null)
+            return;
+        topBar = TopBar.Adopt(nav);
+        topBar.Selected += section => OnNavClicked(TopBar.KeyOf(section));
+        var canvas = nav.parent;
+        hubScreens = HubScreenHost.Create(canvas, topBar, BlockforgeTheme.TopBar.Height);
+        UIKit.EnsureEventSystem();
+    }
+
+    public void ShowHubScreen(HubSection section)
+    {
+        if (hubScreens == null || !hubScreens.Handles(section))
+        {
+            Toast.Info($"{TopBar.LabelOf(section)} is coming soon.");
+            return;
+        }
+        if (homeScreen != null)
+            homeScreen.SetActive(false);
+        if (playMenu != null)
+            playMenu.Close();
+        if (buildMenu != null)
+            buildMenu.Close();
+        hubScreens.Show(section);
+        SetActiveTab(TopBar.KeyOf(section));
+    }
+
+    // Les ecrans historiques reprennent la main : le hote s'efface, l'ecran arrive en fondu
+    private void LeaveHubScreens(GameObject shown)
+    {
+        if (hubScreens != null)
+            hubScreens.HideAll();
+        if (shown == null)
+            return;
+        var group = shown.GetComponent<CanvasGroup>() ?? shown.AddComponent<CanvasGroup>();
+        group.alpha = 0f;
+        StartCoroutine(UIAnim.Fade(group, 1f, BlockforgeTheme.Fade(BlockforgeTheme.MotionScreen)));
+    }
+
     private void Start()
     {
         // Pseudo du joueur connecte (session PocketBase), sinon invite
@@ -102,8 +168,10 @@ public class MainMenuController : MonoBehaviour
         if (playerNameText != null)
             playerNameText.text = pseudo;
         // Pas encore d'economie : solde a zero, deja au format du DS (readout, milliers groupes)
-        if (creditsText != null)
-            creditsText.text = BlockforgeTheme.Num(0);
+        wallet = Blockforge.Meta.MetaServices.Wallet;
+        wallet.CreditsChanged += OnCreditsChanged;
+        OnCreditsChanged(wallet.Credits);
+        SetupHubScreens();
 
         SetActiveTab(SectionHome);
 
@@ -149,6 +217,7 @@ public class MainMenuController : MonoBehaviour
         if (buildMenu != null)
             buildMenu.Close();
         playMenu.Open();
+        LeaveHubScreens(playMenu.gameObject);
         SetActiveTab(SectionPlay);
     }
 
@@ -166,6 +235,7 @@ public class MainMenuController : MonoBehaviour
         if (playMenu != null)
             playMenu.Close();
         buildMenu.Open();
+        LeaveHubScreens(buildMenu.gameObject);
         SetActiveTab(SectionBuild);
     }
 
@@ -177,6 +247,7 @@ public class MainMenuController : MonoBehaviour
             buildMenu.Close();
         if (homeScreen != null)
             homeScreen.SetActive(true);
+        LeaveHubScreens(homeScreen);
         SetActiveTab(SectionHome);
 
         // Un robot a pu etre cree ou supprime depuis Construire
@@ -219,13 +290,13 @@ public class MainMenuController : MonoBehaviour
                 ShowBuildMenu();
                 break;
             case SectionTechTree:
-                Toast.Info("Tech tree is coming soon.");
+                ShowHubScreen(HubSection.TechTree);
                 break;
             case SectionWorkshop:
-                Toast.Info("Workshop is coming soon.");
+                ShowHubScreen(HubSection.Workshop);
                 break;
             case SectionStore:
-                Toast.Info("Store is coming soon.");
+                ShowHubScreen(HubSection.Store);
                 break;
             default:
                 Debug.Log($"[MainMenu] Section '{section}' — à venir.");

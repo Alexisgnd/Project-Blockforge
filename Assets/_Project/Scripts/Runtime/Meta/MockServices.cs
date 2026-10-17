@@ -15,6 +15,22 @@ using UnityEngine;
 
 namespace Blockforge.Meta
 {
+    internal static class MockText
+    {
+        // « 4 200 » saisi a la main -> milliers en espace fine du DS ; « 0.8 » inchange
+        public static string Value(string v)
+        {
+            if (string.IsNullOrEmpty(v) || v.Contains(".")) return v;
+            string digits = v.Replace(" ", "");
+            return long.TryParse(digits, out long n) ? BlockforgeTheme.Num(n) : v;
+        }
+
+        // Nombres de 4 chiffres et plus dans une phrase
+        public static string Sentence(string text) =>
+            string.IsNullOrEmpty(text) ? text
+            : System.Text.RegularExpressions.Regex.Replace(text, @"\b\d{1,3}(?: \d{3})+\b", m => Value(m.Value));
+    }
+
     public sealed class MockServices
     {
         private static MockServices instance;
@@ -106,7 +122,7 @@ namespace Blockforge.Meta
                     [Category.Weapon] = r.weapons, [Category.Electronics] = r.electronics,
                 };
                 list.Add(new RobotListing(r.id, r.name, r.author, r.cpu, r.mass, r.topSpeedMph, r.health, r.downloads, r.price,
-                                          r.grade, r.mainCategory, parts, r.ownedParts, r.totalParts, r.description, r.updatedLabel));
+                                          r.grade, r.mainCategory, parts, r.ownedParts, r.totalParts, MockText.Sentence(r.description), r.updatedLabel));
             }
             return list;
         }
@@ -185,8 +201,8 @@ namespace Blockforge.Meta
         private static StoreItem ToItem(MockMetaData.StoreItemSeed s)
         {
             var stats = new List<(string, string, float)>();
-            foreach (var st in s.stats) stats.Add((st.label, st.value, st.ratio));
-            return new StoreItem(s.id, s.name, s.category, s.grade, s.cpu, s.price, s.owned, s.requiresResearch, stats, s.description);
+            foreach (var st in s.stats) stats.Add((st.label, MockText.Value(st.value), st.ratio));
+            return new StoreItem(s.id, s.name, s.category, s.grade, s.cpu, s.price, s.owned, s.requiresResearch, stats, MockText.Sentence(s.description));
         }
 
         public StoreItem Find(string id)
@@ -224,7 +240,7 @@ namespace Blockforge.Meta
             {
                 (Category.Weapon, b.weapons), (Category.Electronics, b.modules), (Category.Structure, b.blocks), (Category.Cosmetic, b.paintSets),
             };
-            return Task.FromResult(new Bundle(b.id, b.name, b.description, b.price, b.wasPrice, TimeSpan.FromHours(b.endsInHours), contents));
+            return Task.FromResult(new Bundle(b.id, b.name, MockText.Sentence(b.description), b.price, b.wasPrice, TimeSpan.FromHours(b.endsInHours), contents));
         }
 
         public Task Buy(string id, int qty)
@@ -306,7 +322,7 @@ namespace Blockforge.Meta
             foreach (var n in data.nodes)
             {
                 var stats = new List<(string, string, float)>();
-                foreach (var st in n.stats) stats.Add((st.label, st.value, st.ratio));
+                foreach (var st in n.stats) stats.Add((st.label, MockText.Value(st.value), st.ratio));
                 var prev = Neighbour(n, -1);
                 var next = Neighbour(n, +1);
                 list.Add(new TechNode(n.id, n.name, n.lane, n.tier, n.grade, n.state, n.cost, prev?.id, next?.id, n.storePrice, n.description, stats));

@@ -82,7 +82,9 @@ public sealed class WorkshopScreen : HubScreen
         kit.Text(filters, "CpuLabel", DSTextStyle.Label, kit.P.InkMuted, "CPU");
         cpuChips = kit.ChipGroup(filters, "Cpu", new List<ChoiceOption>
         {
-            new("any", "Any"), new("u1000", "Under 1 000"), new("1000", "1 000 – 1 500"), new("1500", "1 500 – 2 000"), new("fits", "Fits my bay"),
+            new("any", "Any"), new("u1000", "Under " + BlockforgeTheme.Num(1000)),
+            new("1000", BlockforgeTheme.Num(1000) + " – " + BlockforgeTheme.Num(1500)),
+            new("1500", BlockforgeTheme.Num(1500) + " – " + BlockforgeTheme.Num(2000)), new("fits", "Fits my bay"),
         }, "any");
         cpuChips.Changed += _ => { pageIndex = 0; Refresh(); };
 
