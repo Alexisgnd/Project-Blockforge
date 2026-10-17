@@ -82,6 +82,15 @@ namespace Blockforge.Meta
     public enum StoreShelf { Featured, Blocks, Movement, Weapons, Electronics, Cosmetics, Bundles }
     public enum StoreSort { ByGrade, PriceLowToHigh, Newest }
 
+    // Bornes des barres de ratio des fiches (StatLine) : un robot ou une piece « au maximum »
+    public static class MetaScales
+    {
+        public const float RobotCpu = 2000f;
+        public const float RobotMassKg = 18000f;
+        public const float RobotSpeedMph = 200f;
+        public const float RobotHealth = 52000f;
+    }
+
     public static class MetaLabels
     {
         public static string Of(Category c) => c switch

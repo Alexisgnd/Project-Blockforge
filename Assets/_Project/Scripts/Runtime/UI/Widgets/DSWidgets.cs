@@ -336,8 +336,12 @@ public static partial class DSWidgets
             string v = BlockforgeTheme.Num(value) + " / " + BlockforgeTheme.Num(max) + (string.IsNullOrEmpty(unit) ? "" : " " + unit);
             Value.text = v;
             Value.color = over ? kit.P.DangerInk : kit.P.InkPrimary;
-            float k = max <= 0 ? 0f : Mathf.Clamp01((float)Math.Min(value, max) / max);
+            // Au budget : remplissage value / max ; au-dela, le budget occupe max / value
+            // de la piste et le depassement le reste, en danger
+            float k = over ? (float)max / Math.Max(1, value) : max <= 0 ? 0f : Mathf.Clamp01((float)value / max);
             Fill.rectTransform.anchorMax = new Vector2(k, 1f);
+            Over.rectTransform.anchorMin = new Vector2(k, 0f);
+            Over.rectTransform.anchorMax = Vector2.one;
             Over.gameObject.SetActive(over);
             Note.text = note ?? "";
             Note.color = over ? kit.P.DangerInk : kit.P.InkSecondary;
@@ -364,7 +368,6 @@ public static partial class DSWidgets
         UIKit.Stretch(w.Fill.rectTransform);
         w.Over = kit.Shape(track.transform, "Over", DSRadius.Xs, kit.P.Danger);
         UIKit.Stretch(w.Over.rectTransform);
-        w.Over.rectTransform.anchorMin = new Vector2(0.9f, 0f);
         kit.Gap(w.Rect, BlockforgeTheme.Space2);
         var noteRow = kit.Row(w.Rect, "NoteRow", BlockforgeTheme.Space1);
         w.NoteIcon = kit.Icon(noteRow, "Icon", "warning", BlockforgeTheme.IconSize.Sm, kit.P.DangerInk);
