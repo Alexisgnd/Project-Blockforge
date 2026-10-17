@@ -7,11 +7,11 @@ using UnityEngine.UI;
 // JETONS DU DESIGN SYSTEM BLOCKFORGE
 // Source : Branding/blockforge-design-system.zip -> tokens.json
 // Classe partielle en trois fichiers :
-// - BlockforgeTheme.Tokens.cs : GENERE depuis tokens.json par
+// - Theme/BlockforgeTheme.Tokens.cs : GENERE depuis tokens.json par
 //   Blockforge > Design System > Generate Theme Tokens :
 //   couleurs dark + hud, Palette par theme, espacements,
 //   rayons, controles, opacites, ombres, styles de texte ;
-// - BlockforgeTheme.Layout.cs : metriques d'ecran (TopBar,
+// - Theme/BlockforgeTheme.Layout.cs : metriques d'ecran (TopBar,
 //   fin de match, resultats, hub), ecrites a la main ;
 // - ce fichier : mouvement, reglage « reduire les
 //   animations », formatage des nombres, alias historiques.
