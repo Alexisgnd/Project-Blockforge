@@ -152,6 +152,9 @@ Packages/packages-lock.json linguist-generated
 # Fonts
 *.otf                   lfs
 *.ttf                   lfs
+# JetBrainsMono SemiBold / Bold : hors LFS (ajoutees depuis un environnement sans acces au stockage LFS)
+Assets/_Project/UI/Fonts/JetBrainsMono-SemiBold.ttf -filter binary
+Assets/_Project/UI/Fonts/JetBrainsMono-Bold.ttf -filter binary
 
 # Executable/Installer
 *.apk                   lfs

@@ -104,4 +104,40 @@ public static class DSText
 
     public static bool IsCaps(DSTextStyle style) => Get(style).caps;
     public static float Size(DSTextStyle style) => Get(style).size;
+
+    // ---------- Styles depuis les jetons (BlockforgeTheme.Type) ----------
+
+    // Applique un TypeSpec du theme : famille + graisse -> police, taille,
+    // interlettrage ; caps = capitales rendues par le style (display-*, label)
+    public static void Apply(TMP_Text text, TypeSpec spec, Color color, bool caps = false)
+    {
+        if (text == null)
+            return;
+        var font = DSAssets.Font(DSAssets.FontFor(spec.Family, spec.Weight));
+        if (font != null)
+        {
+            text.font = font;
+            text.fontSharedMaterial = font.material;
+        }
+        text.fontSize = spec.Size;
+        text.enableAutoSizing = false;
+        text.fontStyle = caps ? FontStyles.UpperCase : FontStyles.Normal;
+        text.characterSpacing = spec.LetterSpacingEm * 100f;
+        text.wordSpacing = 0f;
+        text.lineSpacing = 0f;
+        text.richText = true;
+        text.color = color;
+    }
+
+    // Chiffre en mono a une taille / graisse donnee (scores, prix, compteurs)
+    public static void Mono(TMP_Text text, float size, int weight, Color color) =>
+        Apply(text, new TypeSpec(FontFamily.Mono, size, size, weight, 0f), color);
+
+    // Titre condense en capitales a une taille donnee (VICTORY, noms de rayon)
+    public static void Condensed(TMP_Text text, float size, int weight, float trackingEm, Color color) =>
+        Apply(text, new TypeSpec(FontFamily.Condensed, size, size, weight, trackingEm), color, true);
+
+    // Libelle en capitales (over-lines) a une taille / un interlettrage donnes
+    public static void Caps(TMP_Text text, float size, int weight, float trackingEm, Color color) =>
+        Apply(text, new TypeSpec(FontFamily.Sans, size, size, weight, trackingEm), color, true);
 }

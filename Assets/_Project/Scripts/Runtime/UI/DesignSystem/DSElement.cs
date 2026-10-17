@@ -46,6 +46,11 @@ public enum DSRole
     KeyCap,         // touche d'un KeyHint : surface-inset + border-strong, radius-xs
     Badge,          // puce : radius-pill
     Notice,         // message d'etat : fond *-soft + bord de la tonalite, radius-md
+    // ---------- Hub (fin de match, Workshop, Store, Tech Tree) ----------
+    ChipFilter,     // filtre pilule 32 px : border-strong, selectionne = border-accent + surface-selected
+    TechNode,       // noeud de l'arbre : border-strong, radius-sm ; Done = accent + accent-soft
+    Stepper,        // cadre d'un stepper de quantite : border-strong, radius-sm
+    RowCard,        // ligne / carte cliquable a fond panel, radius-sm (cartes de robots du Workshop)
 }
 
 public enum DSTone { Neutral, Info, Success, Warning, Danger }
@@ -61,10 +66,14 @@ public class DSElement : MonoBehaviour,
     [Header("Composant")]
     public DSRole role = DSRole.Panel;
     public DSTone tone = DSTone.Neutral;
+    [Tooltip("Theme des jetons : dark (menus, hub) ou hud (overlay de match, resultats)")]
+    public DSTheme theme = DSTheme.Dark;
     [Tooltip("Etat selectionne (onglet actif, baie choisie, outil courant, mode actif)")]
     [SerializeField] private bool selected;
     [Tooltip("Baie vide : pointilles sur surface-inset, texte ink-muted")]
     [SerializeField] private bool empty;
+    [Tooltip("Noeud recherche (TechNode) : bord accent, fond accent-soft")]
+    [SerializeField] private bool done;
     [Tooltip("Filet d'un bandeau (Strip) ou d'un panneau contre un bord d'ecran (PanelEdge)")]
     public DSEdge hairlineEdge = DSEdge.Bottom;
 
@@ -120,16 +129,31 @@ public class DSElement : MonoBehaviour,
         set { if (tone != value) { tone = value; Refresh(); } }
     }
 
+    public bool Done
+    {
+        get => done;
+        set { if (done != value) { done = value; Refresh(); } }
+    }
+
+    public DSTheme Theme
+    {
+        get => theme;
+        set { if (theme != value) { theme = value; Refresh(); } }
+    }
+
+    // Jetons du theme courant
+    private BlockforgeTheme.Palette P => BlockforgeTheme.PaletteFor(theme);
+
     public bool IsInteractive => role is DSRole.ButtonPrimary or DSRole.ButtonSecondary or DSRole.ButtonGhost
         or DSRole.ButtonDanger or DSRole.IconButton or DSRole.TabNav or DSRole.TabSegment or DSRole.Field
-        or DSRole.RobotSlot or DSRole.PartCard or DSRole.Card;
+        or DSRole.RobotSlot or DSRole.PartCard or DSRole.Card or DSRole.ChipFilter or DSRole.TechNode or DSRole.RowCard;
 
     public DSRadius Radius => role switch
     {
         DSRole.Panel or DSRole.PanelFloating or DSRole.Card or DSRole.Notice => DSRadius.Md,
         DSRole.Dialog or DSRole.RobotSlot => DSRadius.Lg,
         DSRole.Inset or DSRole.Track or DSRole.Fill or DSRole.KeyCap => DSRadius.Xs,
-        DSRole.Badge => DSRadius.Pill,
+        DSRole.Badge or DSRole.ChipFilter => DSRadius.Pill,
         DSRole.PanelEdge or DSRole.Strip or DSRole.Scrim or DSRole.TabNav or DSRole.None => DSRadius.None,
         _ => DSRadius.Sm,
     };
@@ -246,10 +270,10 @@ public class DSElement : MonoBehaviour,
 
     private Color ToneColor(DSTone value) => value switch
     {
-        DSTone.Success => BlockforgeTheme.Success,
-        DSTone.Warning => BlockforgeTheme.Warning,
-        DSTone.Danger => BlockforgeTheme.Danger,
-        _ => BlockforgeTheme.Accent,
+        DSTone.Success => P.Success,
+        DSTone.Warning => P.Warning,
+        DSTone.Danger => P.Danger,
+        _ => P.Accent,
     };
 
     private Look Compute()
@@ -258,7 +282,7 @@ public class DSElement : MonoBehaviour,
         var look = new Look
         {
             fill = clear, border = clear, underline = clear,
-            ink = BlockforgeTheme.InkPrimary, icon = BlockforgeTheme.InkSecondary, key = BlockforgeTheme.InkMuted,
+            ink = P.InkPrimary, icon = P.InkSecondary, key = P.InkMuted,
         };
         bool hot = hovered && !disabled;
         bool down = pressed && hovered && !disabled;
@@ -267,86 +291,86 @@ public class DSElement : MonoBehaviour,
         {
             case DSRole.Panel:
             case DSRole.PanelFloating:
-                look.fill = BlockforgeTheme.SurfacePanel;
-                look.border = BlockforgeTheme.BorderSubtle;
+                look.fill = P.SurfacePanel;
+                look.border = P.BorderSubtle;
                 break;
             case DSRole.PanelEdge:
-                look.fill = BlockforgeTheme.SurfacePanel;
-                look.underline = BlockforgeTheme.BorderSubtle;
+                look.fill = P.SurfacePanel;
+                look.underline = P.BorderSubtle;
                 break;
             case DSRole.Strip:
-                look.fill = BlockforgeTheme.SurfaceRaised;
-                look.underline = BlockforgeTheme.BorderSubtle;
+                look.fill = P.SurfaceRaised;
+                look.underline = P.BorderSubtle;
                 break;
             case DSRole.Inset:
             case DSRole.Track:
-                look.fill = BlockforgeTheme.SurfaceInset;
+                look.fill = P.SurfaceInset;
                 break;
             case DSRole.Fill:
                 look.fill = ToneColor(tone);
                 break;
             case DSRole.Scrim:
-                look.fill = BlockforgeTheme.Scrim;
+                look.fill = P.Scrim;
                 break;
             case DSRole.Dialog:
-                look.fill = BlockforgeTheme.SurfacePanel;
-                look.border = BlockforgeTheme.BorderStrong;
+                look.fill = P.SurfacePanel;
+                look.border = P.BorderStrong;
                 break;
             case DSRole.ToolRail:
-                look.fill = BlockforgeTheme.SurfaceRaised;
-                look.border = BlockforgeTheme.BorderSubtle;
+                look.fill = P.SurfaceRaised;
+                look.border = P.BorderSubtle;
                 break;
 
             case DSRole.ButtonPrimary:
-                look.fill = down ? BlockforgeTheme.AccentPress : hot ? BlockforgeTheme.AccentHover : BlockforgeTheme.Accent;
-                look.ink = look.icon = BlockforgeTheme.InkOnAccent;
+                look.fill = down ? P.AccentPress : hot ? P.AccentHover : P.Accent;
+                look.ink = look.icon = P.InkOnAccent;
                 break;
             case DSRole.ButtonSecondary:
-                look.fill = down ? BlockforgeTheme.SurfaceSelected : hot ? BlockforgeTheme.SurfaceHover : BlockforgeTheme.AccentSoft;
-                look.border = down ? BlockforgeTheme.AccentPress : hot ? BlockforgeTheme.Accent : BlockforgeTheme.BorderStrong;
-                look.icon = BlockforgeTheme.InkPrimary;
+                look.fill = down ? P.SurfaceSelected : hot ? P.SurfaceHover : P.AccentSoft;
+                look.border = down ? P.AccentPress : hot ? P.Accent : P.BorderStrong;
+                look.icon = P.InkPrimary;
                 break;
             case DSRole.ButtonGhost:
-                look.fill = down ? BlockforgeTheme.SurfaceSelected : hot ? BlockforgeTheme.SurfaceHover : clear;
-                look.ink = look.icon = hot ? BlockforgeTheme.InkPrimary : BlockforgeTheme.InkSecondary;
+                look.fill = down ? P.SurfaceSelected : hot ? P.SurfaceHover : clear;
+                look.ink = look.icon = hot ? P.InkPrimary : P.InkSecondary;
                 break;
             case DSRole.ButtonDanger:
-                look.fill = down ? Shade(BlockforgeTheme.Danger, 0.88f) : hot ? Shade(BlockforgeTheme.Danger, 1.12f) : BlockforgeTheme.Danger;
-                look.icon = BlockforgeTheme.InkPrimary;
+                look.fill = down ? Shade(P.Danger, 0.88f) : hot ? Shade(P.Danger, 1.12f) : P.Danger;
+                look.icon = P.InkPrimary;
                 break;
 
             case DSRole.IconButton:
                 if (selected)
                 {
-                    look.fill = BlockforgeTheme.SurfaceSelected;
-                    look.border = BlockforgeTheme.BorderAccent;
-                    look.icon = BlockforgeTheme.InkPrimary;
-                    look.key = BlockforgeTheme.Accent;
+                    look.fill = P.SurfaceSelected;
+                    look.border = P.BorderAccent;
+                    look.icon = P.InkPrimary;
+                    look.key = P.Accent;
                 }
                 else
                 {
-                    look.fill = down ? BlockforgeTheme.SurfaceSelected : hot ? BlockforgeTheme.SurfaceHover : clear;
-                    look.icon = tone == DSTone.Danger ? BlockforgeTheme.DangerInk
-                        : hot ? BlockforgeTheme.InkPrimary : BlockforgeTheme.InkSecondary;
+                    look.fill = down ? P.SurfaceSelected : hot ? P.SurfaceHover : clear;
+                    look.icon = tone == DSTone.Danger ? P.DangerInk
+                        : hot ? P.InkPrimary : P.InkSecondary;
                 }
                 look.ink = look.icon;
                 break;
 
             case DSRole.TabNav:
-                look.fill = !selected && hot ? BlockforgeTheme.SurfaceHover : clear;
-                look.ink = look.icon = selected || hot ? BlockforgeTheme.InkPrimary : BlockforgeTheme.InkSecondary;
-                look.underline = selected ? BlockforgeTheme.Accent : clear;
+                look.fill = !selected && hot ? P.SurfaceHover : clear;
+                look.ink = look.icon = selected || hot ? P.InkPrimary : P.InkSecondary;
+                look.underline = selected ? P.Accent : clear;
                 break;
             case DSRole.TabSegment:
-                look.fill = selected ? BlockforgeTheme.SurfaceSelected : hot ? BlockforgeTheme.SurfaceHover : clear;
-                look.border = selected ? BlockforgeTheme.BorderAccent : clear;
-                look.ink = look.icon = selected || hot ? BlockforgeTheme.InkPrimary : BlockforgeTheme.InkSecondary;
+                look.fill = selected ? P.SurfaceSelected : hot ? P.SurfaceHover : clear;
+                look.border = selected ? P.BorderAccent : clear;
+                look.ink = look.icon = selected || hot ? P.InkPrimary : P.InkSecondary;
                 break;
 
             case DSRole.Field:
-                look.fill = BlockforgeTheme.SurfaceInset;
-                look.border = fieldFocus ? BlockforgeTheme.Accent : BlockforgeTheme.BorderStrong;
-                look.icon = BlockforgeTheme.InkMuted;
+                look.fill = P.SurfaceInset;
+                look.border = fieldFocus ? P.Accent : P.BorderStrong;
+                look.icon = P.InkMuted;
                 break;
 
             case DSRole.RobotSlot:
@@ -354,40 +378,68 @@ public class DSElement : MonoBehaviour,
             case DSRole.Card:
                 if (empty)
                 {
-                    look.fill = hot ? BlockforgeTheme.SurfaceHover : BlockforgeTheme.SurfaceInset;
-                    look.border = hot ? BlockforgeTheme.BorderStrong : BlockforgeTheme.BorderSubtle;
-                    look.ink = look.icon = hot ? BlockforgeTheme.InkSecondary : BlockforgeTheme.InkMuted;
+                    look.fill = hot ? P.SurfaceHover : P.SurfaceInset;
+                    look.border = hot ? P.BorderStrong : P.BorderSubtle;
+                    look.ink = look.icon = hot ? P.InkSecondary : P.InkMuted;
                 }
                 else if (selected)
                 {
-                    look.fill = BlockforgeTheme.SurfaceSelected;
-                    look.border = BlockforgeTheme.BorderAccent;
+                    look.fill = P.SurfaceSelected;
+                    look.border = P.BorderAccent;
                 }
                 else
                 {
-                    look.fill = hot ? BlockforgeTheme.SurfaceHover : BlockforgeTheme.SurfacePanel;
-                    look.border = hot ? BlockforgeTheme.BorderStrong : BlockforgeTheme.BorderSubtle;
+                    look.fill = hot ? P.SurfaceHover : P.SurfacePanel;
+                    look.border = hot ? P.BorderStrong : P.BorderSubtle;
                 }
                 break;
 
             case DSRole.KeyCap:
-                look.fill = selected ? BlockforgeTheme.SurfaceSelected : BlockforgeTheme.SurfaceInset;
-                look.border = selected ? BlockforgeTheme.BorderAccent : BlockforgeTheme.BorderStrong;
-                look.ink = BlockforgeTheme.InkPrimary;
+                look.fill = selected ? P.SurfaceSelected : P.SurfaceInset;
+                look.border = selected ? P.BorderAccent : P.BorderStrong;
+                look.ink = P.InkPrimary;
                 break;
             case DSRole.Badge:
-                look.fill = BlockforgeTheme.SurfaceInset;
-                look.border = BlockforgeTheme.BorderSubtle;
-                look.ink = look.icon = BlockforgeTheme.InkSecondary;
+                look.fill = P.SurfaceInset;
+                look.border = P.BorderSubtle;
+                look.ink = look.icon = P.InkSecondary;
+                break;
+
+            case DSRole.ChipFilter:
+                look.fill = selected ? P.SurfaceSelected : hot ? P.SurfaceHover : clear;
+                look.border = selected ? P.BorderAccent : P.BorderStrong;
+                look.ink = look.icon = selected || hot ? P.InkPrimary : P.InkSecondary;
+                break;
+            case DSRole.TechNode:
+                if (done)
+                {
+                    look.fill = hot ? P.SurfaceHover : P.AccentSoft;
+                    look.border = P.BorderAccent;
+                    look.icon = P.Accent;
+                }
+                else
+                {
+                    look.fill = hot ? P.SurfaceHover : P.SurfacePanel;
+                    look.border = P.BorderStrong;
+                    look.icon = P.InkSecondary;
+                }
+                break;
+            case DSRole.Stepper:
+                look.fill = clear;
+                look.border = P.BorderStrong;
+                break;
+            case DSRole.RowCard:
+                look.fill = selected ? P.SurfaceSelected : hot ? P.SurfaceHover : P.SurfacePanel;
+                look.border = selected ? P.BorderAccent : hot ? P.BorderStrong : P.BorderSubtle;
                 break;
 
             case DSRole.Notice:
                 (look.fill, look.border, look.ink) = tone switch
                 {
-                    DSTone.Success => (BlockforgeTheme.SuccessSoft, BlockforgeTheme.Success, BlockforgeTheme.Success),
-                    DSTone.Warning => (BlockforgeTheme.WarningSoft, BlockforgeTheme.Warning, BlockforgeTheme.Warning),
-                    DSTone.Danger => (BlockforgeTheme.DangerSoft, BlockforgeTheme.DangerInk, BlockforgeTheme.DangerInk),
-                    _ => (BlockforgeTheme.AccentSoft, BlockforgeTheme.Accent, BlockforgeTheme.Accent),
+                    DSTone.Success => (P.SuccessSoft, P.Success, P.Success),
+                    DSTone.Warning => (P.WarningSoft, P.Warning, P.Warning),
+                    DSTone.Danger => (P.DangerSoft, P.DangerInk, P.DangerInk),
+                    _ => (P.AccentSoft, P.Accent, P.Accent),
                 };
                 look.icon = look.ink;
                 break;
@@ -481,7 +533,7 @@ public class DSElement : MonoBehaviour,
         {
             focusRing.sprite = DSAssets.Shape(radius == DSRadius.None ? DSRadius.Xs : radius, "ring");
             focusRing.type = Image.Type.Sliced;
-            focusRing.color = BlockforgeTheme.FocusRing;
+            focusRing.color = P.FocusRing;
         }
     }
 
@@ -512,7 +564,7 @@ public class DSElement : MonoBehaviour,
             rt.anchorMin = new Vector2(0f, top ? 1f : 0f);
             rt.anchorMax = new Vector2(1f, top ? 1f : 0f);
             rt.pivot = new Vector2(0.5f, top ? 1f : 0f);
-            rt.sizeDelta = new Vector2(0f, role == DSRole.TabNav ? 2f : BlockforgeTheme.ControlBorder);
+            rt.sizeDelta = new Vector2(0f, role == DSRole.TabNav ? BlockforgeTheme.TopBar.Underline : BlockforgeTheme.ControlBorder);
             rt.anchoredPosition = Vector2.zero;
         }
         if (!needsLine && underline != null)

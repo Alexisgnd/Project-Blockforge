@@ -25,6 +25,8 @@ public enum DSFont
     CondensedSemiBold, // Barlow Condensed 600 : display-md, titres de panneau
     CondensedBold,     // Barlow Condensed 700 : display-xl / display-lg
     Mono,              // JetBrains Mono 500 : tous les chiffres (readout-*)
+    MonoSemiBold,      // JetBrains Mono 600 : readout-lg, scores, prix
+    MonoBold,          // JetBrains Mono 700 : score du podium
 }
 
 public static class DSAssets
@@ -39,6 +41,15 @@ public static class DSAssets
     {
         "Barlow-Regular SDF", "Barlow-Medium SDF", "Barlow-SemiBold SDF", "Barlow-Bold SDF",
         "BarlowCondensed-SemiBold SDF", "BarlowCondensed-Bold SDF", "JetBrainsMono-Medium SDF",
+        "JetBrainsMono-SemiBold SDF", "JetBrainsMono-Bold SDF",
+    };
+
+    // Police du DS pour une famille et une graisse CSS (400 / 500 / 600 / 700)
+    public static DSFont FontFor(FontFamily family, int weight) => family switch
+    {
+        FontFamily.Condensed => weight >= 700 ? DSFont.CondensedBold : DSFont.CondensedSemiBold,
+        FontFamily.Mono => weight >= 700 ? DSFont.MonoBold : weight >= 600 ? DSFont.MonoSemiBold : DSFont.Mono,
+        _ => weight >= 700 ? DSFont.Bold : weight >= 600 ? DSFont.SemiBold : weight >= 500 ? DSFont.Medium : DSFont.Regular,
     };
 
     // Apres generation des polices ou des sprites dans l'editeur
@@ -118,6 +129,8 @@ public static class DSAssets
         if (!fonts.TryGetValue(font, out var asset) || asset == null)
         {
             asset = Resources.Load<TMP_FontAsset>($"{Root}/Fonts/{FontAssetNames[(int)font]}");
+            if (asset == null && font is DSFont.MonoSemiBold or DSFont.MonoBold)
+                asset = Resources.Load<TMP_FontAsset>($"{Root}/Fonts/{FontAssetNames[(int)DSFont.Mono]}"); // graisse pas encore generee
             if (asset == null)
                 asset = TMP_Settings.defaultFontAsset; // polices pas encore generees
             fonts[font] = asset;
