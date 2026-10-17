@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using R = BlockforgeTheme.Results;
 
 // =========================================================
 // ECRAN DE RESULTATS (artboard Results, theme hud)
@@ -57,7 +58,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void Build()
     {
-        var R = BlockforgeTheme.Results;
         var P = kit.P;
         var rt = (RectTransform)transform;
         root = kit.Group(rt);
@@ -106,7 +106,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void BuildHeader(Transform parent, Team winner, Color winColor, bool draw)
     {
-        var R = BlockforgeTheme.Results;
         var P = kit.P;
         var header = kit.Row(parent, "Header", BlockforgeTheme.Space8, TextAnchor.MiddleLeft);
         UIKit.Fixed(header, -1f, R.HeaderHeight);
@@ -142,7 +141,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void BuildPodium(Transform parent)
     {
-        var R = BlockforgeTheme.Results;
         var top3 = MatchLogic.Podium(Result.Players);
         var row = kit.Row(parent, "Podium", R.PodiumGap, TextAnchor.LowerCenter);
         // Ordre d'affichage 2e · 1er · 3e ; ordre d'arrivee 2e, 3e, 1er
@@ -156,7 +154,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private (CanvasGroup, RectTransform)? BuildPodiumCard(Transform parent, PlayerMatchStats p, int rank)
     {
-        var R = BlockforgeTheme.Results;
         var P = kit.P;
         bool isFirst = rank == 1;
         bool enemy = p.Team == Team.Enemy;
@@ -220,8 +217,7 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void PodiumStat(Transform parent, string value, string label)
     {
-        var R = BlockforgeTheme.Results;
-        var col = kit.Column(parent, "Stat_" + label, 2f, TextAnchor.UpperCenter, null, true, true, true);
+        var col = kit.Column(parent, "Stat_" + label, BlockforgeTheme.Gap.Hair, TextAnchor.UpperCenter, null, true, true, true);
         UIKit.Flexible(col);
         var v = kit.Mono(col, "Value", R.StatSize, 600, kit.P.InkPrimary, value, TextAlignmentOptions.Center);
         UIKit.HudShadow(v);
@@ -230,7 +226,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void BuildFooter(Transform parent)
     {
-        var R = BlockforgeTheme.Results;
         var P = kit.P;
         var rewards = Result.Rewards;
         var plate = ChamferedPlate.Build(kit, parent, "Footer", PlateCorners.Bottom, R.FooterChamfer);
@@ -244,7 +239,7 @@ public sealed class ResultsScreen : MonoBehaviour
         techValue = Reward(row, "electronics", P.Accent, "Tech points");
 
         // Barre d'XP : Level · +XP · dans le niveau, piste trapeze 6 px
-        var xp = kit.Column(row, "Xp", 6f, TextAnchor.UpperLeft);
+        var xp = kit.Column(row, "Xp", BlockforgeTheme.Gap.Small, TextAnchor.UpperLeft);
         UIKit.Fixed(xp, R.XpWidth, -1f);
         var xpHead = kit.Row(xp, "Head", BlockforgeTheme.Space2, TextAnchor.MiddleLeft);
         UIKit.Fixed(xpHead, -1f, BlockforgeTheme.Type.Label.LineHeight);
@@ -277,13 +272,12 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private TMP_Text Reward(Transform parent, string icon, Color color, string label)
     {
-        var R = BlockforgeTheme.Results;
         var row = kit.Row(parent, "Reward_" + label, BlockforgeTheme.Space3, TextAnchor.MiddleLeft);
         var tile = kit.Shape(row, "Tile", DSRadius.Sm, kit.P.SurfaceBase);
         UIKit.Fixed(tile, R.RewardIcon, R.RewardIcon);
         var ic = kit.Icon(tile.transform, "Icon", icon, BlockforgeTheme.IconSize.Xl, color);
         UIKit.Place(ic.rectTransform, UIKit.Center, Vector2.zero, new Vector2(BlockforgeTheme.IconSize.Xl, BlockforgeTheme.IconSize.Xl));
-        var text = kit.Column(row, "Text", 2f, TextAnchor.MiddleLeft, null, true, true, false);
+        var text = kit.Column(row, "Text", BlockforgeTheme.Gap.Hair, TextAnchor.MiddleLeft, null, true, true, false);
         var value = kit.Mono(text, "Value", R.RewardValueSize, 600, color, "+0");
         UIKit.HudShadow(value);
         kit.Caps(text, "Label", R.RewardLabelSize, 500, 0.08f, kit.P.InkMuted, label);
@@ -333,7 +327,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private void BuildCells(Transform parent)
     {
-        var R = BlockforgeTheme.Results;
         var P = kit.P;
         int columns = Mathf.CeilToInt(BlockforgeTheme.ReferenceWidth / R.Grid);
         for (int i = 0; i < CellSeeds.Length && i < R.CellCount; i++)
@@ -349,7 +342,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private IEnumerator PulseCells()
     {
-        var R = BlockforgeTheme.Results;
         if (BlockforgeTheme.ReduceMotion)
         {
             foreach (var (cell, _) in cells)
@@ -376,7 +368,6 @@ public sealed class ResultsScreen : MonoBehaviour
 
     private IEnumerator Play()
     {
-        var R = BlockforgeTheme.Results;
         StartCoroutine(PulseCells());
         foreach (var (group, _) in podium) group.alpha = 0f;
         foreach (var g in board.Rows) g.alpha = 0f;

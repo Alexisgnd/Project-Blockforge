@@ -3,6 +3,8 @@ using Blockforge.Meta;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using H = BlockforgeTheme.Hub;
+using S = BlockforgeTheme.Store;
 
 // =========================================================
 // STORE — pieces et packs (artboard Store)
@@ -68,8 +70,6 @@ public sealed class StoreScreen : HubScreen
     {
         service = MetaServices.Store;
         wallet = MetaServices.Wallet;
-        var H = BlockforgeTheme.Hub;
-        var S = BlockforgeTheme.Store;
 
         search = kit.SearchField(TitleControls, "Search", "Search parts", H.StoreSearchWidth);
         search.Changed += q => { query = q ?? ""; RefreshShelf(); };
@@ -114,7 +114,6 @@ public sealed class StoreScreen : HubScreen
 
     private void BuildBanner()
     {
-        var S = BlockforgeTheme.Store;
         var plate = ChamferedPlate.Build(kit, Content, "Banner", PlateCorners.BottomRight, S.BannerCut, kit.P.SurfacePanel);
         banner = plate.Rect;
         UIKit.Fixed(banner, -1f, S.BannerArtHeight + 2f * S.BannerPadY);
@@ -146,7 +145,7 @@ public sealed class StoreScreen : HubScreen
         UIKit.Fixed(bundleBadges, -1f, BlockforgeTheme.ControlSm);
 
         var price = kit.Column(row, "Price", BlockforgeTheme.Space3, TextAnchor.MiddleRight, UIKit.Pad(0f, BlockforgeTheme.Space2, 0f, 0f), true, true, false);
-        var priceRow = kit.Row(price, "PriceRow", BlockforgeTheme.Space2 + 2f, TextAnchor.LowerRight);
+        var priceRow = kit.Row(price, "PriceRow", BlockforgeTheme.Gap.Medium, TextAnchor.LowerRight);
         bundleWas = kit.Mono(priceRow, "Was", S.WasSize, 500, kit.P.InkMuted, "", TextAlignmentOptions.BottomRight);
         bundleWas.fontStyle = FontStyles.Strikethrough;
         kit.Icon(priceRow, "Icon", "credits", S.BannerPriceIcon, kit.P.GradeMasterwork);
@@ -156,8 +155,6 @@ public sealed class StoreScreen : HubScreen
 
     private void BuildDetail()
     {
-        var H = BlockforgeTheme.Hub;
-        var S = BlockforgeTheme.Store;
         var content = Detail.Content;
         preview = Preview(content, "Preview", S.DetailPreview, "[3D PREVIEW — ROTATES]", kit.P.GradeRaw);
         previewGrade = preview.Find("GradeBar").GetComponent<Image>();
@@ -279,14 +276,13 @@ public sealed class StoreScreen : HubScreen
 
     private Item BuildItem(int index)
     {
-        var S = BlockforgeTheme.Store;
         var it = new Item();
         it.Rect = kit.Column(grid, "Item_" + index, S.ItemGap, TextAnchor.UpperLeft, null, true, true, false);
         int i = index;
         it.Card = kit.PartCard(it.Rect, "Card", "", Category.Weapon, Grade.Raw, "", () => Select(items[i].Data, true));
         var price = kit.Row(it.Rect, "Price", BlockforgeTheme.Space2, TextAnchor.MiddleLeft, UIKit.Pad(S.PricePadX, 0f));
         UIKit.Fixed(price, BlockforgeTheme.TileMd, BlockforgeTheme.Type.Caption.LineHeight);
-        var cr = kit.Row(price, "Credits", BlockforgeTheme.Space1 + 1f, TextAnchor.MiddleLeft);
+        var cr = kit.Row(price, "Credits", BlockforgeTheme.Gap.IconText, TextAnchor.MiddleLeft);
         kit.Icon(cr, "Icon", "credits", BlockforgeTheme.IconSize.Sm, kit.P.GradeMasterwork);
         it.Price = kit.Mono(cr, "Value", S.PriceSize, 600, kit.P.GradeMasterwork, "");
         kit.Spacer(price);

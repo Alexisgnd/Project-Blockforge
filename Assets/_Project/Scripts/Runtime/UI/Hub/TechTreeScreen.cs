@@ -3,6 +3,8 @@ using Blockforge.Meta;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using H = BlockforgeTheme.Hub;
+using T = BlockforgeTheme.Tech;
 
 // =========================================================
 // TECH TREE — recherche (artboard TechTree)
@@ -68,8 +70,6 @@ public sealed class TechTreeScreen : HubScreen
     {
         service = MetaServices.TechTree;
         wallet = MetaServices.Wallet;
-        var T = BlockforgeTheme.Tech;
-        var H = BlockforgeTheme.Hub;
 
         // ---------- Ligne de titre ----------
         var chip = kit.Row(TitleControls, "TechPoints", T.ChipGap, TextAnchor.MiddleLeft, UIKit.Pad(T.ChipPadX, T.ChipPadY));
@@ -77,7 +77,7 @@ public sealed class TechTreeScreen : HubScreen
         UIKit.Fixed(tile, T.ChipTile, T.ChipTile);
         var tileIcon = kit.Icon(tile.transform, "Icon", "electronics", BlockforgeTheme.IconSize.Lg, kit.P.Accent);
         UIKit.Place(tileIcon.rectTransform, UIKit.Center, Vector2.zero, new Vector2(BlockforgeTheme.IconSize.Lg, BlockforgeTheme.IconSize.Lg));
-        var chipText = kit.Column(chip, "Text", 2f, TextAnchor.MiddleLeft, null, true, true, false);
+        var chipText = kit.Column(chip, "Text", BlockforgeTheme.Gap.Hair, TextAnchor.MiddleLeft, null, true, true, false);
         kit.Text(chipText, "Label", DSTextStyle.Label, kit.P.InkMuted, "Tech points");
         techPointsValue = kit.Mono(chipText, "Value", T.ChipValueSize, 600, kit.P.InkPrimary, "0");
         kit.Element(chip, DSRole.Panel);
@@ -116,7 +116,6 @@ public sealed class TechTreeScreen : HubScreen
 
     private void BuildLanes()
     {
-        var T = BlockforgeTheme.Tech;
         Clear(lanesHost);
         nodes.Clear();
         connectors.Clear();
@@ -129,7 +128,7 @@ public sealed class TechTreeScreen : HubScreen
             UIKit.BottomStrip(hair.rectTransform, 0f, BlockforgeTheme.ControlBorder);
             UIKit.IgnoreLayout(hair);
 
-            var head = kit.Column(row, "Head", 6f, TextAnchor.MiddleLeft, UIKit.Pad(0f, T.LaneHeadPadRight, 0f, 0f), true, true, false);
+            var head = kit.Column(row, "Head", BlockforgeTheme.Gap.Small, TextAnchor.MiddleLeft, UIKit.Pad(0f, T.LaneHeadPadRight, 0f, 0f), true, true, false);
             UIKit.Fixed(head, T.LaneHeadWidth, -1f);
             var title = kit.Row(head, "Title", T.LaneTitleGap, TextAnchor.MiddleLeft);
             var color = kit.CategoryColor(lane);
@@ -156,7 +155,6 @@ public sealed class TechTreeScreen : HubScreen
 
     private NodeView BuildNode(Transform parent, TechNode n)
     {
-        var T = BlockforgeTheme.Tech;
         var v = new NodeView { Data = n };
         v.Rect = kit.Rect(parent, "Node_" + n.Id);
         v.Rect.gameObject.AddComponent<Image>().raycastTarget = true;
@@ -225,8 +223,6 @@ public sealed class TechTreeScreen : HubScreen
 
     private void BuildDetail()
     {
-        var T = BlockforgeTheme.Tech;
-        var H = BlockforgeTheme.Hub;
         var content = Detail.Content;
         preview = Preview(content, "Preview", T.DetailPreview, "[3D PREVIEW]", kit.P.GradeRaw);
         previewGrade = preview.Find("GradeBar").GetComponent<Image>();

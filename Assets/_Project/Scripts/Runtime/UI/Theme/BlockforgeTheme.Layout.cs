@@ -30,6 +30,19 @@ public static partial class BlockforgeTheme
         public const float Emblem = 640f; // embleme de fond de l'overlay
     }
 
+    // ----- Micro-ecarts des maquettes (entre les pas de spacing du DS) -----
+    public static class Gap
+    {
+        public const float Hair = 2f;      // valeur / libelle empiles (readouts, puces)
+        public const float Tight = 3f;     // libelle / nom d'un award
+        public const float IconText = 5f;  // pictogramme 14 px / chiffre mono
+        public const float Small = 6f;     // auteur, tete de voie, barre d'XP, chips
+        public const float Medium = 10f;   // prix + ancien prix, Requires / valeur
+    }
+
+    // Interlettrage du libelle des apercus 3D (« [3D PREVIEW] ») : 0.06em en unites TMP
+    public const float PlaceholderTracking = 6f;
+
     // ----- Petits controles du DS (mesures des composants du bundle) -----
     public static class Controls
     {

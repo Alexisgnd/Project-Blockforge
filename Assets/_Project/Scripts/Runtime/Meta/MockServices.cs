@@ -177,12 +177,12 @@ namespace Blockforge.Meta
                 if (r.id != id)
                     continue;
                 if (!wallet.TryDebitCredits(r.price))
-                    throw new InsufficientFundsException("Not enough credits.");
+                    return Task.FromException(new InsufficientFundsException("Not enough credits."));
                 Downloaded.Add(id);
                 r.downloads++;
                 return Task.CompletedTask;
             }
-            throw new KeyNotFoundException(id);
+            return Task.FromException(new KeyNotFoundException(id));
         }
     }
 
@@ -250,20 +250,20 @@ namespace Blockforge.Meta
                 if (s.id != id)
                     continue;
                 if (s.requiresResearch)
-                    throw new InvalidOperationException("Research first.");
+                    return Task.FromException(new InvalidOperationException("Research first."));
                 if (!wallet.TryDebitCredits(s.price * Math.Max(1, qty)))
-                    throw new InsufficientFundsException("Not enough credits.");
+                    return Task.FromException(new InsufficientFundsException("Not enough credits."));
                 s.owned += Math.Max(1, qty);
                 Changed?.Invoke();
                 return Task.CompletedTask;
             }
-            throw new KeyNotFoundException(id);
+            return Task.FromException(new KeyNotFoundException(id));
         }
 
         public Task BuyBundle(string id)
         {
             if (!wallet.TryDebitCredits(data.bundle.price))
-                throw new InsufficientFundsException("Not enough credits.");
+                return Task.FromException(new InsufficientFundsException("Not enough credits."));
             foreach (var s in data.items)
             {
                 if (s.id == "plasma-launcher") s.owned += data.bundle.weapons;
@@ -334,13 +334,13 @@ namespace Blockforge.Meta
         {
             var n = Seed(id);
             if (n == null)
-                throw new KeyNotFoundException(id);
+                return Task.FromException(new KeyNotFoundException(id));
             if (n.state == TechState.Researched)
                 return Task.CompletedTask;
             if (n.state == TechState.Locked)
-                throw new InvalidOperationException("Research the part before it.");
+                return Task.FromException(new InvalidOperationException("Research the part before it."));
             if (!wallet.TryDebitTechPoints(n.cost))
-                throw new InsufficientFundsException("Not enough tech points.");
+                return Task.FromException(new InsufficientFundsException("Not enough tech points."));
             n.state = TechState.Researched;
             var next = Neighbour(n, +1);
             if (next != null && next.state == TechState.Locked)

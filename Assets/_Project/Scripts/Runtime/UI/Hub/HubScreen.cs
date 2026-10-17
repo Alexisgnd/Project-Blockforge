@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using H = BlockforgeTheme.Hub;
 
 // =========================================================
 // ECRAN DU HUB (base de Workshop, Store, Tech Tree)
@@ -39,7 +40,6 @@ public abstract class HubScreen : MonoBehaviour
         built = true;
         Group = kit.Group(Root);
         Root.gameObject.AddComponent<TabFocusCycler>();
-        var H = BlockforgeTheme.Hub;
 
         // Fond surface-base : le hangar 3D du menu ne transparait pas sous l'ecran
         var background = kit.Image(Root, "Background", kit.P.SurfaceBase);
@@ -127,7 +127,7 @@ public abstract class HubScreen : MonoBehaviour
         poly.vertical = true;
         poly.SetColors(kit.P.SurfaceHover, kit.P.SurfaceInset);
         var label = kit.Mono(rt, "Placeholder", BlockforgeTheme.Type.BodySm.Size, 500, kit.P.InkMuted, placeholder, TextAlignmentOptions.Center);
-        label.characterSpacing = 6f;
+        label.characterSpacing = BlockforgeTheme.PlaceholderTracking;
         UIKit.Stretch(label.rectTransform);
         if (gradeBar.HasValue)
         {
@@ -150,7 +150,7 @@ public abstract class HubScreen : MonoBehaviour
         UIKit.Fixed(row, -1f, BlockforgeTheme.Type.BodySm.LineHeight);
         var l = kit.Text(row, "Label", DSTextStyle.BodySM, kit.P.InkSecondary, label);
         UIKit.Flexible(l);
-        valueHost = kit.Row(row, "Value", BlockforgeTheme.Space1 + 2f, TextAnchor.MiddleRight);
+        valueHost = kit.Row(row, "Value", BlockforgeTheme.Gap.Small, TextAnchor.MiddleRight);
         return row;
     }
 

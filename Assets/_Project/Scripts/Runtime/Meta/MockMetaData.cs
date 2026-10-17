@@ -126,9 +126,10 @@ namespace Blockforge.Meta
 
         public static MockMetaData Load()
         {
+            // Copie : les mocks modifient leurs donnees (achats, recherches) ; l'asset reste intact
             var asset = Resources.Load<MockMetaData>(ResourcePath);
             if (asset != null)
-                return asset;
+                return Instantiate(asset);
             var fallback = CreateInstance<MockMetaData>();
             fallback.name = "MockMetaData (in memory)";
             fallback.FillDefaults();

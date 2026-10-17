@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using T = BlockforgeTheme.TopBar;
 
 // =========================================================
 // BARRE DE NAVIGATION DU HUB (TopBar du design « screens »)
@@ -125,7 +126,7 @@ public sealed class TopBar : MonoBehaviour
     {
         if (topNavigation == null)
             return null;
-        var bar = topNavigation.GetComponent<TopBar>() ?? topNavigation.gameObject.AddComponent<TopBar>();
+        var bar = UIKit.GetOrAdd<TopBar>(topNavigation.gameObject);
         bar.tabs.Clear();
         bar.buttons.Clear();
         bar.NavRoot = topNavigation.Find("NavButtons") as RectTransform;
@@ -154,7 +155,6 @@ public sealed class TopBar : MonoBehaviour
 
     public static TopBar Build(UIKit kit, Transform parent, HubSection active, string playerName, long credits, Action<HubSection> onSelect = null)
     {
-        var T = BlockforgeTheme.TopBar;
         var nav = kit.Rect(parent, "TopNavigation");
         UIKit.TopStrip(nav, 0f, T.Height);
         kit.Element(nav, DSRole.Strip).hairlineEdge = DSEdge.Bottom;
@@ -170,11 +170,11 @@ public sealed class TopBar : MonoBehaviour
         // Bloc de droite : credits puis puce joueur
         var right = kit.Row(nav, "Right", BlockforgeTheme.Space6, TextAnchor.MiddleRight);
         UIKit.Place(right, new Vector2(1f, 0f), new Vector2(1f, 1f), UIKit.MiddleRight, new Vector2(-T.SidePadding, 0f), new Vector2(T.ChipWidth + BlockforgeTheme.Space6 + T.CreditsWidth + BlockforgeTheme.IconSize.Lg + BlockforgeTheme.Space2, 0f));
-        var credits = kit.Row(right, "Credits", BlockforgeTheme.Space2, TextAnchor.MiddleLeft);
-        kit.Icon(credits, "Icon", "credits", BlockforgeTheme.IconSize.Lg, kit.P.GradeMasterwork);
-        bar.CreditsText = kit.Mono(credits, "Value", T.CreditsValueSize, 600, kit.P.GradeMasterwork, BlockforgeTheme.Num(credits));
+        var creditsRow = kit.Row(right, "Credits", BlockforgeTheme.Space2, TextAnchor.MiddleLeft);
+        kit.Icon(creditsRow, "Icon", "credits", BlockforgeTheme.IconSize.Lg, kit.P.GradeMasterwork);
+        bar.CreditsText = kit.Mono(creditsRow, "Value", T.CreditsValueSize, 600, kit.P.GradeMasterwork, BlockforgeTheme.Num(credits));
         UIKit.Fixed(bar.CreditsText, T.CreditsWidth, -1f);
-        var player = kit.Row(right, "Player", BlockforgeTheme.Space3 - 2f, TextAnchor.MiddleLeft, UIKit.Pad(T.ChipPadding, BlockforgeTheme.Space3, 0f, 0f));
+        var player = kit.Row(right, "Player", BlockforgeTheme.Gap.Medium, TextAnchor.MiddleLeft, UIKit.Pad(T.ChipPadding, BlockforgeTheme.Space3, 0f, 0f));
         UIKit.Fixed(player, T.ChipWidth, T.ChipHeight);
         var avatar = kit.Shape(player, "Avatar", DSRadius.Pill, kit.P.SurfaceInset);
         UIKit.Fixed(avatar, T.AvatarSize, T.AvatarSize);

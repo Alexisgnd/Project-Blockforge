@@ -568,7 +568,7 @@ public static partial class DSWidgets
             var kit = Kit;
             var host = PopupParent != null ? PopupParent : Rect.parent;
             Popup = kit.Rect(host, "SelectPopup");
-            var panel = kit.Element(Popup, DSRole.Dialog);
+            kit.Element(Popup, DSRole.Dialog);
             var column = kit.Column(Popup, "Options", 0f, TextAnchor.UpperLeft, UIKit.Pad(BlockforgeTheme.Space1));
             UIKit.Stretch(column);
             Button first = null;
@@ -684,7 +684,6 @@ public static partial class DSWidgets
         UIKit.Place(w.Thumb.rectTransform, UIKit.MiddleLeft, new Vector2(BlockforgeTheme.Controls.ToggleThumbInset, 0f), new Vector2(BlockforgeTheme.Controls.ToggleThumb, BlockforgeTheme.Controls.ToggleThumb));
         w.State = kit.Text(w.Rect, "State", DSTextStyle.ReadoutSM, kit.P.InkMuted, "Off");
         UIKit.Fixed(w.State, BlockforgeTheme.Controls.ToggleHeight, -1f);
-        var focus = kit.Element(track, DSRole.None);
         w.Button.onClick.AddListener(() => w.Set(!w.Checked));
         UIKit.Fixed(w.Rect, -1f, BlockforgeTheme.ControlMd);
         w.Set(value, false);

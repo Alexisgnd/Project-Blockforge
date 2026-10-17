@@ -28,6 +28,11 @@ public sealed class UIKit
     public static readonly UIKit Dark = new(DSTheme.Dark);
     public static readonly UIKit Hud = new(DSTheme.Hud);
 
+    // GetComponent ou AddComponent. Jamais « GetComponent() ?? AddComponent() » : dans
+    // l'editeur un composant absent revient en faux null que ?? ne remplace pas.
+    public static T GetOrAdd<T>(GameObject go) where T : Component =>
+        go.TryGetComponent<T>(out var found) ? found : go.AddComponent<T>();
+
     private static int uiLayer = -1;
     public static int UILayer => uiLayer >= 0 ? uiLayer : (uiLayer = Mathf.Max(0, LayerMask.NameToLayer("UI")));
 
@@ -155,7 +160,7 @@ public sealed class UIKit
 
     public static LayoutElement Fixed(Component c, float width = -1f, float height = -1f)
     {
-        var le = c.gameObject.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
+        var le = GetOrAdd<LayoutElement>(c.gameObject);
         if (width >= 0f) { le.preferredWidth = width; le.minWidth = width; }
         if (height >= 0f) { le.preferredHeight = height; le.minHeight = height; }
         le.flexibleWidth = 0f;
@@ -165,7 +170,7 @@ public sealed class UIKit
 
     public static LayoutElement Flexible(Component c, float flexWidth = 1f, float flexHeight = 0f, float minWidth = 0f)
     {
-        var le = c.gameObject.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
+        var le = GetOrAdd<LayoutElement>(c.gameObject);
         le.flexibleWidth = flexWidth;
         le.flexibleHeight = flexHeight;
         le.minWidth = minWidth;
@@ -174,7 +179,7 @@ public sealed class UIKit
 
     public static void IgnoreLayout(Component c)
     {
-        var le = c.gameObject.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
+        var le = GetOrAdd<LayoutElement>(c.gameObject);
         le.ignoreLayout = true;
     }
 
@@ -194,7 +199,7 @@ public sealed class UIKit
 
     public static ContentSizeFitter Fit(Component c, bool horizontal, bool vertical)
     {
-        var fitter = c.gameObject.GetComponent<ContentSizeFitter>() ?? c.gameObject.AddComponent<ContentSizeFitter>();
+        var fitter = GetOrAdd<ContentSizeFitter>(c.gameObject);
         fitter.horizontalFit = horizontal ? ContentSizeFitter.FitMode.PreferredSize : ContentSizeFitter.FitMode.Unconstrained;
         fitter.verticalFit = vertical ? ContentSizeFitter.FitMode.PreferredSize : ContentSizeFitter.FitMode.Unconstrained;
         return fitter;
@@ -345,7 +350,7 @@ public sealed class UIKit
             var image = go.AddComponent<Image>();
             image.raycastTarget = false;
         }
-        var element = go.GetComponent<DSElement>() ?? go.AddComponent<DSElement>();
+        var element = GetOrAdd<DSElement>(go);
         element.role = role;
         element.theme = Theme;
         element.tone = tone;
@@ -360,7 +365,7 @@ public sealed class UIKit
     // Bouton uGUI sans teinte (les etats sont portes par DSElement)
     public static Button Clickable(Component target)
     {
-        var button = target.gameObject.GetComponent<Button>() ?? target.gameObject.AddComponent<Button>();
+        var button = GetOrAdd<Button>(target.gameObject);
         button.transition = Selectable.Transition.None;
         button.colors = BlockforgeTheme.ButtonStates();
         var image = target.gameObject.GetComponent<Image>();
@@ -387,10 +392,10 @@ public sealed class UIKit
     // Canvas plein ecran a l'echelle du DS (1920 x 1080, echelle sur la hauteur)
     public static Canvas ScreenCanvas(GameObject host, int sortingOrder)
     {
-        var canvas = host.GetComponent<Canvas>() ?? host.AddComponent<Canvas>();
+        var canvas = GetOrAdd<Canvas>(host);
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = sortingOrder;
-        var scaler = host.GetComponent<CanvasScaler>() ?? host.AddComponent<CanvasScaler>();
+        var scaler = GetOrAdd<CanvasScaler>(host);
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(BlockforgeTheme.ReferenceWidth, BlockforgeTheme.ReferenceHeight);
         scaler.matchWidthOrHeight = 1f; // echelle sur la hauteur : rien ne coupe en 21:9

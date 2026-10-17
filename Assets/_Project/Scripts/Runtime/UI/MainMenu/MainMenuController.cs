@@ -155,7 +155,7 @@ public class MainMenuController : MonoBehaviour
             hubScreens.HideAll();
         if (shown == null)
             return;
-        var group = shown.GetComponent<CanvasGroup>() ?? shown.AddComponent<CanvasGroup>();
+        var group = UIKit.GetOrAdd<CanvasGroup>(shown);
         group.alpha = 0f;
         StartCoroutine(UIAnim.Fade(group, 1f, BlockforgeTheme.Fade(BlockforgeTheme.MotionScreen)));
     }

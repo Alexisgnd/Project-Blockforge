@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using O = BlockforgeTheme.Overlay;
 
 // =========================================================
 // OVERLAY DE FIN DE MATCH (artboards Victory / Defeat, theme hud)
@@ -55,7 +56,6 @@ public sealed class MatchEndOverlay : MonoBehaviour
 
     private void Build()
     {
-        var O = BlockforgeTheme.Overlay;
         var P = kit.P;
         var rt = (RectTransform)transform;
         root = kit.Group(rt);
@@ -154,7 +154,6 @@ public sealed class MatchEndOverlay : MonoBehaviour
 
     private void BuildAwardCard(Transform parent, AwardKind kind, Award award)
     {
-        var O = BlockforgeTheme.Overlay;
         var P = kit.P;
         var winner = award?.PlayerId != null ? Result.Find(award.PlayerId) : null;
         bool has = winner != null && award.Value > 0;
@@ -173,7 +172,7 @@ public sealed class MatchEndOverlay : MonoBehaviour
         var icon = kit.Icon(tile.transform, "Icon", MetaLabels.Icon(kind), BlockforgeTheme.IconSize.Xl, P.InkSecondary);
         UIKit.Place(icon.rectTransform, UIKit.Center, Vector2.zero, new Vector2(BlockforgeTheme.IconSize.Xl, BlockforgeTheme.IconSize.Xl));
 
-        var text = kit.Column(row, "Text", 3f, TextAnchor.MiddleLeft);
+        var text = kit.Column(row, "Text", BlockforgeTheme.Gap.Tight, TextAnchor.MiddleLeft);
         UIKit.Flexible(text);
         var label = kit.Caps(text, "Label", O.AwardLabelSize, 600, O.AwardLabelTracking, P.InkMuted, MetaLabels.Of(kind));
         UIKit.HudShadow(label);
@@ -202,7 +201,6 @@ public sealed class MatchEndOverlay : MonoBehaviour
 
     private IEnumerator Play()
     {
-        var O = BlockforgeTheme.Overlay;
         bool reduced = BlockforgeTheme.ReduceMotion;
 
         // Etat initial : tout invisible sauf le voile

@@ -4,6 +4,7 @@ using Blockforge.Meta;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using B = BlockforgeTheme.Board;
 
 // =========================================================
 // SCOREBOARD (composant Scoreboard du DS, theme hud)
@@ -61,7 +62,6 @@ public sealed class ScoreboardWidget
                                          bool showScores, string hint = null, float width = BlockforgeTheme.Board.DefaultWidth,
                                          IComparer<PlayerMatchStats> order = null)
     {
-        var B = BlockforgeTheme.Board;
         var w = new ScoreboardWidget(kit, width);
         w.Rect = kit.Column(parent, name, BlockforgeTheme.Space2, TextAnchor.UpperCenter, null, true, true, true);
         UIKit.Fixed(w.Rect, width, -1f);
@@ -73,7 +73,7 @@ public sealed class ScoreboardWidget
         UIKit.Stretch(topRow);
         w.AllyScore = kit.Mono(topRow, "AllyScore", B.ScoreSize, 600, kit.P.TeamAlly, BlockforgeTheme.Num(result.AllyScore), TextAlignmentOptions.Center);
         UIKit.Fixed(w.AllyScore, B.TopSide, -1f);
-        var mode = kit.Column(topRow, "Mode", 2f, TextAnchor.MiddleCenter);
+        var mode = kit.Column(topRow, "Mode", BlockforgeTheme.Gap.Hair, TextAnchor.MiddleCenter);
         UIKit.Flexible(mode);
         w.ModeName = kit.Condensed(mode, "Name", B.ModeSize, 600, BlockforgeTheme.Type.DisplayMd.LetterSpacingEm, kit.P.InkPrimary, result.ModeName, TextAlignmentOptions.Center);
         w.Meta = kit.Mono(mode, "Meta", B.MetaSize, 500, kit.P.InkSecondary, result.MapName + " · " + BlockforgeTheme.Clock(result.Duration), TextAlignmentOptions.Center);
@@ -127,7 +127,6 @@ public sealed class ScoreboardWidget
     private void BuildTeam(Transform parent, Team team, List<PlayerMatchStats> players, IReadOnlyList<ScoreboardColumn> columns,
                            float width, bool showScores, List<CanvasGroup> rows, List<RectTransform> rects)
     {
-        var B = BlockforgeTheme.Board;
         bool enemy = team == Team.Enemy;
         var teamColor = enemy ? kit.P.TeamEnemy : kit.P.TeamAlly;
         var plate = ChamferedPlate.Build(kit, parent, enemy ? "Enemy" : "Ally", enemy ? PlateCorners.BottomRight : PlateCorners.BottomLeft);

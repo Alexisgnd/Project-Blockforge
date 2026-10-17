@@ -48,19 +48,63 @@ public static class ThemeTokensGenerator
         }
         try
         {
-            using var zip = ZipFile.OpenRead(ZipPath);
-            foreach (var entry in zip.Entries)
-            {
-                if (!entry.FullName.EndsWith("tokens.json", StringComparison.Ordinal) || entry.FullName.Contains("/ds/"))
-                    continue;
-                using var reader = new StreamReader(entry.Open(), Encoding.UTF8);
-                return reader.ReadToEnd();
-            }
+            byte[] data = ReadZipEntry(File.ReadAllBytes(ZipPath),
+                name => name.EndsWith("tokens.json", StringComparison.Ordinal) && !name.Contains("/ds/"));
+            if (data != null)
+                return Encoding.UTF8.GetString(data);
             Debug.LogError("[DesignSystem] tokens.json absent de l'archive.");
         }
         catch (Exception e)
         {
             Debug.LogError($"[DesignSystem] Lecture de l'archive impossible : {e.Message}");
+        }
+        return null;
+    }
+
+    // Lecteur zip minimal (repertoire central + DeflateStream de System.dll) : evite
+    // la dependance a System.IO.Compression.FileSystem, absente des references
+    // par defaut des assemblies editeur
+    private static byte[] ReadZipEntry(byte[] zip, Func<string, bool> match)
+    {
+        int U16(int o) => zip[o] | zip[o + 1] << 8;
+        int U32(int o) => zip[o] | zip[o + 1] << 8 | zip[o + 2] << 16 | zip[o + 3] << 24;
+
+        int eocd = -1;
+        for (int i = zip.Length - 22; i >= Math.Max(0, zip.Length - 22 - 65535); i--)
+            if (U32(i) == 0x06054b50) { eocd = i; break; }
+        if (eocd < 0)
+            throw new InvalidDataException("not a zip archive");
+
+        int count = U16(eocd + 10);
+        int p = U32(eocd + 16);
+        for (int n = 0; n < count; n++)
+        {
+            if (U32(p) != 0x02014b50)
+                throw new InvalidDataException("bad central directory");
+            int method = U16(p + 10);
+            int compressed = U32(p + 20);
+            int size = U32(p + 24);
+            int nameLen = U16(p + 28), extraLen = U16(p + 30), commentLen = U16(p + 32);
+            int local = U32(p + 42);
+            string name = Encoding.UTF8.GetString(zip, p + 46, nameLen);
+            p += 46 + nameLen + extraLen + commentLen;
+            if (!match(name))
+                continue;
+
+            int dataStart = local + 30 + U16(local + 26) + U16(local + 28);
+            if (method == 0)
+            {
+                var stored = new byte[size];
+                Array.Copy(zip, dataStart, stored, 0, size);
+                return stored;
+            }
+            if (method != 8)
+                throw new InvalidDataException($"unsupported compression {method}");
+            using var input = new MemoryStream(zip, dataStart, compressed);
+            using var inflate = new DeflateStream(input, CompressionMode.Decompress);
+            using var output = new MemoryStream(size);
+            inflate.CopyTo(output);
+            return output.ToArray();
         }
         return null;
     }
