@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6e0803aededa1147834201a5add33a8, type: 3}
+  m_Name: Mode_TeamDeathmatch
+  m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
+  title: Team Deathmatch
+  summary: "5 vs 5 \xB7 first to 25 \xB7 about 10 min"
+  description: Two teams of five. Destroy enemy robots to score; the first team to
+    25 wins, or the one leading when the clock runs out. Bots fill any seat left
+    open.
+  iconName: skull
+  playersLabel: 5 vs 5
+  targetLabel: 25 kills
+  timeLabel: 10:00
+  teamSize: 5
+  mapName: Hex valley
+  versusSummary: "first to 25 \xB7 10:00"
+  sceneName: Map_Test
+  icon: {fileID: 0}
+  mapImage: {fileID: 0}

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6e0803aededa1147834201a5add33a8, type: 3}
+  m_Name: Mode_BattleArena
+  m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
+  title: Battle Arena
+  summary: "5 vs 5 \xB7 hold three objectives \xB7 about 15 min"
+  description: Two teams of five fight for three objectives spread across the arena.
+    Holding more objectives than the enemy drains their tickets; the first team to
+    drain the other's tickets wins. Bots fill any seat left open.
+  iconName: objective
+  playersLabel: 5 vs 5
+  targetLabel: 3 objectives
+  timeLabel: 15:00
+  teamSize: 5
+  mapName: Hex valley
+  versusSummary: "hold three objectives \xB7 15:00"
+  sceneName: Map_Test
+  icon: {fileID: 0}
+  mapImage: {fileID: 0}

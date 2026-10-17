@@ -13,7 +13,7 @@ using UnityEngine;
 public class RobotEnergy : MonoBehaviour
 {
     [Header("Reserve")]
-    public float max = 100f;
+    public float max = 275f;
     [Tooltip("Points par seconde une fois le delai passe")]
     public float regenPerSecond = 26f;
     [Tooltip("Secondes sans tir avant que l'energie remonte")]

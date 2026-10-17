@@ -150,9 +150,8 @@ public class RobotTestSpawner : MonoBehaviour
         Vector3 position = (spawnPoint != null ? spawnPoint.position : Vector3.zero) + Vector3.up * 0.4f;
         Quaternion rotation = spawnPoint != null ? Quaternion.Euler(0f, spawnPoint.eulerAngles.y, 0f) : Quaternion.identity;
         Robot.transform.SetPositionAndRotation(position, rotation);
-        CheckGround(position);
-
         SetLayer(Robot.transform, RobotLayer);
+        CheckGround(position);
 
         // Physique (masse = poids / 100), animations, pilotage
         Robot.AddComponent<Rigidbody>();
@@ -246,7 +245,83 @@ public class RobotTestSpawner : MonoBehaviour
         heli.blocks.Add(B("Block_Thruster_N1_Lynx", 15, 0, 12, 6));
         list.Add(heli);
 
+        list.Add(Libellule());
         return list;
+    }
+
+    private static PlacedBlock P(string id, int x, int y, int z, int color, int face = 0, int spin = 0)
+    {
+        var b = B(id, x, y, z, face, spin);
+        b.colorIndex = color;
+        return b;
+    }
+
+    // LIBELLULE : helicoptere d'attaque a rotors en tandem (facon Chinook).
+    // Avant = +Z. Fuselage bleu azur de 3 x 7 elargi a 5 au milieu (y = 1) sur
+    // deux patins de tiges, cabine 3 x 4 (y = 2), nez en pentes orange. Rotor
+    // Assault avant sur un pylone au-dessus du nez, rotor Assault arriere sur un
+    // pylone de deux cubes au-dessus de la queue : deux disques de 3 m qui se
+    // chevauchent pas. Grandes ailes Eagle sur les flancs, poutre de queue avec
+    // double derive et empennage, deux propulseurs Panther encastres dans les
+    // flancs arriere. Armes : 2 lasers Hornet sur la cabine, plasma Pulser au
+    // centre (2 types sur 3).
+    private static RobotBlueprint Libellule()
+    {
+        const int azure = 8, orange = 2, white = 0;
+        var bp = new RobotBlueprint { name = "LIBELLULE" };
+        int top = 1, back = 6, right = 3, left = 4;
+
+        // Patins d'atterrissage
+        for (int z = 12; z <= 16; z++)
+        {
+            bp.blocks.Add(P("Block_Rod_Court", 14, 0, z, white));
+            bp.blocks.Add(P("Block_Rod_Court", 16, 0, z, white));
+        }
+        // Fuselage y = 1 : 3 x 7 (z 11-17), flancs elargis (x 13 et 17, z 11-15), nez en pentes
+        for (int x = 14; x <= 16; x++)
+        {
+            for (int z = 11; z <= 17; z++)
+                bp.blocks.Add(P("Block_01_Cube", x, 1, z, azure));
+            bp.blocks.Add(P("Block_02_Pente", x, 1, 18, orange));
+        }
+        foreach (int x in new[] { 13, 17 })
+        {
+            for (int z = 11; z <= 15; z++)
+                bp.blocks.Add(P("Block_01_Cube", x, 1, z, azure));
+        }
+        // Cabine y = 2 : 3 x 4 (z 12-15)
+        for (int x = 14; x <= 16; x++)
+        {
+            for (int z = 12; z <= 15; z++)
+                bp.blocks.Add(P("Block_01_Cube", x, 2, z, azure));
+        }
+        // Rotor avant : pylone sur le nez, disque au-dessus de la cabine (z 16-18)
+        bp.blocks.Add(P("Block_01_Cube", 15, 2, 17, orange));
+        bp.blocks.Add(P("Block_RotorBlade_Assault", 15, 3, 17, white, top));
+        // Queue : poutre y = 2 (z 7-11), pylone arriere de deux cubes, rotor arriere (z 10-12)
+        for (int z = 7; z <= 11; z++)
+            bp.blocks.Add(P("Block_01_Cube", 15, 2, z, azure));
+        bp.blocks.Add(P("Block_01_Cube", 15, 3, 11, orange));
+        bp.blocks.Add(P("Block_01_Cube", 15, 4, 11, orange));
+        bp.blocks.Add(P("Block_RotorBlade_Assault", 15, 5, 11, white, top));
+        // Empennage : poutre elargie au bout, double derive, stabilisateurs
+        bp.blocks.Add(P("Block_01_Cube", 14, 2, 7, orange));
+        bp.blocks.Add(P("Block_01_Cube", 16, 2, 7, orange));
+        bp.blocks.Add(P("Block_Rudder_N1_Hawk", 14, 3, 7, orange, top));
+        bp.blocks.Add(P("Block_Rudder_N1_Hawk", 16, 3, 7, orange, top));
+        bp.blocks.Add(P("Block_Rudder_N1_Hawk", 17, 2, 7, orange, right, 1));
+        bp.blocks.Add(P("Block_Rudder_N1_Hawk", 13, 2, 7, orange, left, 1));
+        // Ailes : grandes gouvernes Eagle a plat sur les flancs
+        bp.blocks.Add(P("Block_Rudder_N4_Eagle", 18, 1, 13, orange, right, 1));
+        bp.blocks.Add(P("Block_Rudder_N4_Eagle", 12, 1, 13, orange, left, 1));
+        // Propulseurs Panther plaques a l'arriere des flancs (x 13-14 et 16-17, y 1-2)
+        bp.blocks.Add(P("Block_Thruster_N2_Panther", 13, 1, 10, white, back));
+        bp.blocks.Add(P("Block_Thruster_N2_Panther", 16, 1, 10, white, back));
+        // Armement : lasers sur la cabine, plasma au centre entre les rotors
+        bp.blocks.Add(P("Block_Laser_N2_Hornet", 14, 3, 13, white, top));
+        bp.blocks.Add(P("Block_Laser_N2_Hornet", 16, 3, 13, white, top));
+        bp.blocks.Add(P("Block_Plasma_N1_Pulser", 15, 3, 13, white, top));
+        return bp;
     }
 
     private static void SetLayer(Transform root, int layer)
@@ -261,7 +336,7 @@ public class RobotTestSpawner : MonoBehaviour
     private static void CheckGround(Vector3 position)
     {
         var origin = position + Vector3.up * 5f;
-        if (Physics.Raycast(origin, Vector3.down, out var hit, 50f, ~0, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(origin, Vector3.down, out var hit, 50f, ~(1 << RobotLayer), QueryTriggerInteraction.Ignore))
         {
             float drop = position.y - hit.point.y;
             string surface = hit.collider != null ? hit.collider.gameObject.name : "?";

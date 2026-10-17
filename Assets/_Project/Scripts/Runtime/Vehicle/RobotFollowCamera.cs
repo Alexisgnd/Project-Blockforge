@@ -55,6 +55,16 @@ public class RobotFollowCamera : MonoBehaviour
     [Header("Collisions")]
     public float collisionRadius = 0.3f;
 
+    [Header("Zoom (clic droit maintenu)")]
+    [Tooltip("Champ de vision en zoom (le champ normal est celui de la camera)")]
+    public float zoomFov = 30f;
+    public float zoomSpeed = 10f;
+    [Tooltip("Sensibilite souris en zoom, en part de la sensibilite normale")]
+    public float zoomSensitivity = 0.5f;
+    public bool Zooming { get; private set; }
+    private Camera cam;
+    private float baseFov = 60f;
+
     private float yaw;
     private float pitch;
     private float idleTime;
@@ -152,16 +162,30 @@ public class RobotFollowCamera : MonoBehaviour
             return;
 
         var mouse = Mouse.current;
-        Vector2 delta = mouse != null && Cursor.lockState == CursorLockMode.Locked
-            ? mouse.delta.ReadValue()
-            : Vector2.zero;
+        bool locked = Cursor.lockState == CursorLockMode.Locked;
+        Vector2 delta = mouse != null && locked ? mouse.delta.ReadValue() : Vector2.zero;
+
+        // Zoom : clic droit maintenu, champ de vision resserre et souris adoucie
+        Zooming = mouse != null && locked && mouse.rightButton.isPressed && Time.timeScale > 0f;
+        if (cam == null)
+        {
+            cam = GetComponent<Camera>();
+            if (cam != null)
+                baseFov = cam.fieldOfView;
+        }
+        if (cam != null)
+        {
+            float wantedFov = Zooming ? zoomFov : baseFov;
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, wantedFov, 1f - Mathf.Exp(-zoomSpeed * Time.unscaledDeltaTime));
+        }
+        float sensitivity = mouseSensitivity * (Zooming ? zoomSensitivity : 1f);
 
         if (delta.sqrMagnitude > 0.01f)
         {
-            yaw += delta.x * mouseSensitivity;
+            yaw += delta.x * sensitivity;
             // Tangage positif = vers le bas : souris vers le haut -> viser plus haut
             float dy = invertY ? delta.y : -delta.y;
-            pitch = Mathf.Clamp(pitch + dy * mouseSensitivity, -maxLookUp, maxLookDown);
+            pitch = Mathf.Clamp(pitch + dy * sensitivity, -maxLookUp, maxLookDown);
             idleTime = 0f;
         }
         else if (autoAlign)

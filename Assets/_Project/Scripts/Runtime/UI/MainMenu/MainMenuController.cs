@@ -6,17 +6,29 @@ using UnityEngine.SceneManagement;
 // =========================================================
 // CHEF D'ORCHESTRE DU MENU D'ACCUEIL
 // Relie la selection de robot du joueur a l'affichage, gere les
-// boutons Jouer / Construire et les infos du joueur.
+// sections de la navigation du haut (Home, Play, Build, Tech
+// tree, Workshop, Store) et les infos du joueur dans le header
+// (puce joueur, credits).
 // =========================================================
 
 public class MainMenuController : MonoBehaviour
 {
+    // Identifiants des sections (noms des onglets « Nav_<Section> »)
+    public const string SectionHome = "Home";
+    public const string SectionPlay = "Play";
+    public const string SectionBuild = "Build";
+    public const string SectionTechTree = "TechTree";
+    public const string SectionWorkshop = "Workshop";
+    public const string SectionStore = "Store";
+
     [Header("References (remplies par le setup)")]
     public RobotSlotManager slotManager;
     public RobotStatsUI statsUI;
     public TMP_Text bayLabelText;
     public TMP_Text robotNameText;
     public TMP_Text playerNameText;
+    [Tooltip("Solde de credits du header (readout, grade-masterwork)")]
+    public TMP_Text creditsText;
 
     [Header("Ecrans")]
     public GameObject homeScreen;
@@ -24,7 +36,7 @@ public class MainMenuController : MonoBehaviour
     public BuildMenuController buildMenu;
 
     [Header("Navigation")]
-    public string arenaSceneName = "Arena";
+    public string arenaSceneName = "Map_Test";
     public string garageSceneName = "Garage";
 
     [Header("Onglets (auto-détectés si vide)")]
@@ -89,8 +101,11 @@ public class MainMenuController : MonoBehaviour
         string pseudo = user != null && !string.IsNullOrEmpty(user.name) ? user.name : "Guest";
         if (playerNameText != null)
             playerNameText.text = pseudo;
+        // Pas encore d'economie : solde a zero, deja au format du DS (readout, milliers groupes)
+        if (creditsText != null)
+            creditsText.text = BlockforgeTheme.Num(0);
 
-        SetActiveTab("ACCUEIL");
+        SetActiveTab(SectionHome);
 
         // En attendant la reponse de PocketBase (RobotSlotManager.Refresh)
         if (bayLabelText != null)
@@ -122,7 +137,7 @@ public class MainMenuController : MonoBehaviour
 
     public void ShowPlayMenu()
     {
-        // Pas encore d'ecran modes de jeu ? On lance directement l'arene.
+        // Pas encore d'ecran Play ? On lance directement l'arene.
         if (playMenu == null)
         {
             SceneManager.LoadScene(arenaSceneName);
@@ -134,7 +149,7 @@ public class MainMenuController : MonoBehaviour
         if (buildMenu != null)
             buildMenu.Close();
         playMenu.Open();
-        SetActiveTab("JOUER");
+        SetActiveTab(SectionPlay);
     }
 
     public void ShowBuildMenu()
@@ -151,7 +166,7 @@ public class MainMenuController : MonoBehaviour
         if (playMenu != null)
             playMenu.Close();
         buildMenu.Open();
-        SetActiveTab("CONSTRUIRE");
+        SetActiveTab(SectionBuild);
     }
 
     public void ShowHome()
@@ -162,7 +177,7 @@ public class MainMenuController : MonoBehaviour
             buildMenu.Close();
         if (homeScreen != null)
             homeScreen.SetActive(true);
-        SetActiveTab("ACCUEIL");
+        SetActiveTab(SectionHome);
 
         // Un robot a pu etre cree ou supprime depuis Construire
         if (slotManager != null)
@@ -190,14 +205,27 @@ public class MainMenuController : MonoBehaviour
     {
         switch (section)
         {
+            // Anciens identifiants francais des scenes generees avant la refonte du header
             case "ACCUEIL":
+            case SectionHome:
                 ShowHome();
                 break;
             case "JOUER":
+            case SectionPlay:
                 ShowPlayMenu();
                 break;
             case "CONSTRUIRE":
+            case SectionBuild:
                 ShowBuildMenu();
+                break;
+            case SectionTechTree:
+                Toast.Info("Tech tree is coming soon.");
+                break;
+            case SectionWorkshop:
+                Toast.Info("Workshop is coming soon.");
+                break;
+            case SectionStore:
+                Toast.Info("Store is coming soon.");
                 break;
             default:
                 Debug.Log($"[MainMenu] Section '{section}' — à venir.");

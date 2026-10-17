@@ -801,7 +801,8 @@ public class GarageBuildController : MonoBehaviour
     // =========================================================
 
     // cell = case libre visee, faceNormal = normale (axe entier) de la face du
-    // support qui la designe (+Y pour le sol de la grille)
+    // support qui la designe (+Y pour le sol de la grille, sauf si une piece
+    // posee touche la case : sa face, pour y accrocher les armes et modules)
     private bool TryGetTarget(out Vector3Int cell, out PlacedBlockView hoverBlock, out Vector3Int faceNormal)
     {
         cell = default;
@@ -847,6 +848,25 @@ public class GarageBuildController : MonoBehaviour
         {
             cell = WorldToCell(ray.GetPoint(planeDist));
             cell.y = 0;
+            // Case du sol sous ou contre une piece deja posee : un bloc qui
+            // s'accroche a une face (arme, module...) s'y fixe plutot que de se
+            // poser simplement par terre. Le dessous d'un bloc d'abord (il y
+            // pend), sinon un flanc. hoverBlock reste nul : le clic droit sur le
+            // sol ne retire rien.
+            if (occupied.ContainsKey(cell + Vector3Int.up))
+            {
+                faceNormal = Vector3Int.down;
+            }
+            else
+            {
+                foreach (var direction in Neighbours)
+                {
+                    if (direction.y != 0 || !occupied.ContainsKey(cell + direction))
+                        continue;
+                    faceNormal = -direction;
+                    break;
+                }
+            }
             return cell.x >= 0 && cell.x < cellsX
                 && cell.z >= 0 && cell.z < cellsZ;
         }

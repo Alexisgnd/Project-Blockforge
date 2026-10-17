@@ -164,7 +164,9 @@ public class MatchPauseMenu : MonoBehaviour
         var stack = Column(mainView.transform, "Buttons");
         Button(stack.transform, "Resume", DSRole.ButtonPrimary, "Resume", Resume);
         Button(stack.transform, "Options", DSRole.ButtonSecondary, "Options", ShowOptions);
-        Button(stack.transform, "Builder", DSRole.ButtonGhost, "Back to builder", BackToBuilder);
+        // Lance depuis l'ecran Play : on quitte le match vers le menu, sinon on revient au garage
+        bool fromMenu = RobotSession.ReturnSceneName == "MainMenu";
+        Button(stack.transform, "Builder", DSRole.ButtonGhost, fromMenu ? "Leave match" : "Back to builder", BackToBuilder);
 
         optionsView = BuildPanel("Options", 460f);
         Text(optionsView.transform, "Title", DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, "Options");
@@ -267,7 +269,7 @@ public class MatchPauseMenu : MonoBehaviour
         foreach (var (keys, what) in new[]
                  {
                      ("Z|Q|S|D", "Drive"), ("Shift", "Boost"), ("Space|Ctrl", "Up / down (rotors, thrusters)"),
-                     ("Mouse", "Aim"), ("Left click", "Fire"), ("1|2|3", "Weapon slot"), ("R", "Self-right"),
+                     ("Mouse", "Aim"), ("Left click", "Fire"), ("Right click", "Zoom"), ("1|2|3", "Weapon slot"), ("R", "Self-right"),
                      ("F5", "Next demo robot"), ("Esc", "This menu"),
                  })
         {

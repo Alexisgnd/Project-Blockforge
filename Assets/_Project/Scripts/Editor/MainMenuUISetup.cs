@@ -10,17 +10,34 @@ using UnityEngine.UI;
 // =========================================================
 // SETUP DE L'UI uGUI DU MENU D'ACCUEIL
 // Menu : Blockforge > Setup MainMenu UI
-// Genere UNE FOIS la hierarchie Canvas (top nav, slots
-// robots, stats, boutons) puis te laisse la retoucher
-// visuellement dans l'editeur. La logique reste en C#.
+// Genere UNE FOIS la hierarchie Canvas (header, slots robots,
+// stats) puis te laisse la retoucher visuellement dans
+// l'editeur. La logique reste en C#.
+// Menu : Blockforge > Setup MainMenu Header
+// Regenere seulement le header (design « Play to Versus ») dans
+// la scene existante : logo, sections Home / Play / Build /
+// Tech tree / Workshop / Store, credits et puce joueur, sans
+// toucher aux ecrans Home, Play et Build deja generes.
 // =========================================================
 
 public static class MainMenuUISetup
 {
     private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
+    public const float HeaderHeight = 80f;
 
-    // Palette
-    private static readonly Color NavBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Background, 0.92f);
+    // Sections du header, dans l'ordre du design ; la cle est le suffixe de « Nav_<cle> »
+    public static readonly (string key, string label)[] Sections =
+    {
+        (MainMenuController.SectionHome, "Home"),
+        (MainMenuController.SectionPlay, "Play"),
+        (MainMenuController.SectionBuild, "Build"),
+        (MainMenuController.SectionTechTree, "Tech tree"),
+        (MainMenuController.SectionWorkshop, "Workshop"),
+        (MainMenuController.SectionStore, "Store"),
+    };
+
+    // Palette (les couleurs definitives sont posees par DesignSystemApply)
+    private static readonly Color NavBg = BlockforgeTheme.SurfaceRaised;
     private static readonly Color PanelBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.85f);
     private static readonly Color CardBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.92f);
     private static readonly Color Accent = BlockforgeTheme.Accent;
@@ -69,52 +86,8 @@ public static class MainMenuUISetup
         var controller = managerGo.AddComponent<MainMenuController>();
         var slotManager = managerGo.AddComponent<RobotSlotManager>();
 
-        // ---------- Top navigation ----------
-        var nav = CreatePanel(canvasGo.transform, "TopNavigation", NavBg);
-        SetAnchors(nav, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        nav.sizeDelta = new Vector2(0, 80);
-        nav.anchoredPosition = Vector2.zero;
-
-        var logo = CreateText(nav, "LogoText", "BLOCKFORGE", 30, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
-        SetAnchors(logo, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        logo.sizeDelta = new Vector2(280, 50);
-        logo.anchoredPosition = new Vector2(40, 0);
-
-        var navButtons = new (string label, float width)[]
-        {
-            ("ACCUEIL", 130), ("JOUER", 110), ("CONSTRUIRE", 160),
-            ("INVENTAIRE", 160), ("ARBRE DE TECHNOLOGIE", 260), ("WORKSHOP", 150),
-        };
-        var navContainer = CreateUI(nav, "NavButtons");
-        SetAnchors(navContainer, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
-        navContainer.offsetMin = new Vector2(340, 0);
-        navContainer.offsetMax = new Vector2(-360, 0);
-        var layout = navContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 6;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = true;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-
-        for (int i = 0; i < navButtons.Length; i++)
-        {
-            bool isHome = i == 0;
-            var (btn, label) = CreateButton(navContainer, $"Nav_{navButtons[i].label}", navButtons[i].label, 16,
-                                            isHome ? BlockforgeTheme.AccentMuted : Color.clear,
-                                            isHome ? TextMain : TextDim);
-            btn.gameObject.AddComponent<LayoutElement>().preferredWidth = navButtons[i].width;
-            UnityEventTools.AddStringPersistentListener(btn.onClick, controller.OnNavClicked, navButtons[i].label);
-        }
-
-        var playerName = CreateText(nav, "PlayerName", "PILOTE", 20, TextMain, TextAlignmentOptions.Right, FontStyles.Bold);
-        SetAnchors(playerName, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-        playerName.sizeDelta = new Vector2(300, 30);
-        playerName.anchoredPosition = new Vector2(-40, 10);
-
-        var playerLevel = CreateText(nav, "PlayerLevel", "NIVEAU 1", 12, TextDim, TextAlignmentOptions.Right, FontStyles.Normal);
-        SetAnchors(playerLevel, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-        playerLevel.sizeDelta = new Vector2(300, 20);
-        playerLevel.anchoredPosition = new Vector2(-40, -14);
+        // ---------- Header ----------
+        BuildHeader(canvasGo.transform, controller);
 
         // ---------- HomeScreen ----------
         var home = CreateUI(canvasGo.transform, "HomeScreen");
@@ -217,15 +190,11 @@ public static class MainMenuUISetup
         slotManager.slotNameLabels = slotNames;
         slotManager.selectedBadges = slotBadges;
 
-        // Pas de barre d'actions en bas : Play et Build sont deja dans la
-        // navigation du haut (doublon retire le 12/10/2026)
-
         // ---------- Cablage final du controller ----------
         controller.slotManager = slotManager;
         controller.statsUI = statsUI;
         controller.bayLabelText = bayLabel.GetComponent<TMP_Text>();
         controller.robotNameText = robotName.GetComponent<TMP_Text>();
-        controller.playerNameText = playerName.GetComponent<TMP_Text>();
 
         AddScenesToBuild();
 
@@ -234,7 +203,126 @@ public static class MainMenuUISetup
         DesignSystemApply.ApplyToOpenScene();
         EditorSceneManager.SaveScene(scene);
         Selection.activeGameObject = canvasGo;
-        Debug.Log("[MainMenuUISetup] UI du menu generee. Elle est a toi : retouche-la dans la hierarchie.");
+        Debug.Log("[MainMenuUISetup] UI du menu generee. Relance ensuite Setup Build Screen et Setup MainMenu Play Screens.");
+    }
+
+    // Regenere le header seul dans la scene MainMenu existante
+    [MenuItem("Blockforge/Setup MainMenu Header")]
+    public static void SetupHeader()
+    {
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return;
+        var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+
+        var canvasGo = GameObject.Find("MainCanvas");
+        var managerGo = GameObject.Find("MenuManager");
+        if (canvasGo == null || managerGo == null)
+        {
+            Debug.LogError("[MainMenuUISetup] MainCanvas ou MenuManager introuvable. Lance d'abord : Blockforge > Setup MainMenu UI.");
+            return;
+        }
+        var controller = managerGo.GetComponent<MainMenuController>();
+
+        var old = canvasGo.transform.Find("TopNavigation");
+        if (old != null)
+            Object.DestroyImmediate(old.gameObject);
+
+        var nav = BuildHeader(canvasGo.transform, controller);
+        nav.SetAsFirstSibling(); // meme place qu'au setup complet (les ecrans commencent sous le header)
+        EditorUtility.SetDirty(controller);
+
+        EditorSceneManager.MarkSceneDirty(scene);
+        DesignSystemApply.ApplyToOpenScene();
+        EditorSceneManager.SaveScene(scene);
+        Selection.activeGameObject = nav.gameObject;
+        Debug.Log("[MainMenuUISetup] Header regenere : logo, sections, credits, joueur.");
+    }
+
+    // =========================================================
+    // HEADER (design « Play to Versus »)
+    // Bandeau surface-raised de 80 px : lockup a gauche, onglets
+    // centres, a droite le solde de credits et la puce joueur.
+    // La geometrie finale, les styles et les pictogrammes sont
+    // poses par DesignSystemApply.ApplyMainMenu.
+    // =========================================================
+
+    public static RectTransform BuildHeader(Transform canvas, MainMenuController controller)
+    {
+        var nav = CreatePanel(canvas, "TopNavigation", NavBg);
+        SetAnchors(nav, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        nav.sizeDelta = new Vector2(0, HeaderHeight);
+        nav.anchoredPosition = Vector2.zero;
+
+        // Lockup horizontal (sprite pose par le DS)
+        var logo = CreatePanel(nav, "Logo", Color.white);
+        SetAnchors(logo, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        logo.sizeDelta = new Vector2(190, 52);
+        logo.anchoredPosition = new Vector2(BlockforgeTheme.Space12, 0);
+        logo.GetComponent<Image>().raycastTarget = false;
+
+        // Onglets de section, centres entre le logo et le bloc de droite
+        var navContainer = CreateUI(nav, "NavButtons");
+        SetAnchors(navContainer, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
+        navContainer.offsetMin = new Vector2(360, 0);
+        navContainer.offsetMax = new Vector2(-360, 0);
+        var layout = navContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = BlockforgeTheme.Space1;
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = true;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+
+        foreach (var (key, label) in Sections)
+        {
+            var (btn, _) = CreateButton(navContainer, "Nav_" + key, label, 15, Color.clear, TextDim);
+            btn.gameObject.AddComponent<LayoutElement>().preferredWidth = 110;
+            if (controller != null)
+                UnityEventTools.AddStringPersistentListener(btn.onClick, controller.OnNavClicked, key);
+        }
+
+        // Bloc de droite : credits puis puce joueur
+        var right = CreateUI(nav, "Right");
+        SetAnchors(right, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        right.sizeDelta = new Vector2(420, 40);
+        right.anchoredPosition = new Vector2(-BlockforgeTheme.Space12, 0);
+
+        var credits = CreateUI(right, "Credits");
+        SetAnchors(credits, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        credits.sizeDelta = new Vector2(120, 24);
+        var creditsIcon = CreatePanel(credits, "Icon", BlockforgeTheme.GradeMasterwork);
+        SetAnchors(creditsIcon, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        creditsIcon.sizeDelta = new Vector2(18, 18);
+        creditsIcon.GetComponent<Image>().raycastTarget = false;
+        var creditsValue = CreateText(credits, "Value", "0", 16, BlockforgeTheme.GradeMasterwork, TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
+        SetAnchors(creditsValue, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
+        creditsValue.offsetMin = new Vector2(18 + BlockforgeTheme.Space2, 0);
+        creditsValue.offsetMax = Vector2.zero;
+
+        var player = CreatePanel(right, "Player", BlockforgeTheme.SurfacePanel);
+        SetAnchors(player, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        player.sizeDelta = new Vector2(180, 40);
+        var avatar = CreatePanel(player, "Avatar", BlockforgeTheme.SurfaceInset);
+        SetAnchors(avatar, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        avatar.sizeDelta = new Vector2(28, 28);
+        avatar.anchoredPosition = new Vector2(6, 0);
+        avatar.GetComponent<Image>().raycastTarget = false;
+        var avatarIcon = CreatePanel(avatar, "Icon", Accent);
+        SetAnchors(avatarIcon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        avatarIcon.sizeDelta = new Vector2(16, 16);
+        avatarIcon.GetComponent<Image>().raycastTarget = false;
+        var playerName = CreateText(player, "Name", "Pilot", 14, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
+        SetAnchors(playerName, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
+        playerName.offsetMin = new Vector2(6 + 28 + 10, 0);
+        playerName.offsetMax = new Vector2(-12, 0);
+
+        if (controller != null)
+        {
+            controller.playerNameText = playerName.GetComponent<TMP_Text>();
+            controller.creditsText = creditsValue.GetComponent<TMP_Text>();
+            controller.navButtonsRoot = navContainer;
+        }
+        return nav;
     }
 
     // =========================================================

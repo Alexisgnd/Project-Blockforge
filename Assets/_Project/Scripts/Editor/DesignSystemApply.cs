@@ -109,24 +109,26 @@ public static class DesignSystemApply
     }
 
     // =========================================================
-    // ACCUEIL, JOUER, CONSTRUIRE (MainMenu)
+    // HEADER, HOME, PLAY, BUILD (MainMenu)
     // =========================================================
-
-    private static readonly (string key, string label)[] NavLabels =
-    {
-        ("ACCUEIL", "Home"), ("JOUER", "Play"), ("CONSTRUIRE", "Build"),
-        ("INVENTAIRE", "Inventory"), ("ARBRE DE TECHNOLOGIE", "Tech tree"), ("WORKSHOP", "Workshop"),
-    };
 
     private static void ApplyMainMenu()
     {
-        // ---------- Navigation du haut (Tabs nav sur un bandeau surface-raised) ----------
+        // ---------- Header (design « Play to Versus ») ----------
+        // Bandeau surface-raised de 80 px avec filet en bas : lockup a gauche,
+        // Tabs nav centres, a droite le solde de credits puis la puce joueur.
         var nav = F("TopNavigation");
         El(nav, DSRole.Strip, null, e => e.hairlineEdge = DSEdge.Bottom);
 
-        var logoText = F("TopNavigation/LogoText");
-        if (logoText != null)
-            logoText.gameObject.SetActive(false);
+        // Anciens elements (scenes generees avant la refonte du header)
+        foreach (var legacy in new[] { "TopNavigation/LogoText", "TopNavigation/PlayerName", "TopNavigation/PlayerLevel" })
+        {
+            var old = root != null ? root.Find(legacy) : null;
+            if (old != null)
+                old.gameObject.SetActive(false);
+        }
+
+        const float logoW = 190f;
         if (nav != null)
         {
             // Lockup horizontal : jamais sous 180 px de large
@@ -136,23 +138,82 @@ public static class DesignSystemApply
             logoImage.preserveAspect = true;
             logoImage.raycastTarget = false;
             logoImage.color = Color.white;
-            Place(logo, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(BlockforgeTheme.Space8, 0), new Vector2(190, 52));
+            Place(logo, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(BlockforgeTheme.Space12, 0), new Vector2(logoW, 52), new Vector2(0, 0.5f));
         }
 
+        // Bloc de droite : puce joueur (largeur fixe, nom coupe) puis credits a sa gauche
+        const float playerW = 180f, avatar = 28f, chipPad = 6f;
+        float rightW = 0f;
+        var right = F("TopNavigation/Right");
+        if (right != null)
+        {
+            var player = right.Find("Player");
+            if (player != null)
+            {
+                var name = player.Find("Name")?.GetComponent<TMP_Text>();
+                Txt(name, DSTextStyle.TitleSM, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.MidlineLeft);
+                if (name != null)
+                {
+                    name.textWrappingMode = TextWrappingModes.NoWrap;
+                    name.overflowMode = TextOverflowModes.Ellipsis;
+                    Place(name, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+                    name.rectTransform.offsetMin = new Vector2(chipPad + avatar + BlockforgeTheme.Space3 - 2f, 0);
+                    name.rectTransform.offsetMax = new Vector2(-BlockforgeTheme.Space3, 0);
+                }
+                El(player, DSRole.Panel, new[] { name });
+                Place(player, new Vector2(1, 0.5f), new Vector2(1, 0.5f), Vector2.zero, new Vector2(playerW, 40f), new Vector2(1, 0.5f));
+
+                var avatarT = player.Find("Avatar");
+                if (avatarT != null)
+                {
+                    var avatarImage = GetOrAdd<Image>(avatarT.gameObject);
+                    Undo.RecordObject(avatarImage, "Design System");
+                    avatarImage.sprite = DSAssets.Shape(DSRadius.Pill, "fill");
+                    avatarImage.type = Image.Type.Sliced;
+                    avatarImage.color = BlockforgeTheme.SurfaceInset;
+                    avatarImage.raycastTarget = false;
+                    EditorUtility.SetDirty(avatarImage);
+                    Place(avatarT, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(chipPad, 0), new Vector2(avatar, avatar), new Vector2(0, 0.5f));
+                    SetIcon(avatarT.Find("Icon")?.GetComponent<Image>(), "user", BlockforgeTheme.Accent, 16f);
+                }
+                rightW = playerW;
+            }
+
+            var credits = right.Find("Credits");
+            if (credits != null)
+            {
+                var value = credits.Find("Value")?.GetComponent<TMP_Text>();
+                Txt(value, DSTextStyle.ReadoutMD, BlockforgeTheme.GradeMasterwork, null, TextAlignmentOptions.MidlineLeft);
+                if (value != null)
+                    value.fontSize = 16f;
+                SetIcon(credits.Find("Icon")?.GetComponent<Image>(), "credits", BlockforgeTheme.GradeMasterwork, 18f);
+                float creditsW = 18f + BlockforgeTheme.Space2 + 72f;
+                Place(credits, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-(rightW + BlockforgeTheme.Space6), 0), new Vector2(creditsW, 24f), new Vector2(1, 0.5f));
+                rightW += BlockforgeTheme.Space6 + creditsW;
+            }
+            Place(right, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-BlockforgeTheme.Space12, 0), new Vector2(rightW, 40f), new Vector2(1, 0.5f));
+        }
+
+        // Onglets : Tabs nav centres entre le logo et le bloc de droite
         var navButtons = F("TopNavigation/NavButtons");
         if (navButtons != null)
         {
             var navRect = (RectTransform)navButtons;
-            navRect.offsetMin = new Vector2(BlockforgeTheme.Space8 + 190 + BlockforgeTheme.Space8, navRect.offsetMin.y);
+            Undo.RecordObject(navRect, "Design System");
+            navRect.anchorMin = Vector2.zero;
+            navRect.anchorMax = Vector2.one;
+            navRect.offsetMin = new Vector2(BlockforgeTheme.Space12 + logoW + BlockforgeTheme.Space8, 0);
+            navRect.offsetMax = new Vector2(-(BlockforgeTheme.Space12 + rightW + BlockforgeTheme.Space8), 0);
+            EditorUtility.SetDirty(navRect);
             var layout = navButtons.GetComponent<HorizontalLayoutGroup>();
             if (layout != null)
             {
                 layout.spacing = BlockforgeTheme.Space1;
-                layout.childAlignment = TextAnchor.MiddleLeft;
+                layout.childAlignment = TextAnchor.MiddleCenter;
                 layout.childControlHeight = true;
                 layout.childForceExpandHeight = true;
             }
-            foreach (var (key, label) in NavLabels)
+            foreach (var (key, label) in MainMenuUISetup.Sections)
             {
                 var tab = navButtons.Find("Nav_" + key);
                 if (tab == null)
@@ -164,18 +225,11 @@ public static class DesignSystemApply
                     text.fontSize = NavLabelSize;
                 var el = El(tab, DSRole.TabNav, new[] { text });
                 if (el != null)
-                    el.Selected = key == "ACCUEIL";
+                    el.Selected = key == MainMenuController.SectionHome;
                 var le = GetOrAdd<LayoutElement>(tab.gameObject);
                 le.preferredWidth = PrefWidth(text) + 2 * BlockforgeTheme.Space5;
             }
         }
-
-        var playerName = T("TopNavigation/PlayerName");
-        Txt(playerName, DSTextStyle.TitleSM, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.Right);
-        Offset(playerName, x: -BlockforgeTheme.Space8);
-        var playerLevel = T("TopNavigation/PlayerLevel");
-        Txt(playerLevel, DSTextStyle.Caption, BlockforgeTheme.InkMuted, "Level 1", TextAlignmentOptions.Right);
-        Offset(playerLevel, x: -BlockforgeTheme.Space8);
 
         ApplyHome();
         ApplyPlayScreen();
@@ -310,162 +364,11 @@ public static class DesignSystemApply
         return x + width + BlockforgeTheme.Space2;
     }
 
-    // Pictogramme de chaque mode, par nom d'asset (Data/GameModes)
-    private static readonly Dictionary<string, string> ModeIcons = new()
-    {
-        { "Mode_TeamClash", "group" }, { "Mode_Control", "objective" },
-        { "Mode_FreeForAll", "skull" }, { "Mode_Custom", "settings" },
-    };
-
-    private static string ModeIcon(GameModeDefinition def)
-    {
-        return def != null && ModeIcons.TryGetValue(def.name, out var icon) ? icon : "objective";
-    }
-
-    // Ecran Modes de jeu, sans apercu : cartes = pictogramme dans un puits,
-    // titre, accroche, chiffres ; fiche = en-tete + panneaux Details / Objectives
+    // Ecran Play : liste des modes, fiche du mode selectionne, actions.
+    // Geometrie posee par GameModesUISetup ; styles, roles et pictogrammes par son ApplyStyle.
     private static void ApplyPlayScreen()
     {
-        var screen = F("PlayScreen");
-        if (screen == null)
-            return;
-        SetImage(screen, BlockforgeTheme.SurfaceBase);
-
-        Txt(T("PlayScreen/ModesView/Title"), DSTextStyle.DisplayXL, BlockforgeTheme.InkPrimary, "Game modes");
-        Txt(T("PlayScreen/ModesView/Subtitle"), DSTextStyle.Body, BlockforgeTheme.InkSecondary, "Choose how you want to play.");
-
-        var playMenu = screen.GetComponent<PlayMenuController>();
-        var cards = playMenu != null && playMenu.cards != null ? playMenu.cards : new GameModeCard[0];
-        for (int i = 0; i < cards.Length; i++)
-        {
-            if (cards[i] == null)
-                continue;
-            var card = cards[i].transform;
-            var def = playMenu.definitions != null && i < playMenu.definitions.Length ? playMenu.definitions[i] : null;
-
-            El(card, DSRole.Card);
-            El(card.Find("IconFrame"), DSRole.Inset);
-            SetIcon(card.Find("IconFrame/Icon")?.GetComponent<Image>(), ModeIcon(def), BlockforgeTheme.InkSecondary, 0f);
-            Txt(card.Find("Title")?.GetComponent<TMP_Text>(), DSTextStyle.TitleLG, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.Left);
-            Txt(card.Find("Description")?.GetComponent<TMP_Text>(), DSTextStyle.BodySM, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.TopLeft);
-            for (int r = 0; r < 2; r++)
-            {
-                Txt(card.Find($"Stats/Row_{r}_Label")?.GetComponent<TMP_Text>(), DSTextStyle.Caption, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.Left);
-                Txt(card.Find($"Stats/Row_{r}_Value")?.GetComponent<TMP_Text>(), DSTextStyle.ReadoutMD, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.Right);
-            }
-            var configure = card.Find("ConfigureButton");
-            if (configure != null)
-            {
-                var text = configure.GetComponentInChildren<TMP_Text>(true);
-                Txt(text, DSTextStyle.ButtonSM, BlockforgeTheme.InkPrimary, "Configure", TextAlignmentOptions.Center);
-                El(configure, DSRole.ButtonSecondary, new[] { text });
-                Resize(configure, PrefWidth(text) + 2 * BlockforgeTheme.Space3, BlockforgeTheme.ControlSm);
-            }
-        }
-
-        // Fiche d'un mode (le pictogramme est repris de la carte a l'ouverture)
-        const string d = "PlayScreen/DetailsView/";
-        El(F(d + "IconFrame"), DSRole.Inset);
-        SetIcon(F(d + "IconFrame/Icon")?.GetComponent<Image>(), "objective", BlockforgeTheme.InkSecondary, 0f);
-        Txt(T(d + "Title"), DSTextStyle.DisplayXL, BlockforgeTheme.InkPrimary);
-        Txt(T(d + "Tagline"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
-        Txt(T(d + "Description"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
-
-        El(F(d + "DetailsPanel"), DSRole.Panel);
-        Txt(T(d + "DetailsPanel/SectionTitle"), DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, "Details");
-        string[] rows = { "Teams", "Duration", "Tickets", "Respawn", "Team size", "Map" };
-        for (int i = 0; i < rows.Length; i++)
-        {
-            Txt(T($"{d}DetailsPanel/Row_{i}_Label"), DSTextStyle.Caption, BlockforgeTheme.InkSecondary, rows[i]);
-            // Le nom de carte est du texte : style titre plutot que chiffres
-            Txt(T($"{d}DetailsPanel/Row_{i}_Value"), i == 5 ? DSTextStyle.TitleSM : DSTextStyle.ReadoutMD, BlockforgeTheme.InkPrimary);
-        }
-
-        El(F(d + "ObjectivesPanel"), DSRole.Panel);
-        Txt(T(d + "ObjectivesPanel/SectionTitle"), DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, "Objectives");
-        El(F(d + "ObjectivesPanel/ObjectivePrimary"), DSRole.Inset);
-        Txt(T(d + "ObjectivesPanel/ObjectivePrimary/Text"), DSTextStyle.Body, BlockforgeTheme.InkPrimary);
-        El(F(d + "ObjectivesPanel/ObjectiveSecondary"), DSRole.Inset);
-        Txt(T(d + "ObjectivesPanel/ObjectiveSecondary/Text"), DSTextStyle.Body, BlockforgeTheme.InkSecondary);
-
-        DialogButton(F(d + "BackButton"), DSRole.ButtonGhost, DSTextStyle.ButtonMD, "Back", BlockforgeTheme.ControlMd);
-        ApplyPlayChoice(playMenu, d);
-    }
-
-    // Deux facons de lancer un mode : contre des bots (action principale) ou en
-    // ligne (pas encore disponible : desactive, avec cadenas et raison, cf. DS).
-    private static void ApplyPlayChoice(PlayMenuController playMenu, string d)
-    {
-        var play = F(d + "PlayButton");
-        if (play == null)
-            return;
-        DialogButton(play, DSRole.ButtonPrimary, DSTextStyle.ButtonLG, "Play with bots", BlockforgeTheme.ControlLg);
-        var playRect = (RectTransform)play;
-        Resize(playRect, Mathf.Max(260f, playRect.sizeDelta.x), BlockforgeTheme.ControlLg);
-
-        // Bouton "Play online" : clone du bouton Play, a sa gauche
-        var online = play.parent.Find("PlayOnlineButton"); // cree au premier passage (pas d'alerte "introuvable")
-        if (online == null)
-        {
-            var clone = Object.Instantiate(play.gameObject, play.parent);
-            clone.name = "PlayOnlineButton";
-            Undo.RegisterCreatedObjectUndo(clone, "Design System");
-            online = clone.transform;
-            var cloneButton = clone.GetComponent<Button>();
-            if (cloneButton != null)
-                cloneButton.onClick.RemoveAllListeners();
-        }
-        var onlineText = online.GetComponentInChildren<TMP_Text>(true);
-        Txt(onlineText, DSTextStyle.ButtonLG, InkFor(DSRole.ButtonSecondary), "Play online", TextAlignmentOptions.Center);
-        El(online, DSRole.ButtonSecondary, new[] { onlineText });
-        var onlineButton = online.GetComponent<Button>();
-        if (onlineButton != null)
-        {
-            Undo.RecordObject(onlineButton, "Design System");
-            onlineButton.interactable = false;
-            EditorUtility.SetDirty(onlineButton);
-        }
-
-        // Cadenas devant le libelle
-        const float iconSize = 18f;
-        float labelW = PrefWidth(onlineText);
-        float padX = BlockforgeTheme.Space6;
-        float onlineW = padX + iconSize + BlockforgeTheme.Space2 + labelW + padX;
-        var onlineRect = (RectTransform)online;
-        Place(onlineRect, playRect.anchorMin, playRect.anchorMax,
-              new Vector2(playRect.anchoredPosition.x - playRect.sizeDelta.x - BlockforgeTheme.Space3, playRect.anchoredPosition.y),
-              new Vector2(onlineW, BlockforgeTheme.ControlLg), playRect.pivot);
-        var lockIcon = Child(online, "LockIcon");
-        var lockImage = GetOrAdd<Image>(lockIcon.gameObject);
-        lockImage.raycastTarget = false;
-        SetIcon(lockImage, "lock", BlockforgeTheme.InkSecondary, iconSize);
-        Place(lockImage, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(padX, 0), new Vector2(iconSize, iconSize), new Vector2(0, 0.5f));
-        if (onlineText != null)
-        {
-            var textRect = onlineText.rectTransform;
-            Undo.RecordObject(textRect, "Design System");
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(padX + iconSize + BlockforgeTheme.Space2, 0);
-            textRect.offsetMax = new Vector2(-padX, 0);
-            EditorUtility.SetDirty(textRect);
-        }
-
-        // La raison, juste au-dessus du bouton
-        var reasonGo = Child(online.parent, "PlayOnlineReason");
-        var reason = GetOrAdd<TextMeshProUGUI>(reasonGo.gameObject);
-        reason.raycastTarget = false;
-        Txt(reason, DSTextStyle.Caption, BlockforgeTheme.InkMuted, "Online play is coming soon.", TextAlignmentOptions.BottomRight);
-        Place(reason, playRect.anchorMin, playRect.anchorMax,
-              new Vector2(onlineRect.anchoredPosition.x, onlineRect.anchoredPosition.y + BlockforgeTheme.ControlLg + BlockforgeTheme.Space2),
-              new Vector2(320f, 18f), playRect.pivot);
-
-        if (playMenu != null)
-        {
-            Undo.RecordObject(playMenu, "Design System");
-            playMenu.playOnlineButton = onlineButton;
-            EditorUtility.SetDirty(playMenu);
-        }
+        GameModesUISetup.ApplyStyle();
     }
 
     private static void ApplyBuildScreen()
@@ -1112,7 +1015,7 @@ public static class DesignSystemApply
         Resize(button, Mathf.Max(((RectTransform)button).sizeDelta.x, PrefWidth(text) + 2 * padX), height);
     }
 
-    private static Color InkFor(DSRole role) => role switch
+    internal static Color InkFor(DSRole role) => role switch
     {
         DSRole.ButtonPrimary => BlockforgeTheme.InkOnAccent,
         DSRole.ButtonGhost => BlockforgeTheme.InkSecondary,
@@ -1123,7 +1026,7 @@ public static class DesignSystemApply
     // OUTILS
     // =========================================================
 
-    private static Transform F(string path)
+    internal static Transform F(string path)
     {
         if (root == null)
             return null;
@@ -1133,9 +1036,9 @@ public static class DesignSystemApply
         return found;
     }
 
-    private static TMP_Text T(string path) => F(path)?.GetComponent<TMP_Text>();
+    internal static TMP_Text T(string path) => F(path)?.GetComponent<TMP_Text>();
 
-    private static DSElement El(Transform target, DSRole role, TMP_Text[] labels = null, Action<DSElement> configure = null)
+    internal static DSElement El(Transform target, DSRole role, TMP_Text[] labels = null, Action<DSElement> configure = null)
     {
         if (target == null)
             return null;
@@ -1172,7 +1075,7 @@ public static class DesignSystemApply
         return element;
     }
 
-    private static void Txt(TMP_Text text, DSTextStyle style, Color color, string value = null, TextAlignmentOptions? align = null)
+    internal static void Txt(TMP_Text text, DSTextStyle style, Color color, string value = null, TextAlignmentOptions? align = null)
     {
         if (text == null)
             return;
@@ -1186,7 +1089,7 @@ public static class DesignSystemApply
         textCount++;
     }
 
-    private static float PrefWidth(TMP_Text text)
+    internal static float PrefWidth(TMP_Text text)
     {
         if (text == null)
             return 60f;
@@ -1194,7 +1097,7 @@ public static class DesignSystemApply
         return Mathf.Ceil(text.GetPreferredValues(text.text, 9999f, 9999f).x);
     }
 
-    private static Transform Child(Transform parent, string name)
+    internal static Transform Child(Transform parent, string name)
     {
         var existing = parent.Find(name);
         if (existing != null)
@@ -1224,7 +1127,7 @@ public static class DesignSystemApply
         return image;
     }
 
-    private static void SetIcon(Image image, string icon, Color color, float size)
+    internal static void SetIcon(Image image, string icon, Color color, float size)
     {
         if (image == null)
             return;
@@ -1238,9 +1141,9 @@ public static class DesignSystemApply
         EditorUtility.SetDirty(image);
     }
 
-    private static void SetImage(Transform target, Color color)
+    internal static void SetImage(Transform target, Color color)
     {
-        var image = target.GetComponent<Image>();
+        var image = target != null ? target.GetComponent<Image>() : null;
         if (image == null)
             return;
         Undo.RecordObject(image, "Design System");
@@ -1249,13 +1152,13 @@ public static class DesignSystemApply
         EditorUtility.SetDirty(image);
     }
 
-    private static T GetOrAdd<T>(GameObject go) where T : Component
+    internal static T GetOrAdd<T>(GameObject go) where T : Component
     {
         var component = go.GetComponent<T>();
         return component != null ? component : Undo.AddComponent<T>(go);
     }
 
-    private static void Place(Component target, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2? pivot = null)
+    internal static void Place(Component target, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2? pivot = null)
     {
         if (target == null)
             return;
@@ -1286,7 +1189,7 @@ public static class DesignSystemApply
         EditorUtility.SetDirty(rect);
     }
 
-    private static void Resize(Component target, float width, float height)
+    internal static void Resize(Component target, float width, float height)
     {
         if (target == null)
             return;

@@ -6,13 +6,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // =========================================================
-// SETUP DES ECRANS "MODES DE JEU" + "DETAILS D'UN MODE"
+// SETUP DE L'ECRAN PLAY (design « Play to Versus »)
 // Menu : Blockforge > Setup MainMenu Play Screens
-// Pas d'apercu : les cartes et la fiche n'ont plus d'image de
-// couverture ni de carte (pictogramme du mode a la place, carte
-// d'exemple en ligne de texte dans le panneau Details).
-// A lancer APRES "Setup MainMenu UI" (il a besoin du
-// MainCanvas et du MenuManager existants).
+// Une seule vue sous le header : a gauche le titre, la liste des
+// modes (une ligne par mode) et la baie « Your robot » ; a droite
+// la fiche du mode selectionne (apercu de la carte avec ses deux
+// puces, titre, description, trois chiffres) et la rangee
+// d'actions (Play with bots, Find a match, raccourci Entree,
+// raison d'une action indisponible).
+// Le setup pose la geometrie (px du canvas de reference 1920 x
+// 1080) et le cablage ; les composants du DS, les styles de texte
+// et les pictogrammes sont poses par ApplyStyle, appele par
+// Blockforge > Apply Design System (relancable).
+// A lancer APRES « Setup MainMenu UI » (MainCanvas, MenuManager).
 // =========================================================
 
 public static class GameModesUISetup
@@ -20,25 +26,17 @@ public static class GameModesUISetup
     private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
     private const string ModeDataDir = "Assets/_Project/Data/GameModes";
 
-    private static readonly Color ScreenBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Background, 0.985f);
-    private static readonly Color CardBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.95f);
-    private static readonly Color PanelBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.Surface, 0.9f);
-    private static readonly Color CoverPlaceholder = BlockforgeTheme.SurfaceRaised;
-    private static readonly Color Accent = BlockforgeTheme.Accent;
-    private static readonly Color BlueBoxBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.AccentMuted, 0.95f);
-    private static readonly Color RedBoxBg = BlockforgeTheme.WithAlpha(BlockforgeTheme.DangerMuted, 0.95f);
-    private static readonly Color TextMain = BlockforgeTheme.TextPrimary;
-    private static readonly Color TextDim = BlockforgeTheme.TextSecondary;
-    private static readonly Color TextBody = BlockforgeTheme.TextSecondary;
+    // Anciens modes (4 v 4, sans fiche) remplaces par ceux du design
+    private static readonly string[] LegacyModes = { "Mode_TeamClash", "Mode_Control", "Mode_FreeForAll", "Mode_Custom" };
 
-    // Gabarits (px, canvas de reference) : cartes compactes, fiche en colonne
-    private const float CardWidth = 320f;
-    private const float CardHeight = 340f;
-    private const float CardGap = 24f;
-    private const float DetailWidth = 1200f;
-    private const float DetailsPanelWidth = 460f;
-    private const float PanelGap = 24f;
-    private const float PanelHeight = 400f;
+    // ---------- Gabarit (px) ----------
+    private const float PadTop = 40f, PadSide = 48f, PadBottom = 32f;
+    private const float LeftW = 520f, ColumnGap = 32f;
+    private const float CardH = 74f, CardGap = 8f;
+    private const float SlotW = 176f, SlotH = 132f;
+    private const float BottomBlockH = 240f;
+    private const float PanelPadX = 32f;
+    private const float StatW = 170f, StatGap = 24f;
 
     [MenuItem("Blockforge/Setup MainMenu Play Screens")]
     public static void Setup()
@@ -60,6 +58,7 @@ public static class GameModesUISetup
         }
 
         var mainController = managerGo.GetComponent<MainMenuController>();
+        var slotManager = managerGo.GetComponent<RobotSlotManager>();
         var homeScreen = canvasGo.transform.Find("HomeScreen");
 
         // Supprime une installation precedente (Find ne voit pas les objets inactifs)
@@ -67,150 +66,213 @@ public static class GameModesUISetup
         if (oldScreen != null)
             Object.DestroyImmediate(oldScreen.gameObject);
 
-        // ---------- Ecran racine ----------
-        var screen = CreatePanel(canvasGo.transform, "PlayScreen", ScreenBg);
+        // ---------- Ecran racine, sous le header ----------
+        var screen = CreatePanel(canvasGo.transform, "PlayScreen", BlockforgeTheme.SurfaceBase);
         StretchFull(screen);
-        // Sous la top nav (80 px)
-        screen.offsetMax = new Vector2(0, -80);
+        screen.offsetMax = new Vector2(0, -MainMenuUISetup.HeaderHeight);
 
         var playMenu = screen.gameObject.AddComponent<PlayMenuController>();
         playMenu.definitions = definitions;
+        playMenu.slotManager = slotManager;
 
         // =====================================================
-        // VUE 1 : LISTE DES MODES (cartes sans apercu)
+        // COLONNE DE GAUCHE : titre, modes, robot
         // =====================================================
-        var modesView = CreateUI(screen, "ModesView");
-        StretchFull(modesView);
+        var left = CreateUI(screen, "Left");
+        SetAnchors(left, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 1));
+        left.sizeDelta = new Vector2(LeftW, 0);
+        left.anchoredPosition = new Vector2(PadSide, 0);
+        left.offsetMin = new Vector2(PadSide, PadBottom);
+        left.offsetMax = new Vector2(PadSide + LeftW, -PadTop);
 
-        var title = CreateText(modesView, "Title", "Game modes", 42, TextMain, TextAlignmentOptions.Center, FontStyles.Bold);
-        SetAnchors(title, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        title.sizeDelta = new Vector2(800, 60);
-        title.anchoredPosition = new Vector2(0, -50);
+        var title = CreateText(left, "Title", "Play", 48, BlockforgeTheme.InkPrimary, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+        Top(title, 0, 0, LeftW, 50);
+        var subtitle = CreateText(left, "Subtitle", "Pick a mode. Your current robot goes in as it is.", 15,
+                                  BlockforgeTheme.InkSecondary, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+        Top(subtitle, 0, 62, LeftW, 22);
 
-        var subtitle = CreateText(modesView, "Subtitle", "Choose how you want to play.", 16,
-                                  TextDim, TextAlignmentOptions.Center, FontStyles.Normal);
-        SetAnchors(subtitle, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        subtitle.sizeDelta = new Vector2(800, 30);
-        subtitle.anchoredPosition = new Vector2(0, -108);
-
+        var modes = CreateUI(left, "Modes");
+        Top(modes, 0, 108, LeftW, definitions.Length * CardH + Mathf.Max(0, definitions.Length - 1) * CardGap);
         var cards = new GameModeCard[definitions.Length];
-        float totalW = definitions.Length * CardWidth + (definitions.Length - 1) * CardGap;
         for (int i = 0; i < definitions.Length; i++)
-        {
-            float x = -totalW / 2f + CardWidth / 2f + i * (CardWidth + CardGap);
-            cards[i] = BuildModeCard(modesView, $"Card_{i}", x);
-        }
+            cards[i] = BuildModeCard(modes, $"Mode_{i}", i * (CardH + CardGap), definitions[i]);
         playMenu.cards = cards;
 
+        // Your robot : etiquette, baie (RobotSlot du DS) et bouton Change
+        var yourRobot = CreateUI(left, "YourRobot");
+        SetAnchors(yourRobot, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
+        yourRobot.sizeDelta = new Vector2(0, 14 + 8 + SlotH);
+        yourRobot.anchoredPosition = Vector2.zero;
+        var robotLabel = CreateText(yourRobot, "Label", "Your robot", 11, BlockforgeTheme.InkMuted, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+        Top(robotLabel, 0, 0, LeftW, 14);
+
+        var slot = CreatePanel(yourRobot, "Slot", BlockforgeTheme.SurfacePanel);
+        Top(slot, 0, 22, SlotW, SlotH);
+        var slotElement = slot.gameObject.AddComponent<DSElement>();
+        slotElement.role = DSRole.RobotSlot;
+        float pad = BlockforgeTheme.Space3;
+        var bay = CreateText(slot, "Bay", "Bay 01", 11, BlockforgeTheme.InkMuted, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+        SetAnchors(bay, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        bay.offsetMin = new Vector2(pad, -pad - 14);
+        bay.offsetMax = new Vector2(-pad, -pad);
+        var robotName = CreateText(slot, "Name", "Robot", 24, BlockforgeTheme.InkPrimary, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+        SetAnchors(robotName, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        robotName.offsetMin = new Vector2(pad, -pad - 14 - 4 - 60);
+        robotName.offsetMax = new Vector2(-pad, -pad - 14 - 4);
+        var robotStats = CreateText(slot, "Stats", "", 12, BlockforgeTheme.InkSecondary, TextAlignmentOptions.BottomLeft, FontStyles.Normal);
+        SetAnchors(robotStats, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
+        robotStats.offsetMin = new Vector2(pad, pad);
+        robotStats.offsetMax = new Vector2(-pad, pad + 16);
+
+        var (changeBtn, _) = CreateButton(yourRobot, "ChangeButton", "Change", 13, Color.clear, BlockforgeTheme.InkSecondary);
+        var changeRect = (RectTransform)changeBtn.transform;
+        SetAnchors(changeRect, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
+        changeRect.sizeDelta = new Vector2(120, BlockforgeTheme.ControlMd);
+        changeRect.anchoredPosition = new Vector2(SlotW + BlockforgeTheme.Space4, (SlotH - BlockforgeTheme.ControlMd) / 2f);
+        var changeIcon = CreatePanel(changeBtn.transform, "Icon", BlockforgeTheme.InkSecondary);
+        SetAnchors(changeIcon, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        changeIcon.sizeDelta = new Vector2(16, 16);
+        changeIcon.anchoredPosition = new Vector2(BlockforgeTheme.Space3, 0);
+        changeIcon.GetComponent<Image>().raycastTarget = false;
+
+        playMenu.robotSlot = slotElement;
+        playMenu.robotBayText = bay.GetComponent<TMP_Text>();
+        playMenu.robotNameText = robotName.GetComponent<TMP_Text>();
+        playMenu.robotStatsText = robotStats.GetComponent<TMP_Text>();
+        playMenu.changeRobotButton = changeBtn;
+
         // =====================================================
-        // VUE 2 : FICHE DETAIL (colonne de 1200 px centree)
-        // En-tete (pictogramme, titre, accroche, description)
-        // puis deux panneaux : Details (dont la carte d'exemple)
-        // et Objectives. Plus d'image de couverture ni de carte.
+        // FICHE DU MODE (panneau de droite)
         // =====================================================
-        var details = CreateUI(screen, "DetailsView");
-        StretchFull(details);
-        const float left = -DetailWidth / 2f;
+        var detail = CreatePanel(screen, "Detail", BlockforgeTheme.SurfacePanel);
+        StretchFull(detail);
+        detail.offsetMin = new Vector2(PadSide + LeftW + ColumnGap, PadBottom);
+        detail.offsetMax = new Vector2(-PadSide, -PadTop);
+        detail.gameObject.AddComponent<RectMask2D>();
 
-        var iconFrame = CreatePanel(details, "IconFrame", CoverPlaceholder);
-        TopCenter(iconFrame, left, -40, 72, 72);
-        var icon = CreatePanel(iconFrame, "Icon", TextDim);
-        SetAnchors(icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        icon.sizeDelta = new Vector2(40, 40);
-        icon.anchoredPosition = Vector2.zero;
-        icon.GetComponent<Image>().raycastTarget = false;
-        playMenu.detailIcon = icon.GetComponent<Image>();
+        // Apercu de la carte (tout le haut du panneau)
+        var preview = CreatePanel(detail, "Preview", BlockforgeTheme.SurfaceRaised);
+        StretchFull(preview);
+        preview.offsetMin = new Vector2(0, BottomBlockH);
+        preview.GetComponent<Image>().raycastTarget = false;
+        var mapImage = CreatePanel(preview, "MapImage", Color.white);
+        StretchFull(mapImage);
+        mapImage.GetComponent<Image>().raycastTarget = false;
+        mapImage.GetComponent<Image>().preserveAspect = false;
+        mapImage.GetComponent<Image>().enabled = false;
+        var placeholder = CreateText(preview, "Placeholder", "[Map preview — Hex valley]", 14, BlockforgeTheme.InkMuted, TextAlignmentOptions.Center, FontStyles.Normal);
+        StretchFull(placeholder);
 
-        var dTitle = CreateText(details, "Title", "Mode", 40, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
-        TopCenter(dTitle, left + 96, -36, DetailWidth - 96, 50);
-        playMenu.detailTitle = dTitle.GetComponent<TMP_Text>();
+        var mapChip = BuildChip(preview, "MapChip", false);
+        var teamsChip = BuildChip(preview, "TeamsChip", true);
 
-        var dTagline = CreateText(details, "Tagline", "Tagline", 15, TextDim, TextAlignmentOptions.TopLeft, FontStyles.Normal);
-        TopCenter(dTagline, left + 96, -86, DetailWidth - 96, 28);
-        playMenu.detailTagline = dTagline.GetComponent<TMP_Text>();
+        // Separation puis bloc du bas
+        var divider = CreatePanel(detail, "Divider", BlockforgeTheme.BorderSubtle);
+        SetAnchors(divider, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
+        divider.sizeDelta = new Vector2(0, 1);
+        divider.anchoredPosition = new Vector2(0, BottomBlockH);
+        divider.GetComponent<Image>().raycastTarget = false;
 
-        var dDesc = CreateText(details, "Description", "Description", 15, TextBody, TextAlignmentOptions.TopLeft, FontStyles.Normal);
-        TopCenter(dDesc, left, -140, 760, 90);
-        playMenu.detailDescription = dDesc.GetComponent<TMP_Text>();
+        var block = CreateUI(detail, "Block");
+        SetAnchors(block, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
+        block.sizeDelta = new Vector2(0, BottomBlockH);
+        block.anchoredPosition = Vector2.zero;
 
-        // ---------- Panneau DETAILS ----------
-        var detailsPanel = CreatePanel(details, "DetailsPanel", PanelBg);
-        TopCenter(detailsPanel, left, -250, DetailsPanelWidth, PanelHeight);
+        var dTitle = CreateText(block, "Title", "Team Deathmatch", 36, BlockforgeTheme.InkPrimary, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+        Top(dTitle, PanelPadX, 28, 620, 36);
+        var dDesc = CreateText(block, "Description", "Description", 15, BlockforgeTheme.InkSecondary, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+        Top(dDesc, PanelPadX, 72, 620, 44);
 
-        CreateSectionTitle(detailsPanel, "Details");
-
-        var rows = new (string label, string field)[]
+        var stats = CreateUI(block, "Stats");
+        SetAnchors(stats, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
+        stats.sizeDelta = new Vector2(3 * StatW + 2 * StatGap, 44);
+        stats.anchoredPosition = new Vector2(-PanelPadX, -28);
+        var statTexts = new TMP_Text[3];
+        string[] statNames = { "Players", "Target", "Time" };
+        for (int i = 0; i < 3; i++)
         {
-            ("Teams", nameof(PlayMenuController.detailTeams)),
-            ("Duration", nameof(PlayMenuController.detailDuration)),
-            ("Tickets", nameof(PlayMenuController.detailTickets)),
-            ("Respawn", nameof(PlayMenuController.detailRespawn)),
-            ("Team size", nameof(PlayMenuController.detailTeamSize)),
-            ("Map", nameof(PlayMenuController.detailMapName)),
-        };
-        for (int i = 0; i < rows.Length; i++)
-        {
-            float y = -64f - i * 52f;
-            var label = CreateText(detailsPanel, $"Row_{i}_Label", rows[i].label, 14, TextDim, TextAlignmentOptions.Left, FontStyles.Normal);
-            SetAnchors(label, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            label.offsetMin = new Vector2(24, y - 44);
-            label.offsetMax = new Vector2(-200, y);
-
-            var value = CreateText(detailsPanel, $"Row_{i}_Value", "—", 15, TextMain, TextAlignmentOptions.Right, FontStyles.Bold);
-            SetAnchors(value, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            value.offsetMin = new Vector2(140, y - 44);
-            value.offsetMax = new Vector2(-24, y);
-
-            typeof(PlayMenuController).GetField(rows[i].field)
-                                      .SetValue(playMenu, value.GetComponent<TMP_Text>());
+            float x = i * (StatW + StatGap);
+            var label = CreateText(stats, $"Stat_{i}_Label", statNames[i], 11, BlockforgeTheme.InkMuted, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+            Top(label, x, 0, StatW, 14);
+            var value = CreateText(stats, $"Stat_{i}_Value", "—", 22, BlockforgeTheme.InkPrimary, TextAlignmentOptions.TopLeft, FontStyles.Bold);
+            Top(value, x, 18, StatW, 26);
+            statTexts[i] = value.GetComponent<TMP_Text>();
         }
+        playMenu.detailPlayers = statTexts[0];
+        playMenu.detailTarget = statTexts[1];
+        playMenu.detailTime = statTexts[2];
 
-        // ---------- Panneau OBJECTIFS ----------
-        var objectivesPanel = CreatePanel(details, "ObjectivesPanel", PanelBg);
-        TopCenter(objectivesPanel, left + DetailsPanelWidth + PanelGap, -250,
-                  DetailWidth - DetailsPanelWidth - PanelGap, PanelHeight);
+        var divider2 = CreatePanel(block, "Divider", BlockforgeTheme.BorderSubtle);
+        SetAnchors(divider2, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        divider2.offsetMin = new Vector2(PanelPadX, -137);
+        divider2.offsetMax = new Vector2(-PanelPadX, -136);
+        divider2.GetComponent<Image>().raycastTarget = false;
 
-        CreateSectionTitle(objectivesPanel, "Objectives");
+        // Rangee d'actions
+        var actions = CreateUI(block, "Actions");
+        SetAnchors(actions, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        actions.offsetMin = new Vector2(PanelPadX, -157 - 48);
+        actions.offsetMax = new Vector2(-PanelPadX, -157);
 
-        var blueBox = CreatePanel(objectivesPanel, "ObjectivePrimary", BlueBoxBg);
-        SetAnchors(blueBox, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        blueBox.offsetMin = new Vector2(24, -210);
-        blueBox.offsetMax = new Vector2(-24, -64);
-        var blueText = CreateText(blueBox, "Text", "Primary objective", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
-        StretchFull(blueText);
-        blueText.offsetMin = new Vector2(18, 12);
-        blueText.offsetMax = new Vector2(-18, -12);
-        playMenu.detailObjectivePrimary = blueText.GetComponent<TMP_Text>();
+        var (playBtn, _) = CreateButton(actions, "PlayButton", "Play with bots", 14, BlockforgeTheme.Accent, BlockforgeTheme.InkOnAccent);
+        var playRect = (RectTransform)playBtn.transform;
+        SetAnchors(playRect, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        playRect.sizeDelta = new Vector2(220, 48);
+        playRect.anchoredPosition = Vector2.zero;
+        var playIcon = CreatePanel(playBtn.transform, "Icon", BlockforgeTheme.InkOnAccent);
+        SetAnchors(playIcon, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        playIcon.sizeDelta = new Vector2(18, 18);
+        playIcon.anchoredPosition = new Vector2(BlockforgeTheme.Space6, 0);
+        playIcon.GetComponent<Image>().raycastTarget = false;
 
-        var redBox = CreatePanel(objectivesPanel, "ObjectiveSecondary", RedBoxBg);
-        SetAnchors(redBox, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        redBox.offsetMin = new Vector2(24, -372);
-        redBox.offsetMax = new Vector2(-24, -226);
-        var redText = CreateText(redBox, "Text", "Secondary objective", 14.5f, TextMain, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
-        StretchFull(redText);
-        redText.offsetMin = new Vector2(18, 12);
-        redText.offsetMax = new Vector2(-18, -12);
-        playMenu.detailObjectiveSecondary = redText.GetComponent<TMP_Text>();
+        var (findBtn, _) = CreateButton(actions, "FindMatchButton", "Find a match", 14, BlockforgeTheme.AccentSoft, BlockforgeTheme.InkPrimary);
+        var findRect = (RectTransform)findBtn.transform;
+        SetAnchors(findRect, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        findRect.sizeDelta = new Vector2(220, 48);
+        findRect.anchoredPosition = new Vector2(236, 0);
+        var findIcon = CreatePanel(findBtn.transform, "Icon", BlockforgeTheme.InkPrimary);
+        SetAnchors(findIcon, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        findIcon.sizeDelta = new Vector2(18, 18);
+        findIcon.anchoredPosition = new Vector2(BlockforgeTheme.Space6, 0);
+        findIcon.GetComponent<Image>().raycastTarget = false;
+        var lockIcon = CreatePanel(findBtn.transform, "LockIcon", BlockforgeTheme.InkSecondary);
+        SetAnchors(lockIcon, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        lockIcon.sizeDelta = new Vector2(14, 14);
+        lockIcon.anchoredPosition = new Vector2(-BlockforgeTheme.Space3, 0);
+        lockIcon.GetComponent<Image>().raycastTarget = false;
 
-        // ---------- Boutons bas (alignes sur la colonne) ----------
-        var (backBtn, _) = CreateButton(details, "BackButton", "Back", 15, CardBg, TextMain);
-        var backRect = backBtn.GetComponent<RectTransform>();
-        SetAnchors(backRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 0));
-        backRect.sizeDelta = new Vector2(160, 48);
-        backRect.anchoredPosition = new Vector2(left, 36);
-        playMenu.backButton = backBtn;
+        // KeyHint : touche Entree + libelle de l'action
+        var keyHint = CreateUI(actions, "KeyHint");
+        SetAnchors(keyHint, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        keyHint.sizeDelta = new Vector2(200, 24);
+        keyHint.anchoredPosition = new Vector2(472, 0);
+        var keyCap = CreatePanel(keyHint, "Key", BlockforgeTheme.SurfaceInset);
+        SetAnchors(keyCap, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        keyCap.sizeDelta = new Vector2(44, 22);
+        var keyText = CreateText(keyCap, "Label", "Enter", 11, BlockforgeTheme.InkPrimary, TextAlignmentOptions.Center, FontStyles.Normal);
+        StretchFull(keyText);
+        var keyCaption = CreateText(keyHint, "Caption", "Play with bots", 12, BlockforgeTheme.InkSecondary, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
+        SetAnchors(keyCaption, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
+        keyCaption.offsetMin = new Vector2(44 + BlockforgeTheme.Space2, 0);
+        keyCaption.offsetMax = Vector2.zero;
 
-        var (playBtn, _) = CreateButton(details, "PlayButton", "Play", 18, Accent, BlockforgeTheme.OnAccent);
-        var playRect = playBtn.GetComponent<RectTransform>();
-        SetAnchors(playRect, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(1, 0));
-        playRect.sizeDelta = new Vector2(340, 54);
-        playRect.anchoredPosition = new Vector2(-left, 34);
+        // Raison d'une action indisponible (a droite, vide au repos)
+        var reason = CreateText(actions, "Reason", "", 13, BlockforgeTheme.InkMuted, TextAlignmentOptions.MidlineRight, FontStyles.Normal);
+        SetAnchors(reason, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f));
+        reason.sizeDelta = new Vector2(420, 0);
+        reason.anchoredPosition = Vector2.zero;
+
+        // ---------- Cablage ----------
+        playMenu.detailTitle = dTitle.GetComponent<TMP_Text>();
+        playMenu.detailDescription = dDesc.GetComponent<TMP_Text>();
+        playMenu.mapChipText = mapChip.Find("Text").GetComponent<TMP_Text>();
+        playMenu.teamsChipText = teamsChip.Find("Text").GetComponent<TMP_Text>();
+        playMenu.mapPlaceholderText = placeholder.GetComponent<TMP_Text>();
+        playMenu.mapImage = mapImage.GetComponent<Image>();
         playMenu.playButton = playBtn;
+        playMenu.findMatchButton = findBtn;
+        playMenu.reasonText = reason.GetComponent<TMP_Text>();
 
-        // ---------- Etats initiaux + cablage ----------
-        playMenu.modesView = modesView.gameObject;
-        playMenu.detailsView = details.gameObject;
-        details.gameObject.SetActive(false);
         screen.gameObject.SetActive(false);
 
         if (mainController != null)
@@ -222,162 +284,307 @@ public static class GameModesUISetup
         }
 
         EditorSceneManager.MarkSceneDirty(scene);
-        // Design system Blockforge : formes, etats, typo, libelles anglais
+        // Design system Blockforge : composants, styles, pictogrammes (ApplyStyle ci-dessous)
         DesignSystemApply.ApplyToOpenScene();
         EditorSceneManager.SaveScene(scene);
-        Debug.Log("[GameModesUISetup] Ecrans Modes de jeu + Details generes et cables.");
+        Debug.Log("[GameModesUISetup] Ecran Play genere et cable (" + definitions.Length + " mode(s)).");
     }
 
     // =========================================================
-    // CARTE DE MODE
+    // LIGNE D'UN MODE
     // =========================================================
 
-    // Carte sans apercu : pictogramme dans un puits, titre, accroche,
-    // lignes de chiffres en bas (alignees d'une carte a l'autre)
-    private static GameModeCard BuildModeCard(RectTransform parent, string name, float x)
+    private static GameModeCard BuildModeCard(RectTransform parent, string name, float y, GameModeDefinition def)
     {
-        var card = CreatePanel(parent, name, CardBg);
-        SetAnchors(card, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        card.sizeDelta = new Vector2(CardWidth, CardHeight);
-        card.anchoredPosition = new Vector2(x, -20);
+        var card = CreatePanel(parent, name, BlockforgeTheme.SurfacePanel);
+        Top(card, 0, y, LeftW, CardH);
 
         var widget = card.gameObject.AddComponent<GameModeCard>();
         widget.button = card.gameObject.AddComponent<Button>();
         widget.button.targetGraphic = card.GetComponent<Image>();
+        widget.element = card.gameObject.AddComponent<DSElement>();
+        widget.element.role = DSRole.Card;
 
-        var iconFrame = CreatePanel(card, "IconFrame", CoverPlaceholder);
-        SetAnchors(iconFrame, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
-        iconFrame.sizeDelta = new Vector2(64, 64);
-        iconFrame.anchoredPosition = new Vector2(24, -24);
-        iconFrame.GetComponent<Image>().raycastTarget = false;
+        float padX = 20f, padY = (CardH - 44f) / 2f;
+        var well = CreatePanel(card, "IconWell", BlockforgeTheme.SurfaceInset);
+        SetAnchors(well, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        well.sizeDelta = new Vector2(44, 44);
+        well.anchoredPosition = new Vector2(padX, 0);
+        well.GetComponent<Image>().raycastTarget = false;
+        widget.iconWell = well.GetComponent<Image>();
 
-        var icon = CreatePanel(iconFrame, "Icon", TextDim);
+        var icon = CreatePanel(well, "Icon", BlockforgeTheme.InkSecondary);
         SetAnchors(icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        icon.sizeDelta = new Vector2(36, 36);
-        icon.anchoredPosition = Vector2.zero;
+        icon.sizeDelta = new Vector2(24, 24);
         icon.GetComponent<Image>().raycastTarget = false;
         widget.iconImage = icon.GetComponent<Image>();
 
-        var title = CreateText(card, "Title", "Mode", 21, TextMain, TextAlignmentOptions.Left, FontStyles.Bold);
+        float textLeft = padX + 44f + 16f, textRight = padX + 20f + 16f;
+        var title = CreateText(card, "Title", def != null ? def.title : "Mode", 18, BlockforgeTheme.InkPrimary, TextAlignmentOptions.TopLeft, FontStyles.Bold);
         SetAnchors(title, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        title.offsetMin = new Vector2(24, -140);
-        title.offsetMax = new Vector2(-24, -108);
+        title.offsetMin = new Vector2(textLeft, -padY - 22);
+        title.offsetMax = new Vector2(-textRight, -padY);
         widget.titleText = title.GetComponent<TMP_Text>();
 
-        var desc = CreateText(card, "Description", "Description", 13, TextDim, TextAlignmentOptions.TopLeft, FontStyles.Normal);
-        SetAnchors(desc, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        desc.offsetMin = new Vector2(24, -216);
-        desc.offsetMax = new Vector2(-24, -146);
-        widget.descriptionText = desc.GetComponent<TMP_Text>();
+        var summary = CreateText(card, "Summary", def != null ? def.summary : "", 13, BlockforgeTheme.InkMuted, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+        SetAnchors(summary, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
+        summary.offsetMin = new Vector2(textLeft, -padY - 22 - 4 - 16);
+        summary.offsetMax = new Vector2(-textRight, -padY - 22 - 4);
+        widget.summaryText = summary.GetComponent<TMP_Text>();
 
-        // Chiffres du mode : deux lignes libelle / valeur
-        var stats = CreateUI(card, "Stats");
-        SetAnchors(stats, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0));
-        stats.offsetMin = new Vector2(24, 20);
-        stats.offsetMax = new Vector2(-24, 84);
-        widget.statsGroup = stats.gameObject;
-        widget.teamsText = StatRow(stats, 0, "Teams");
-        widget.durationText = StatRow(stats, 1, "Duration");
-
-        var (configureBtn, _) = CreateButton(card, "ConfigureButton", "Configure", 13,
-                                             BlockforgeTheme.SurfaceRaised, TextMain);
-        var cfgRect = configureBtn.GetComponent<RectTransform>();
-        SetAnchors(cfgRect, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0));
-        cfgRect.sizeDelta = new Vector2(150, 36);
-        cfgRect.anchoredPosition = new Vector2(24, 24);
-        widget.configureButton = configureBtn;
-        configureBtn.gameObject.SetActive(false);
+        var chevron = CreatePanel(card, "Chevron", BlockforgeTheme.InkSecondary);
+        SetAnchors(chevron, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        chevron.sizeDelta = new Vector2(20, 20);
+        chevron.anchoredPosition = new Vector2(-padX, 0);
+        chevron.GetComponent<Image>().raycastTarget = false;
+        widget.chevron = chevron.GetComponent<Image>();
+        widget.chevron.enabled = false;
 
         return widget;
     }
 
-    // Ligne "libelle ........ valeur" dans le pied de carte (index 0 = haut)
-    private static TMP_Text StatRow(RectTransform stats, int index, string label)
+    // Puce du HUD sur l'apercu : plaque surface-hud au coin exterieur coupe, pictogramme, libelle
+    private static RectTransform BuildChip(RectTransform preview, string name, bool right)
     {
-        float top = -index * 32f;
-        var labelRect = CreateText(stats, $"Row_{index}_Label", label, 13, TextDim, TextAlignmentOptions.Left, FontStyles.Normal);
-        SetAnchors(labelRect, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        labelRect.offsetMin = new Vector2(0, top - 32);
-        labelRect.offsetMax = new Vector2(-120, top);
+        var chip = CreateUI(preview, name);
+        chip.gameObject.AddComponent<CanvasRenderer>();
+        var plate = chip.gameObject.AddComponent<HudPolygon>();
+        plate.raycastTarget = false;
+        plate.SetSolid(BlockforgeTheme.SurfaceHud);
+        if (right) plate.cutTopRight = BlockforgeTheme.HudChamfer; else plate.cutBottomLeft = BlockforgeTheme.HudChamfer;
+        SetAnchors(chip, new Vector2(right ? 1 : 0, 1), new Vector2(right ? 1 : 0, 1), new Vector2(right ? 1 : 0, 1));
+        chip.sizeDelta = new Vector2(140, 28);
+        chip.anchoredPosition = new Vector2(right ? -24 : 24, -20);
 
-        var valueRect = CreateText(stats, $"Row_{index}_Value", "—", 14, TextMain, TextAlignmentOptions.Right, FontStyles.Bold);
-        SetAnchors(valueRect, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        valueRect.offsetMin = new Vector2(100, top - 32);
-        valueRect.offsetMax = new Vector2(0, top);
-        return valueRect.GetComponent<TMP_Text>();
-    }
-
-    // Ancre haut-centre, position du coin haut-gauche relative au centre
-    private static void TopCenter(RectTransform rect, float x, float y, float width, float height)
-    {
-        SetAnchors(rect, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1));
-        rect.sizeDelta = new Vector2(width, height);
-        rect.anchoredPosition = new Vector2(x, y);
-    }
-
-    private static void CreateSectionTitle(RectTransform panel, string text)
-    {
-        var title = CreateText(panel, "SectionTitle", text, 16, Accent, TextAlignmentOptions.Left, FontStyles.Bold);
-        SetAnchors(title, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-        title.offsetMin = new Vector2(24, -52);
-        title.offsetMax = new Vector2(-24, -14);
+        var icon = CreatePanel(chip, "Icon", BlockforgeTheme.InkPrimary);
+        SetAnchors(icon, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        icon.sizeDelta = new Vector2(14, 14);
+        icon.anchoredPosition = new Vector2(12, 0);
+        icon.GetComponent<Image>().raycastTarget = false;
+        var text = CreateText(chip, "Text", right ? "5 vs 5" : "Hex valley", 12, BlockforgeTheme.InkPrimary, TextAlignmentOptions.MidlineLeft, FontStyles.Bold);
+        SetAnchors(text, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f));
+        text.offsetMin = new Vector2(12 + 14 + 8, 0);
+        text.offsetMax = new Vector2(-12, 0);
+        return chip;
     }
 
     // =========================================================
-    // DONNEES
+    // STYLE DU DS (appele par DesignSystemApply.ApplyToOpenScene)
+    // Relancable : pose les roles, les styles de texte, les
+    // pictogrammes et les largeurs calculees sur le texte.
+    // =========================================================
+
+    public static void ApplyStyle()
+    {
+        var screen = DesignSystemApply.F("PlayScreen");
+        if (screen == null)
+            return;
+        DesignSystemApply.SetImage(screen, BlockforgeTheme.SurfaceBase);
+        var playMenu = screen.GetComponent<PlayMenuController>();
+
+        // ----- Colonne de gauche -----
+        DesignSystemApply.Txt(DesignSystemApply.T("PlayScreen/Left/Title"), DSTextStyle.DisplayXL, BlockforgeTheme.InkPrimary, "Play", TextAlignmentOptions.TopLeft);
+        DesignSystemApply.Txt(DesignSystemApply.T("PlayScreen/Left/Subtitle"), DSTextStyle.Body, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.TopLeft);
+
+        var cards = playMenu != null && playMenu.cards != null ? playMenu.cards : new GameModeCard[0];
+        for (int i = 0; i < cards.Length; i++)
+        {
+            if (cards[i] == null)
+                continue;
+            var card = cards[i].transform;
+            var def = playMenu.definitions != null && i < playMenu.definitions.Length ? playMenu.definitions[i] : null;
+            DesignSystemApply.El(card, DSRole.Card, new[] { cards[i].titleText });
+            DesignSystemApply.El(card.Find("IconWell"), DSRole.Inset);
+            DesignSystemApply.SetIcon(cards[i].iconImage, def != null ? def.iconName : "objective", BlockforgeTheme.InkSecondary, 24f);
+            DesignSystemApply.Txt(cards[i].titleText, DSTextStyle.TitleMD, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.TopLeft);
+            if (cards[i].titleText != null)
+                cards[i].titleText.fontSize = 18f;
+            DesignSystemApply.Txt(cards[i].summaryText, DSTextStyle.BodySM, BlockforgeTheme.InkMuted, null, TextAlignmentOptions.TopLeft);
+            DesignSystemApply.SetIcon(cards[i].chevron, "chevron-right", BlockforgeTheme.InkSecondary, 20f);
+        }
+
+        const string yr = "PlayScreen/Left/YourRobot/";
+        DesignSystemApply.Txt(DesignSystemApply.T(yr + "Label"), DSTextStyle.Label, BlockforgeTheme.InkMuted, "Your robot", TextAlignmentOptions.TopLeft);
+        var slot = DesignSystemApply.F(yr + "Slot");
+        if (slot != null)
+        {
+            DesignSystemApply.El(slot, DSRole.RobotSlot, new[] { slot.Find("Name")?.GetComponent<TMP_Text>() });
+            DesignSystemApply.Txt(DesignSystemApply.T(yr + "Slot/Bay"), DSTextStyle.Label, BlockforgeTheme.InkMuted, null, TextAlignmentOptions.TopLeft);
+            var name = DesignSystemApply.T(yr + "Slot/Name");
+            DesignSystemApply.Txt(name, DSTextStyle.DisplayMD, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.TopLeft);
+            if (name != null)
+            {
+                name.textWrappingMode = TextWrappingModes.Normal;
+                name.overflowMode = TextOverflowModes.Ellipsis;
+                name.maxVisibleLines = 2;
+            }
+            DesignSystemApply.Txt(DesignSystemApply.T(yr + "Slot/Stats"), DSTextStyle.ReadoutSM, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.BottomLeft);
+        }
+        var change = DesignSystemApply.F(yr + "ChangeButton");
+        if (change != null)
+        {
+            var text = change.Find("Text")?.GetComponent<TMP_Text>();
+            DesignSystemApply.Txt(text, DSTextStyle.ButtonMD, BlockforgeTheme.InkSecondary, "Change", TextAlignmentOptions.Center);
+            var icon = change.Find("Icon")?.GetComponent<Image>();
+            DesignSystemApply.SetIcon(icon, "edit", BlockforgeTheme.InkSecondary, 16f);
+            var el = DesignSystemApply.El(change, DSRole.ButtonGhost, new[] { text });
+            if (el != null && icon != null)
+                el.icons = new Graphic[] { icon };
+            float w = BlockforgeTheme.Space3 + 16f + BlockforgeTheme.Space2 + DesignSystemApply.PrefWidth(text) + BlockforgeTheme.Space4;
+            DesignSystemApply.Resize(change, w, BlockforgeTheme.ControlMd);
+            if (text != null)
+            {
+                text.rectTransform.offsetMin = new Vector2(BlockforgeTheme.Space3 + 16f + BlockforgeTheme.Space2, 0);
+                text.rectTransform.offsetMax = new Vector2(-BlockforgeTheme.Space4, 0);
+            }
+        }
+
+        // ----- Fiche -----
+        const string d = "PlayScreen/Detail/";
+        DesignSystemApply.El(DesignSystemApply.F("PlayScreen/Detail"), DSRole.Panel);
+        DesignSystemApply.SetImage(DesignSystemApply.F(d + "Preview"), BlockforgeTheme.SurfaceRaised);
+        DesignSystemApply.Txt(DesignSystemApply.T(d + "Preview/Placeholder"), DSTextStyle.ReadoutMD, BlockforgeTheme.InkMuted, null, TextAlignmentOptions.Center);
+        ApplyChip(d + "Preview/MapChip", "objective");
+        ApplyChip(d + "Preview/TeamsChip", "group");
+        DesignSystemApply.SetImage(DesignSystemApply.F(d + "Divider"), BlockforgeTheme.BorderSubtle);
+
+        const string b = "PlayScreen/Detail/Block/";
+        var title = DesignSystemApply.T(b + "Title");
+        DesignSystemApply.Txt(title, DSTextStyle.DisplayLG, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.TopLeft);
+        if (title != null)
+            title.fontSize = 36f;
+        var desc = DesignSystemApply.T(b + "Description");
+        DesignSystemApply.Txt(desc, DSTextStyle.Body, BlockforgeTheme.InkSecondary, null, TextAlignmentOptions.TopLeft);
+        if (desc != null)
+            desc.textWrappingMode = TextWrappingModes.Normal;
+        string[] statNames = { "Players", "Target", "Time" };
+        for (int i = 0; i < 3; i++)
+        {
+            DesignSystemApply.Txt(DesignSystemApply.T($"{b}Stats/Stat_{i}_Label"), DSTextStyle.Label, BlockforgeTheme.InkMuted, statNames[i], TextAlignmentOptions.TopLeft);
+            var value = DesignSystemApply.T($"{b}Stats/Stat_{i}_Value");
+            DesignSystemApply.Txt(value, DSTextStyle.ReadoutLG, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.TopLeft);
+            if (value != null)
+                value.fontSize = 22f;
+        }
+        DesignSystemApply.SetImage(DesignSystemApply.F(b + "Divider"), BlockforgeTheme.BorderSubtle);
+
+        // ----- Actions -----
+        const string a = "PlayScreen/Detail/Block/Actions/";
+        float x = 0f;
+        var play = DesignSystemApply.F(a + "PlayButton");
+        if (play != null)
+        {
+            var text = play.Find("Text")?.GetComponent<TMP_Text>();
+            DesignSystemApply.Txt(text, DSTextStyle.ButtonLG, BlockforgeTheme.InkOnAccent, "Play with bots", TextAlignmentOptions.Center);
+            var icon = play.Find("Icon")?.GetComponent<Image>();
+            DesignSystemApply.SetIcon(icon, "play", BlockforgeTheme.InkOnAccent, 18f);
+            var el = DesignSystemApply.El(play, DSRole.ButtonPrimary, new[] { text });
+            if (el != null && icon != null)
+                el.icons = new Graphic[] { icon };
+            float w = IconButtonWidth(text, 18f, 0f);
+            DesignSystemApply.Place(play, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlLg + 4f), new Vector2(0, 0.5f));
+            IconButtonText(text, 18f, 0f);
+            x += w + BlockforgeTheme.Space4;
+        }
+        var find = DesignSystemApply.F(a + "FindMatchButton");
+        if (find != null)
+        {
+            var text = find.Find("Text")?.GetComponent<TMP_Text>();
+            DesignSystemApply.Txt(text, DSTextStyle.ButtonLG, BlockforgeTheme.InkPrimary, "Find a match", TextAlignmentOptions.Center);
+            var icon = find.Find("Icon")?.GetComponent<Image>();
+            DesignSystemApply.SetIcon(icon, "group", BlockforgeTheme.InkPrimary, 18f);
+            var lockIcon = find.Find("LockIcon")?.GetComponent<Image>();
+            DesignSystemApply.SetIcon(lockIcon, "lock", BlockforgeTheme.InkSecondary, 14f);
+            var el = DesignSystemApply.El(find, DSRole.ButtonSecondary, new[] { text });
+            if (el != null && icon != null)
+                el.icons = new Graphic[] { icon };
+            float w = IconButtonWidth(text, 18f, 14f + BlockforgeTheme.Space2);
+            DesignSystemApply.Place(find, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlLg + 4f), new Vector2(0, 0.5f));
+            IconButtonText(text, 18f, 14f + BlockforgeTheme.Space2);
+            x += w + BlockforgeTheme.Space4;
+        }
+        var hint = DesignSystemApply.F(a + "KeyHint");
+        if (hint != null)
+        {
+            var key = hint.Find("Key");
+            var keyText = key != null ? key.Find("Label")?.GetComponent<TMP_Text>() : null;
+            DesignSystemApply.Txt(keyText, DSTextStyle.Key, BlockforgeTheme.InkPrimary, "Enter", TextAlignmentOptions.Center);
+            DesignSystemApply.El(key, DSRole.KeyCap, new[] { keyText });
+            var caption = hint.Find("Caption")?.GetComponent<TMP_Text>();
+            DesignSystemApply.Txt(caption, DSTextStyle.Caption, BlockforgeTheme.InkSecondary, "Play with bots", TextAlignmentOptions.MidlineLeft);
+            DesignSystemApply.Place(hint, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(240, 24), new Vector2(0, 0.5f));
+        }
+        DesignSystemApply.Txt(DesignSystemApply.T(a + "Reason"), DSTextStyle.Caption, BlockforgeTheme.InkMuted, null, TextAlignmentOptions.MidlineRight);
+    }
+
+    private static void ApplyChip(string path, string icon)
+    {
+        var chip = DesignSystemApply.F(path);
+        if (chip == null)
+            return;
+        var text = chip.Find("Text")?.GetComponent<TMP_Text>();
+        DesignSystemApply.Txt(text, DSTextStyle.Label, BlockforgeTheme.InkPrimary, null, TextAlignmentOptions.MidlineLeft);
+        if (text != null)
+            text.fontSize = 12f;
+        DesignSystemApply.SetIcon(chip.Find("Icon")?.GetComponent<Image>(), icon, BlockforgeTheme.InkPrimary, 14f);
+        DesignSystemApply.Resize(chip, 12 + 14 + 8 + DesignSystemApply.PrefWidth(text) + 12, 28f);
+    }
+
+    // Bouton avec pictogramme a gauche (et cadenas a droite en option) : padding space-6
+    private static float IconButtonWidth(TMP_Text text, float iconSize, float trailing)
+    {
+        return BlockforgeTheme.Space6 + iconSize + BlockforgeTheme.Space2 + DesignSystemApply.PrefWidth(text) + trailing + BlockforgeTheme.Space6;
+    }
+
+    private static void IconButtonText(TMP_Text text, float iconSize, float trailing)
+    {
+        if (text == null)
+            return;
+        text.rectTransform.anchorMin = Vector2.zero;
+        text.rectTransform.anchorMax = Vector2.one;
+        text.rectTransform.offsetMin = new Vector2(BlockforgeTheme.Space6 + iconSize + BlockforgeTheme.Space2, 0);
+        text.rectTransform.offsetMax = new Vector2(-BlockforgeTheme.Space6 - trailing, 0);
+    }
+
+    // =========================================================
+    // DONNEES : les deux modes du design (5 v 5)
     // =========================================================
 
     private static GameModeDefinition[] EnsureGameModes()
     {
         EnsureFolder(ModeDataDir);
 
+        foreach (var legacy in LegacyModes)
+        {
+            string path = $"{ModeDataDir}/{legacy}.asset";
+            if (AssetDatabase.LoadAssetAtPath<GameModeDefinition>(path) != null)
+                AssetDatabase.DeleteAsset(path);
+        }
+
         var defs = new List<GameModeDefinition>
         {
-            EnsureMode("Mode_TeamClash", m =>
+            EnsureMode("Mode_TeamDeathmatch", m =>
             {
-                m.title = "Team Clash";
-                m.tagline = "Two teams fight to destroy every enemy robot.";
-                m.description = "Two teams of four robots meet head-on. Destroy every enemy robot to win " +
-                                "the round. The first team to win three rounds wins the match.";
-                m.teamsLabel = "4v4"; m.durationLabel = "10–15 min"; m.ticketsLabel = "—";
-                m.respawnLabel = "No"; m.teamSizeLabel = "4"; m.mapName = "Dust Arena";
-                m.objectivePrimary = "Destroy every robot on the enemy team.";
-                m.objectiveSecondary = "Protect your allies: there is no respawn during a round.";
+                m.title = "Team Deathmatch";
+                m.summary = "5 vs 5 · first to 25 · about 10 min";
+                m.description = "Two teams of five. Destroy enemy robots to score; the first team to 25 wins, " +
+                                "or the one leading when the clock runs out. Bots fill any seat left open.";
+                m.iconName = "skull";
+                m.playersLabel = "5 vs 5"; m.targetLabel = "25 kills"; m.timeLabel = "10:00";
+                m.teamSize = 5; m.mapName = "Hex valley"; m.versusSummary = "first to 25 · 10:00";
+                m.sceneName = "Map_Test";
             }),
-            EnsureMode("Mode_Control", m =>
+            EnsureMode("Mode_BattleArena", m =>
             {
-                m.title = "Control";
-                m.tagline = "Capture and hold strategic points to win.";
-                m.description = "Two teams fight for strategic points spread across the map. The more points " +
-                                "your team holds, the more tickets the enemy loses. The first team to drain " +
-                                "the other's tickets to zero wins.";
-                m.teamsLabel = "4v4"; m.durationLabel = "10–15 min"; m.ticketsLabel = "1 000";
-                m.respawnLabel = "Yes"; m.teamSizeLabel = "4"; m.mapName = "Outpost Valley";
-                m.objectivePrimary = "Hold more points than the enemy to drain their tickets.";
-                m.objectiveSecondary = "Destroy enemy robots to weaken their team.";
-            }),
-            EnsureMode("Mode_FreeForAll", m =>
-            {
-                m.title = "Free for All";
-                m.tagline = "Every robot for itself. Be the last one standing.";
-                m.description = "Eight robots, one rule: survive. No allies, no mercy. Take out everything " +
-                                "that moves and be the last working robot to win the match.";
-                m.teamsLabel = "8"; m.durationLabel = "10–15 min"; m.ticketsLabel = "—";
-                m.respawnLabel = "No"; m.teamSizeLabel = "1"; m.mapName = "Scrapyard";
-                m.objectivePrimary = "Be the last robot standing on the battlefield.";
-                m.objectiveSecondary = "Every takedown earns you bonus resources.";
-            }),
-            EnsureMode("Mode_Custom", m =>
-            {
-                m.title = "Custom Match";
-                m.tagline = "Create or join a custom match.";
-                m.description = "Set up your own match: pick the map, the mode, the number of players and " +
-                                "the rules. Invite your friends or open the match to everyone.";
-                m.isCustom = true;
-                m.teamsLabel = "Any"; m.durationLabel = "Any"; m.ticketsLabel = "Custom";
-                m.respawnLabel = "Custom"; m.teamSizeLabel = "Any"; m.mapName = "Your choice";
-                m.objectivePrimary = "Set your own match rules.";
-                m.objectiveSecondary = "Invite your friends with a private match code.";
+                m.title = "Battle Arena";
+                m.summary = "5 vs 5 · hold three objectives · about 15 min";
+                m.description = "Two teams of five fight for three objectives spread across the arena. Holding " +
+                                "more objectives than the enemy drains their tickets; the first team to drain the " +
+                                "other's tickets wins. Bots fill any seat left open.";
+                m.iconName = "objective";
+                m.playersLabel = "5 vs 5"; m.targetLabel = "3 objectives"; m.timeLabel = "15:00";
+                m.teamSize = 5; m.mapName = "Hex valley"; m.versusSummary = "hold three objectives · 15:00";
+                m.sceneName = "Map_Test";
             }),
         };
 
@@ -442,6 +649,14 @@ public static class GameModesUISetup
         var textRect = CreateText(rect, "Text", label, fontSize, textColor, TextAlignmentOptions.Center, FontStyles.Bold);
         StretchFull(textRect);
         return (button, textRect.GetComponent<TMP_Text>());
+    }
+
+    // Ancre en haut a gauche du parent : position du coin haut-gauche, taille
+    private static void Top(RectTransform rect, float x, float y, float width, float height)
+    {
+        SetAnchors(rect, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+        rect.sizeDelta = new Vector2(width, height);
+        rect.anchoredPosition = new Vector2(x, -y);
     }
 
     private static void SetAnchors(RectTransform rect, Vector2 min, Vector2 max, Vector2 pivot)

@@ -39,6 +39,9 @@ public static class BlockPreviewFactory
     // le modele ; centerOnPivot = boite centree sur le pivot (apercu sur la
     // pince) au lieu d'etre placee autour de la case visee (grille).
     // bottomDistance = distance du pivot au point le plus bas du visuel.
+    // Debord des pales de rotor hors de leur boite d'empreinte (X et Z)
+    public const float RotorOverscale = 1.3f;
+
     public static GameObject CreateVisual(BlockDefinition def, float cellSize, out float bottomDistance,
                                           float fill = DefaultFill, bool centerOnPivot = false)
     {
@@ -131,6 +134,18 @@ public static class BlockPreviewFactory
         instance.transform.localScale = Vector3.one * scale;
         instance.transform.localPosition = targetMin - bounds.min * scale;
         bottomDistance = -targetMin.y;
+
+        // Rotors : les pales debordent de leur boite (x RotorOverscale en X et Z,
+        // moyeu garde au centre, hauteur inchangee) : un disque plus lisible en vol
+        if (string.Equals(def.family, "Rotors", System.StringComparison.OrdinalIgnoreCase))
+        {
+            Vector3 boxCenter = targetMin + scaledSize * 0.5f;
+            Vector3 modelCenter = bounds.min + bounds.size * 0.5f;
+            instance.transform.localScale = new Vector3(scale * RotorOverscale, scale, scale * RotorOverscale);
+            instance.transform.localPosition = new Vector3(boxCenter.x - modelCenter.x * scale * RotorOverscale,
+                                                           targetMin.y - bounds.min.y * scale,
+                                                           boxCenter.z - modelCenter.z * scale * RotorOverscale);
+        }
         return wrapper;
     }
 

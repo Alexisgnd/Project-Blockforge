@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7c4d405fcfebbc4985adfb9ebd6d5c7, type: 3}
+  m_Name: MusicLibrary
+  m_EditorClassIdentifier: Blockforge.Runtime::MusicLibrary
+  crossfadeDuration: 2.5
+  masterVolume: 1
+  tracks:
+  - track: 1
+    clip: {fileID: 8300000, guid: cc77d95deaf74d64ea00703d6d1d343d, type: 3}
+    volume: 0.5
+  - track: 2
+    clip: {fileID: 8300000, guid: 53953de8419f45d47b52d782c523a420, type: 3}
+    volume: 0.43
+  - track: 3
+    clip: {fileID: 8300000, guid: 13abf423cebb9f043861284380b8c007, type: 3}
+    volume: 0.43
+  - track: 4
+    clip: {fileID: 8300000, guid: 9d174c11b416c06409450fe2999a37f3, type: 3}
+    volume: 0.42
+  scenes:
+  - sceneName: Boot
+    track: 1
+  - sceneName: MainMenu
+    track: 1
+  - sceneName: Garage
+    track: 2
+  - sceneName: Map_Test
+    track: 4
+  - sceneName: Map_MARS
+    track: 3

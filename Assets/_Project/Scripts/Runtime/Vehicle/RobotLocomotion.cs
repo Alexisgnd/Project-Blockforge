@@ -62,6 +62,7 @@ public class LocomotionUnit
     public LocomotionKind kind;
     public PlacedBlockView view;
     public Transform visual;
+    public int tier = 1;             // niveau du bloc (N1..N7, Recon/Invader/Assault) : vitesse et poussee
     public readonly List<LocomotionContact> contacts = new();
     public float maxSpeed;           // m/s
     public float driveAccel;         // m/s^2
@@ -190,7 +191,7 @@ public class RobotLocomotion : MonoBehaviour
             return null;
 
         string family = (def.family ?? "").ToLowerInvariant();
-        var unit = new LocomotionUnit { view = view, visual = visual };
+        var unit = new LocomotionUnit { view = view, visual = visual, tier = TierOf(def.name) };
         if (!TryGetLocalBounds(visual, out var vb))
             return null;
         unit.center = vb.center;
@@ -289,6 +290,24 @@ public class RobotLocomotion : MonoBehaviour
         }
         return unit;
     }
+
+    // Niveau d'un bloc d'apres le nom de son asset : _N3 -> 3 ; rotors Recon /
+    // Invader / Assault -> 1 / 2 / 3. Chaque niveau au-dessus du premier ajoute
+    // TierStep (30 %) de vitesse de pointe, de montee et de poussee.
+    public const float TierStep = 0.3f;
+    public static int TierOf(string assetName)
+    {
+        if (string.IsNullOrEmpty(assetName))
+            return 1;
+        var m = Regex.Match(assetName, @"_N(\d)");
+        if (m.Success)
+            return Mathf.Clamp(int.Parse(m.Groups[1].Value), 1, 9);
+        string n = assetName.ToLowerInvariant();
+        if (n.Contains("assault")) return 3;
+        if (n.Contains("invader")) return 2;
+        return 1;
+    }
+    public static float TierFactor(int tier) => 1f + TierStep * Mathf.Max(0, tier - 1);
 
     private static void SetFamily(LocomotionUnit unit, float maxSpeed, float accel, float grip, float friction)
     {
@@ -475,9 +494,14 @@ public class RobotLocomotion : MonoBehaviour
             return;
 
         float g = -Physics.gravity.y;
+        // Niveau des rotors (le meilleur) : montee, inclinaison et vitesse de pointe
+        int tier = 1;
+        foreach (var rotor in rotors)
+            tier = Mathf.Max(tier, rotor.tier);
+        float k = TierFactor(tier);
         // Vitesse verticale demandee : Espace monte, Ctrl descend, sinon altitude tenue
         float vy = Body.linearVelocity.y;
-        float wanted = lift * rotorClimbSpeed;
+        float wanted = lift * rotorClimbSpeed * k;
         float accel = g + (wanted - vy) * 2.5f;
         float verticality = Mathf.Max(0.35f, Vector3.Dot(up, Vector3.up));
         float total = Mathf.Clamp(Body.mass * accel / verticality, 0f, Body.mass * g * 2.5f);
@@ -491,7 +515,7 @@ public class RobotLocomotion : MonoBehaviour
         // Assiette : Z/S inclinent vers l'avant/l'arriere, le reste reste a plat
         Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up).normalized;
         Vector3 flatRight = Vector3.Cross(Vector3.up, flatForward);
-        Vector3 wantedUp = Quaternion.AngleAxis(throttle * 18f * (boost ? 1.3f : 1f), flatRight) * Vector3.up;
+        Vector3 wantedUp = Quaternion.AngleAxis(throttle * (14f + 6f * tier) * (boost ? 1.3f : 1f), flatRight) * Vector3.up;
         Vector3 error = Vector3.Cross(up, wantedUp);
         Vector3 ang = Body.angularVelocity;
         Vector3 tilt = error * 10f - Vector3.ProjectOnPlane(ang, up) * 3f;
@@ -500,11 +524,25 @@ public class RobotLocomotion : MonoBehaviour
         // Lacet et freinage horizontal leger (le robot ne glisse pas indefiniment)
         float targetYaw = steer * turnRateDeg * Mathf.Deg2Rad;
         Body.AddTorque(up * (targetYaw - yawRate) * 4f, ForceMode.Acceleration);
+        // Vitesse de pointe : celle des rotors, ou celle des propulseurs s'il y en a
         Vector3 horizontal = Vector3.ProjectOnPlane(Body.linearVelocity, Vector3.up);
-        float limit = rotorSpeed * (boost ? boostMultiplier : 1f);
+        float limit = Mathf.Max(rotorSpeed * k, ThrusterLimit()) * (boost ? boostMultiplier : 1f);
         if (horizontal.magnitude > limit)
             Body.AddForce(-horizontal.normalized * (horizontal.magnitude - limit) * 2f, ForceMode.Acceleration);
-        Body.AddForce(-horizontal * 0.25f, ForceMode.Acceleration);
+        Body.AddForce(-horizontal * (0.25f / k), ForceMode.Acceleration);
+    }
+
+    // Vitesse de pointe permise par les propulseurs (0 sans propulseur) : 30 m/s
+    // au niveau 1, + 30 % par niveau
+    private float ThrusterLimit()
+    {
+        float limit = 0f;
+        foreach (var u in units)
+        {
+            if (u.kind == LocomotionKind.Thruster && !u.disabled)
+                limit = Mathf.Max(limit, 30f * TierFactor(u.tier));
+        }
+        return limit;
     }
 
     private void ApplyThrusters(Vector3 up, Vector3 forward)
@@ -513,7 +551,7 @@ public class RobotLocomotion : MonoBehaviour
         if (thrusters.Count == 0)
             return;
         float speed = Body.linearVelocity.magnitude;
-        float limit = 30f * (boost ? boostMultiplier : 1f);
+        float limit = ThrusterLimit() * (boost ? boostMultiplier : 1f);
         foreach (var t in thrusters)
         {
             Vector3 dir = transform.TransformDirection(t.axis);
@@ -521,7 +559,7 @@ public class RobotLocomotion : MonoBehaviour
             if (speed > limit)
                 fire *= 0.2f;
             t.output = Mathf.MoveTowards(t.output, fire, Time.fixedDeltaTime * 4f);
-            float accel = 9f * (boost ? boostMultiplier : 1f);
+            float accel = 9f * TierFactor(t.tier) * (boost ? boostMultiplier : 1f);
             Body.AddForceAtPosition(dir * (t.output * accel * Body.mass / thrusters.Count), transform.TransformPoint(t.center));
         }
     }
