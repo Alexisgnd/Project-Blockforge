@@ -1,0 +1,939 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 086f3f13c0431ebfadb7a33475610dc1, type: 3}
+  m_Name: MockMetaData
+  m_EditorClassIdentifier: Blockforge.Runtime::Blockforge.Meta.MockMetaData
+  credits: 12480
+  techPoints: 1240
+  level: 14
+  xpInLevel: 2450
+  xpForNextLevel: 3000
+  modeName: Team Deathmatch
+  mapName: Hex valley
+  durationSeconds: 552
+  allyScore: 25
+  enemyScore: 19
+  rewardCredits: 1240
+  rewardTechPoints: 85
+  rewardXp: 620
+  players:
+  - name: freejam_chris
+    team: 0
+    isLocal: 1
+    isBot: 0
+    kills: 7
+    deaths: 2
+    assists: 5
+    damage: 18420
+    healing: 0
+    score: 2180
+  - name: Necro_ciclone
+    team: 0
+    isLocal: 0
+    isBot: 1
+    kills: 6
+    deaths: 3
+    assists: 4
+    damage: 15300
+    healing: 1200
+    score: 1640
+  - name: Refticus
+    team: 0
+    isLocal: 0
+    isBot: 1
+    kills: 5
+    deaths: 4
+    assists: 6
+    damage: 12900
+    healing: 0
+    score: 1410
+  - name: serz219
+    team: 0
+    isLocal: 0
+    isBot: 1
+    kills: 4
+    deaths: 5
+    assists: 3
+    damage: 9870
+    healing: 2100
+    score: 1020
+  - name: Starshock21
+    team: 0
+    isLocal: 0
+    isBot: 1
+    kills: 3
+    deaths: 5
+    assists: 7
+    damage: 7400
+    healing: 9350
+    score: 980
+  - name: EoS_Keegardhard
+    team: 1
+    isLocal: 0
+    isBot: 1
+    kills: 6
+    deaths: 4
+    assists: 2
+    damage: 14080
+    healing: 0
+    score: 1520
+  - name: Dima112006
+    team: 1
+    isLocal: 0
+    isBot: 1
+    kills: 4
+    deaths: 5
+    assists: 3
+    damage: 11200
+    healing: 0
+    score: 1150
+  - name: Taker195
+    team: 1
+    isLocal: 0
+    isBot: 1
+    kills: 4
+    deaths: 5
+    assists: 1
+    damage: 10050
+    healing: 3100
+    score: 1040
+  - name: xRyus
+    team: 1
+    isLocal: 0
+    isBot: 1
+    kills: 3
+    deaths: 5
+    assists: 4
+    damage: 8600
+    healing: 0
+    score: 900
+  - name: Zdziefan
+    team: 1
+    isLocal: 0
+    isBot: 1
+    kills: 2
+    deaths: 6
+    assists: 2
+    damage: 6100
+    healing: 400
+    score: 640
+  workshopTotal: 1240
+  robots:
+  - id: hover-tank-mk4
+    name: Hover tank Mk IV
+    author: Refticus
+    cpu: 1640
+    mass: 9820
+    topSpeedMph: 148
+    health: 31400
+    downloads: 12480
+    price: 2400
+    grade: 3
+    mainCategory: 1
+    blocks: 212
+    movement: 6
+    weapons: 2
+    electronics: 1
+    ownedParts: 198
+    totalParts: 221
+    description: Low-slung hover chassis with twin plasma launchers and a rear shield
+      plate. Fast on open ground, fragile from above.
+    updatedLabel: updated 2 days ago
+  - id: plasma-walker
+    name: Plasma walker
+    author: Necro_ciclone
+    cpu: 1720
+    mass: 11200
+    topSpeedMph: 92
+    health: 36800
+    downloads: 9115
+    price: 2900
+    grade: 3
+    mainCategory: 2
+    blocks: 240
+    movement: 6
+    weapons: 3
+    electronics: 0
+    ownedParts: 180
+    totalParts: 249
+    description: Six-legged platform that keeps three plasma launchers level on any
+      slope. Slow, steady, relentless.
+    updatedLabel: updated 2 days ago
+  - id: rail-sniper
+    name: Rail sniper
+    author: serz219
+    cpu: 1590
+    mass: 8600
+    topSpeedMph: 131
+    health: 24900
+    downloads: 7302
+    price: 2150
+    grade: 2
+    mainCategory: 2
+    blocks: 168
+    movement: 4
+    weapons: 1
+    electronics: 1
+    ownedParts: 160
+    totalParts: 174
+    description: A single rail cannon on a wheeled frame built to shoot first and
+      leave. Keep your distance.
+    updatedLabel: updated 2 days ago
+  - id: medic-buggy
+    name: Medic buggy
+    author: Starshock21
+    cpu: 1455
+    mass: 6200
+    topSpeedMph: 156
+    health: 19800
+    downloads: 6940
+    price: 1800
+    grade: 2
+    mainCategory: 3
+    blocks: 140
+    movement: 4
+    weapons: 0
+    electronics: 3
+    ownedParts: 139
+    totalParts: 147
+    description: Light buggy carrying two nano dispensers. Heals faster than it fights.
+    updatedLabel: updated 2 days ago
+  - id: siege-platform
+    name: Siege platform
+    author: EoS_Keegardhard
+    cpu: 1850
+    mass: 15400
+    topSpeedMph: 64
+    health: 48200
+    downloads: 5612
+    price: 3300
+    grade: 4
+    mainCategory: 0
+    blocks: 310
+    movement: 8
+    weapons: 2
+    electronics: 1
+    ownedParts: 240
+    totalParts: 321
+    description: Tracked block of armour with a rail cannon on top. Takes the hits
+      so the team does not have to.
+    updatedLabel: updated 2 days ago
+  - id: flak-car
+    name: Flak car
+    author: Dima112006
+    cpu: 1702
+    mass: 9100
+    topSpeedMph: 139
+    health: 27500
+    downloads: 4870
+    price: 2650
+    grade: 1
+    mainCategory: 2
+    blocks: 190
+    movement: 4
+    weapons: 2
+    electronics: 0
+    ownedParts: 170
+    totalParts: 196
+    description: Fast wheeled car with two flak cannons. Built to swat rotors out
+      of the sky.
+    updatedLabel: updated 2 days ago
+  - id: drone-carrier
+    name: Drone carrier
+    author: Taker195
+    cpu: 1668
+    mass: 10400
+    topSpeedMph: 88
+    health: 30100
+    downloads: 4101
+    price: 2500
+    grade: 3
+    mainCategory: 3
+    blocks: 220
+    movement: 6
+    weapons: 1
+    electronics: 2
+    ownedParts: 201
+    totalParts: 229
+    description: Hover platform with a radar and a shield module. Sees everything,
+      hides nothing.
+    updatedLabel: updated 2 days ago
+  - id: laser-hover
+    name: Laser hover
+    author: Zdziefan
+    cpu: 1610
+    mass: 7800
+    topSpeedMph: 162
+    health: 22600
+    downloads: 3955
+    price: 2200
+    grade: 1
+    mainCategory: 1
+    blocks: 176
+    movement: 6
+    weapons: 2
+    electronics: 0
+    ownedParts: 170
+    totalParts: 184
+    description: Four hovers and two laser blasters. The lightest fighter on this
+      page.
+    updatedLabel: updated 2 days ago
+  currentRobotName: Race car
+  currentRobotCpu: 1813
+  cpuBudget: 2000
+  bundle:
+    id: bundle-plasma-strike
+    name: Plasma strike pack
+    description: Two plasma launchers, a shield module, 40 hardened armour blocks
+      and the Ember paint set. Saves 1 300 credits over buying the parts alone.
+    price: 4900
+    wasPrice: 6200
+    endsInHours: 54
+    weapons: 2
+    modules: 1
+    blocks: 40
+    paintSets: 1
+  items:
+  - id: laser-blaster
+    name: Laser blaster
+    category: 2
+    grade: 0
+    cpu: 60
+    price: 320
+    owned: 8
+    requiresResearch: 0
+    stats:
+    - label: Damage
+      value: 1 100
+      ratio: 0.22
+    - label: Fire rate
+      value: 4
+      ratio: 0.9
+    - label: Range
+      value: 140
+      ratio: 0.4
+    - label: CPU
+      value: 60
+      ratio: 0.15
+    - label: Mass
+      value: 320
+      ratio: 0.14
+    description: A rapid laser with a short reach. Cheap, light and always on target.
+  - id: rail-cannon
+    name: Rail cannon
+    category: 2
+    grade: 2
+    cpu: 240
+    price: 2100
+    owned: 1
+    requiresResearch: 0
+    stats:
+    - label: Damage
+      value: 7 800
+      ratio: 0.92
+    - label: Fire rate
+      value: 0.4
+      ratio: 0.15
+    - label: Range
+      value: 400
+      ratio: 0.95
+    - label: CPU
+      value: 240
+      ratio: 0.6
+    - label: Mass
+      value: 1 980
+      ratio: 0.7
+    description: A long-barrel cannon that charges for a second and punches through
+      armour in a straight line. Slow, loud, decisive.
+  - id: plasma-launcher
+    name: Plasma launcher
+    category: 2
+    grade: 3
+    cpu: 165
+    price: 1450
+    owned: 2
+    requiresResearch: 0
+    stats:
+    - label: Damage
+      value: 4 200
+      ratio: 0.78
+    - label: Fire rate
+      value: 0.8
+      ratio: 0.3
+    - label: Range
+      value: 220
+      ratio: 0.66
+    - label: CPU
+      value: 165
+      ratio: 0.45
+    - label: Mass
+      value: 1 240
+      ratio: 0.52
+    description: Lobs a slow plasma bolt that splashes on impact. Arcs over cover;
+      weak against fast hovers.
+  - id: flak-cannon
+    name: Flak cannon
+    category: 2
+    grade: 1
+    cpu: 140
+    price: 980
+    owned: 0
+    requiresResearch: 0
+    stats:
+    - label: Damage
+      value: 2 600
+      ratio: 0.5
+    - label: Fire rate
+      value: 1.5
+      ratio: 0.45
+    - label: Range
+      value: 260
+      ratio: 0.7
+    - label: CPU
+      value: 140
+      ratio: 0.38
+    - label: Mass
+      value: 1 020
+      ratio: 0.42
+    description: Bursts in the air near flying robots. Does little to anything on
+      the ground.
+  - id: tesla-blade
+    name: Tesla blade
+    category: 2
+    grade: 3
+    cpu: 120
+    price: 1600
+    owned: 0
+    requiresResearch: 0
+    stats:
+    - label: Damage
+      value: 3 400
+      ratio: 0.64
+    - label: Fire rate
+      value: 2
+      ratio: 0.55
+    - label: Range
+      value: 12
+      ratio: 0.05
+    - label: CPU
+      value: 120
+      ratio: 0.32
+    - label: Mass
+      value: 860
+      ratio: 0.36
+    description: A spinning blade that arcs lightning into anything it touches. Get
+      close.
+  - id: ion-distorter
+    name: Ion distorter
+    category: 2
+    grade: 4
+    cpu: 310
+    price: 4200
+    owned: 0
+    requiresResearch: 1
+    stats:
+    - label: Damage
+      value: 5 200
+      ratio: 0.84
+    - label: Fire rate
+      value: 0.6
+      ratio: 0.2
+    - label: Range
+      value: 300
+      ratio: 0.8
+    - label: CPU
+      value: 310
+      ratio: 0.8
+    - label: Mass
+      value: 2 400
+      ratio: 0.84
+    description: Bends an enemy's energy field for a moment. Research it before it
+      reaches the Store.
+  - id: cube
+    name: Cube
+    category: 0
+    grade: 0
+    cpu: 1
+    price: 10
+    owned: 480
+    requiresResearch: 0
+    stats:
+    - label: Health
+      value: 600
+      ratio: 0.2
+    - label: CPU
+      value: 1
+      ratio: 0.01
+    - label: Mass
+      value: 10
+      ratio: 0.02
+    description: The block everything else is built on.
+  - id: hardened-plate
+    name: Hardened plate
+    category: 0
+    grade: 3
+    cpu: 4
+    price: 60
+    owned: 40
+    requiresResearch: 0
+    stats:
+    - label: Health
+      value: 2 400
+      ratio: 0.7
+    - label: CPU
+      value: 4
+      ratio: 0.04
+    - label: Mass
+      value: 48
+      ratio: 0.1
+    description: Thick armour plate for the side that faces the enemy.
+  - id: wheel
+    name: Wheel
+    category: 1
+    grade: 0
+    cpu: 20
+    price: 120
+    owned: 12
+    requiresResearch: 0
+    stats:
+    - label: Speed
+      value: 118
+      ratio: 0.6
+    - label: CPU
+      value: 20
+      ratio: 0.08
+    - label: Mass
+      value: 240
+      ratio: 0.12
+    description: A steering wheel for flat ground.
+  - id: hover-blade
+    name: Hover blade
+    category: 1
+    grade: 1
+    cpu: 35
+    price: 340
+    owned: 6
+    requiresResearch: 0
+    stats:
+    - label: Speed
+      value: 148
+      ratio: 0.74
+    - label: CPU
+      value: 35
+      ratio: 0.12
+    - label: Mass
+      value: 180
+      ratio: 0.1
+    description: Floats a metre above anything. Slides in corners.
+  - id: radar
+    name: Radar
+    category: 3
+    grade: 0
+    cpu: 40
+    price: 400
+    owned: 1
+    requiresResearch: 0
+    stats:
+    - label: Range
+      value: 300
+      ratio: 0.8
+    - label: CPU
+      value: 40
+      ratio: 0.14
+    - label: Mass
+      value: 120
+      ratio: 0.08
+    description: Shows enemies on the minimap for the whole team.
+  - id: shield-module
+    name: Shield module
+    category: 3
+    grade: 2
+    cpu: 90
+    price: 1100
+    owned: 0
+    requiresResearch: 1
+    stats:
+    - label: Absorb
+      value: 6 000
+      ratio: 0.7
+    - label: CPU
+      value: 90
+      ratio: 0.26
+    - label: Mass
+      value: 420
+      ratio: 0.2
+    description: A bubble that absorbs one volley. Research first.
+  - id: ember-paint
+    name: Ember paint set
+    category: 4
+    grade: 1
+    cpu: 0
+    price: 600
+    owned: 0
+    requiresResearch: 0
+    stats:
+    - label: Colours
+      value: 12
+      ratio: 0.5
+    description: Twelve warm tones for the spray gun.
+  nodes:
+  - id: t-light-armour
+    name: Light armour
+    lane: 0
+    tier: 1
+    grade: 0
+    state: 0
+    cost: 0
+    storePrice: 10
+    description: Basic cubes and prisms.
+    stats:
+    - label: Health
+      value: 600
+      ratio: 0.2
+    - label: CPU
+      value: 1
+      ratio: 0.01
+  - id: t-heavy-armour
+    name: Heavy armour
+    lane: 0
+    tier: 2
+    grade: 1
+    state: 0
+    cost: 120
+    storePrice: 40
+    description: Denser blocks for the front line.
+    stats:
+    - label: Health
+      value: 1 400
+      ratio: 0.4
+    - label: CPU
+      value: 2
+      ratio: 0.02
+  - id: hardened-plate
+    name: Hardened plate
+    lane: 0
+    tier: 3
+    grade: 3
+    state: 1
+    cost: 220
+    storePrice: 60
+    description: Thick armour plate for the side that faces the enemy.
+    stats:
+    - label: Health
+      value: 2 400
+      ratio: 0.7
+    - label: CPU
+      value: 4
+      ratio: 0.04
+  - id: t-tesla-plating
+    name: Tesla plating
+    lane: 0
+    tier: 4
+    grade: 3
+    state: 2
+    cost: 480
+    storePrice: 140
+    description: Armour that shocks whatever touches it.
+    stats:
+    - label: Health
+      value: 2 000
+      ratio: 0.6
+    - label: Shock
+      value: 800
+      ratio: 0.4
+  - id: t-masterwork-alloy
+    name: Masterwork alloy
+    lane: 0
+    tier: 5
+    grade: 4
+    state: 2
+    cost: 900
+    storePrice: 320
+    description: The lightest armour there is.
+    stats:
+    - label: Health
+      value: 3 600
+      ratio: 0.95
+    - label: CPU
+      value: 6
+      ratio: 0.06
+  - id: wheel
+    name: Wheels
+    lane: 1
+    tier: 1
+    grade: 0
+    state: 0
+    cost: 0
+    storePrice: 120
+    description: A steering wheel for flat ground.
+    stats:
+    - label: Speed
+      value: 118
+      ratio: 0.6
+    - label: CPU
+      value: 20
+      ratio: 0.08
+  - id: hover-blade
+    name: Hovers
+    lane: 1
+    tier: 2
+    grade: 1
+    state: 0
+    cost: 180
+    storePrice: 340
+    description: Floats a metre above anything. Slides in corners.
+    stats:
+    - label: Speed
+      value: 148
+      ratio: 0.74
+    - label: CPU
+      value: 35
+      ratio: 0.12
+  - id: t-legs
+    name: Legs
+    lane: 1
+    tier: 3
+    grade: 2
+    state: 1
+    cost: 300
+    storePrice: 520
+    description: Insect legs that climb anything.
+    stats:
+    - label: Speed
+      value: 72
+      ratio: 0.3
+    - label: CPU
+      value: 48
+      ratio: 0.16
+  - id: t-thrusters
+    name: Thrusters
+    lane: 1
+    tier: 4
+    grade: 3
+    state: 2
+    cost: 520
+    storePrice: 900
+    description: Short bursts of speed in any direction.
+    stats:
+    - label: Thrust
+      value: 4 200
+      ratio: 0.7
+    - label: CPU
+      value: 60
+      ratio: 0.2
+  - id: t-rotors
+    name: Rotors
+    lane: 1
+    tier: 5
+    grade: 4
+    state: 2
+    cost: 760
+    storePrice: 1400
+    description: Full flight. Fragile.
+    stats:
+    - label: Lift
+      value: 6 000
+      ratio: 0.85
+    - label: CPU
+      value: 110
+      ratio: 0.3
+  - id: laser-blaster
+    name: Laser blaster
+    lane: 2
+    tier: 1
+    grade: 0
+    state: 0
+    cost: 0
+    storePrice: 320
+    description: A rapid laser with a short reach.
+    stats:
+    - label: Damage
+      value: 1 100
+      ratio: 0.22
+    - label: Fire rate
+      value: 4
+      ratio: 0.9
+    - label: Range
+      value: 140
+      ratio: 0.4
+    - label: CPU
+      value: 60
+      ratio: 0.15
+  - id: plasma-launcher
+    name: Plasma launcher
+    lane: 2
+    tier: 2
+    grade: 3
+    state: 0
+    cost: 260
+    storePrice: 1450
+    description: Lobs a slow plasma bolt that splashes on impact.
+    stats:
+    - label: Damage
+      value: 4 200
+      ratio: 0.78
+    - label: Fire rate
+      value: 0.8
+      ratio: 0.3
+    - label: Range
+      value: 220
+      ratio: 0.66
+    - label: CPU
+      value: 165
+      ratio: 0.45
+  - id: rail-cannon
+    name: Rail cannon
+    lane: 2
+    tier: 3
+    grade: 2
+    state: 1
+    cost: 350
+    storePrice: 2100
+    description: A long-barrel cannon that charges for a second and punches through
+      armour in a straight line. Slow, loud, decisive.
+    stats:
+    - label: Damage
+      value: 7 800
+      ratio: 0.92
+    - label: Fire rate
+      value: 0.4
+      ratio: 0.15
+    - label: Range
+      value: 400
+      ratio: 0.95
+    - label: CPU
+      value: 240
+      ratio: 0.6
+  - id: flak-cannon
+    name: Flak cannon
+    lane: 2
+    tier: 4
+    grade: 1
+    state: 2
+    cost: 600
+    storePrice: 980
+    description: Bursts in the air near flying robots.
+    stats:
+    - label: Damage
+      value: 2 600
+      ratio: 0.5
+    - label: Fire rate
+      value: 1.5
+      ratio: 0.45
+    - label: Range
+      value: 260
+      ratio: 0.7
+    - label: CPU
+      value: 140
+      ratio: 0.38
+  - id: ion-distorter
+    name: Ion distorter
+    lane: 2
+    tier: 5
+    grade: 4
+    state: 2
+    cost: 1100
+    storePrice: 4200
+    description: Bends an enemy's energy field for a moment.
+    stats:
+    - label: Damage
+      value: 5 200
+      ratio: 0.84
+    - label: Fire rate
+      value: 0.6
+      ratio: 0.2
+    - label: Range
+      value: 300
+      ratio: 0.8
+    - label: CPU
+      value: 310
+      ratio: 0.8
+  - id: radar
+    name: Radar
+    lane: 3
+    tier: 1
+    grade: 0
+    state: 0
+    cost: 0
+    storePrice: 400
+    description: Shows enemies on the minimap for the whole team.
+    stats:
+    - label: Range
+      value: 300
+      ratio: 0.8
+    - label: CPU
+      value: 40
+      ratio: 0.14
+  - id: shield-module
+    name: Shield module
+    lane: 3
+    tier: 2
+    grade: 2
+    state: 1
+    cost: 260
+    storePrice: 1100
+    description: A bubble that absorbs one volley.
+    stats:
+    - label: Absorb
+      value: 6 000
+      ratio: 0.7
+    - label: CPU
+      value: 90
+      ratio: 0.26
+  - id: t-repair-module
+    name: Repair module
+    lane: 3
+    tier: 3
+    grade: 2
+    state: 2
+    cost: 540
+    storePrice: 1600
+    description: Rebuilds nearby blocks over time.
+    stats:
+    - label: Heal
+      value: 900
+      ratio: 0.5
+    - label: CPU
+      value: 110
+      ratio: 0.3
+  - id: t-cloak
+    name: Cloak
+    lane: 3
+    tier: 4
+    grade: 3
+    state: 2
+    cost: 800
+    storePrice: 2600
+    description: Three seconds of invisibility.
+    stats:
+    - label: Duration
+      value: 3
+      ratio: 0.3
+    - label: CPU
+      value: 150
+      ratio: 0.4
+  - id: t-emp-burst
+    name: EMP burst
+    lane: 3
+    tier: 5
+    grade: 4
+    state: 2
+    cost: 1200
+    storePrice: 4800
+    description: Shuts down every module in range.
+    stats:
+    - label: Range
+      value: 60
+      ratio: 0.45
+    - label: CPU
+      value: 220
+      ratio: 0.6

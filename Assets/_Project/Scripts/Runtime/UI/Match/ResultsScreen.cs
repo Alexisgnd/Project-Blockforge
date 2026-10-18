@@ -122,13 +122,9 @@ public sealed class ResultsScreen : MonoBehaviour
         UIKit.HudShadow(word);
         // Le score n'apparait qu'ici : 24 px a droite du mot, meme ligne de base
         var score = kit.Row(h1, "Score", R.ScoreGap, TextAnchor.LowerLeft, UIKit.Pad(R.ScoreOffset - BlockforgeTheme.Space4, 0f, 0f, 0f));
-        var ally = kit.Mono(score, "Ally", R.ScoreSize, 600, P.TeamAlly, BlockforgeTheme.Num(Result.AllyScore), TextAlignmentOptions.MidlineLeft);
-        UIKit.Fixed(ally, -1f, R.ScoreSize);
+        var ally = kit.Mono(score, "Ally", R.ScoreSize, 600, P.TeamAlly, BlockforgeTheme.Num(Result.AllyScore), TextAlignmentOptions.BottomLeft);
         var dash = kit.Mono(score, "Dash", R.DashSize, 600, P.InkMuted, "–", TextAlignmentOptions.MidlineLeft);
-        // Meme hauteur de ligne que les scores : le tiret se centre sur eux au lieu de tomber sur la ligne de base
-        UIKit.Fixed(dash, -1f, R.ScoreSize);
-        var enemy = kit.Mono(score, "Enemy", R.ScoreSize, 600, P.TeamEnemy, BlockforgeTheme.Num(Result.EnemyScore), TextAlignmentOptions.MidlineLeft);
-        UIKit.Fixed(enemy, -1f, R.ScoreSize);
+        var enemy = kit.Mono(score, "Enemy", R.ScoreSize, 600, P.TeamEnemy, BlockforgeTheme.Num(Result.EnemyScore), TextAlignmentOptions.BottomLeft);
         UIKit.HudShadow(ally);
         UIKit.HudShadow(dash);
         UIKit.HudShadow(enemy);
