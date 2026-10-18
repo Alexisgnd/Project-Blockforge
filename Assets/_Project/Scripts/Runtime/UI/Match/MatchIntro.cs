@@ -22,8 +22,8 @@ using UnityEngine.UI;
 //             arrivent en cascade de haut en bas, 40 ms d'ecart
 // La barre de chargement court des deux bords vers le centre
 // pendant tout le chargement ; chaque ligne porte sa propre
-// progression (le joueur suit le chargement reel de la scene,
-// les bots « se connectent » en 0,6 a 2,2 s). Echap / Cancel
+// progression (le joueur suit le chargement reel de la scene ;
+// les bots sont prets d'emblee : 100 % des l'affichage). Echap / Cancel
 // annule tant que la scene n'a pas commence a charger ; ensuite
 // le pied de page passe a « Loading… ». Scene prete : fondu de
 // sortie en 220 ms. Animations reduites : fondu de 140 ms, pas
@@ -160,7 +160,6 @@ public class MatchIntro : MonoBehaviour
         public RectTransform fill;
         public TMP_Text pct;
         public float load;           // 0..1
-        public float connectTime;    // bots : duree de « connexion »
         public float startAt;        // temps (depuis le debut) ou la ligne commence a charger
         public bool ready;
     }
@@ -326,7 +325,7 @@ public class MatchIntro : MonoBehaviour
             if (row.p.isSelf)
                 load = op == null ? 0f : Mathf.Clamp01(op.progress / 0.9f);
             else
-                load = Mathf.Clamp01((now - row.startAt) / row.connectTime);
+                load = 1f; // bots : rien a charger, prets des le clic sur Play with bots
             SetRowLoad(row, load);
             bool ally = data.allies.Contains(row.p);
             if (ally) { allySum += load; allyN++; } else { enemySum += load; enemyN++; }
@@ -667,11 +666,9 @@ public class MatchIntro : MonoBehaviour
 
         // Lignes
         float y = -(68f + 14f);
-        var rng = new System.Random();
         for (int i = 0; i < team.Count; i++)
         {
             var row = BuildRow(srt, team[i], enemy, y, i + 1);
-            row.connectTime = 0.6f + (float)rng.NextDouble() * 1.6f;
             rows.Add(row);
             y -= RowH + RowGap;
         }
@@ -821,7 +818,7 @@ public class MatchIntro : MonoBehaviour
         }
 
         var view = new RowView { p = p, fill = flr, pct = pct };
-        SetRowLoad(view, 0f);
+        SetRowLoad(view, p.isBot ? 1f : 0f);
         return view;
     }
 

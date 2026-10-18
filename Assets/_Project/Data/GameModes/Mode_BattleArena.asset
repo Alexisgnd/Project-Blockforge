@@ -24,6 +24,6 @@ MonoBehaviour:
   teamSize: 5
   mapName: Hex valley
   versusSummary: "hold three objectives \xB7 15:00"
-  sceneName: Map_Test
+  sceneName: Map_MARS
   icon: {fileID: 0}
   mapImage: {fileID: 0}

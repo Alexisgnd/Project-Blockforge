@@ -572,7 +572,7 @@ public static class GameModesUISetup
                 m.iconName = "skull";
                 m.playersLabel = "5 vs 5"; m.targetLabel = "25 kills"; m.timeLabel = "10:00";
                 m.teamSize = 5; m.mapName = "Hex valley"; m.versusSummary = "first to 25 · 10:00";
-                m.sceneName = "Map_Test";
+                m.sceneName = "Map_MARS";
             }),
             EnsureMode("Mode_BattleArena", m =>
             {
@@ -584,7 +584,7 @@ public static class GameModesUISetup
                 m.iconName = "objective";
                 m.playersLabel = "5 vs 5"; m.targetLabel = "3 objectives"; m.timeLabel = "15:00";
                 m.teamSize = 5; m.mapName = "Hex valley"; m.versusSummary = "hold three objectives · 15:00";
-                m.sceneName = "Map_Test";
+                m.sceneName = "Map_MARS";
             }),
         };
 

@@ -36,7 +36,7 @@ public class GameModeDefinition : ScriptableObject
 
     [Header("Navigation")]
     [Tooltip("Scene chargee au lancement (doit etre dans la liste du build)")]
-    public string sceneName = "Map_Test";
+    public string sceneName = "Map_MARS";
 
     [Header("Visuels (optionnels)")]
     public Sprite icon;

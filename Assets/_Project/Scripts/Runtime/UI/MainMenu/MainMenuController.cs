@@ -41,7 +41,7 @@ public class MainMenuController : MonoBehaviour
     public BuildMenuController buildMenu;
 
     [Header("Navigation")]
-    public string arenaSceneName = "Map_Test";
+    public string arenaSceneName = "Map_MARS";
     public string garageSceneName = "Garage";
 
     [Header("Onglets (auto-détectés si vide)")]
