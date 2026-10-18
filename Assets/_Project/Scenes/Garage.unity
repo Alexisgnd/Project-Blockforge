@@ -370,8 +370,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 9
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -729,8 +731,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1927497081}
@@ -1290,8 +1294,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 7
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -1392,8 +1398,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 584187329}
@@ -1559,7 +1567,7 @@ MonoBehaviour:
   m_text: Mobility
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1789,8 +1797,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 2
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -2313,8 +2323,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1750621954}
@@ -2467,8 +2479,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 8
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -2746,8 +2760,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 285049538}
@@ -3051,7 +3067,7 @@ MonoBehaviour:
   m_text: All
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3575,8 +3591,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 15
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -4341,7 +4359,7 @@ MonoBehaviour:
   m_text: CUBE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4801,8 +4819,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 9
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -5532,8 +5552,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1217704314}
@@ -5685,8 +5707,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 2
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -6550,8 +6574,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 12
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1858464038}
@@ -7254,8 +7280,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 7
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -7497,6 +7525,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 626216634}
   m_CullTransparentMesh: 1
+--- !u!1001 &640724400
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6586571908912205110, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      propertyPath: m_Name
+      value: ShipGarage_V3
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 654331654}
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: -8037938140082288066, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+--- !u!4 &640724401 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1332645153481229337, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+  m_PrefabInstance: {fileID: 640724400}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &641046537
 GameObject:
   m_ObjectHideFlags: 0
@@ -7807,8 +7900,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 176186689}
@@ -7915,6 +8010,96 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 645911967}
   m_CullTransparentMesh: 1
+--- !u!1 &654331653
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 654331654}
+  - component: {fileID: 654331656}
+  - component: {fileID: 654331655}
+  m_Layer: 0
+  m_Name: centerLine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &654331654
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654331653}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.0000009536743, y: -0.0050000018, z: -0.0000009536743}
+  m_LocalScale: {x: 0.06749998, y: 0.01, z: 31.644999}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 640724401}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &654331655
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654331653}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: -4268510316511394518, guid: 1dd905f6ff4b0574dab890eaa49abf15, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &654331656
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654331653}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &664183476
 GameObject:
   m_ObjectHideFlags: 0
@@ -7969,8 +8154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 422676108}
@@ -8401,8 +8588,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 10
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 396750893}
@@ -8503,8 +8692,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 6
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -9288,8 +9479,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 2
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -9486,8 +9679,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 5
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -9652,7 +9847,7 @@ MonoBehaviour:
   m_text: Controls
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9917,8 +10112,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1656096636}
@@ -10030,8 +10227,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 1
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -10683,8 +10882,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1326584094}
@@ -11019,8 +11220,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1970416545}
@@ -11120,8 +11323,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 7
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -12194,8 +12399,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 5
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -12392,8 +12599,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1997569030}
@@ -13897,8 +14106,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 20
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -13999,8 +14210,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 458621788}
@@ -14101,8 +14314,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 6
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -14165,8 +14380,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1315064722}
@@ -14214,96 +14431,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1145703629}
   m_CullTransparentMesh: 1
---- !u!1 &1147120795
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1147120796}
-  - component: {fileID: 1147120798}
-  - component: {fileID: 1147120797}
-  m_Layer: 0
-  m_Name: centerLine
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1147120796
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1147120795}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.0000009536743, y: -0.0050000018, z: -0.0000009536743}
-  m_LocalScale: {x: 0.06749998, y: 0.01, z: 31.644999}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1638927386}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!23 &1147120797
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1147120795}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: -4268510316511394518, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 1
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1147120798
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1147120795}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1158196243
 GameObject:
   m_ObjectHideFlags: 0
@@ -14364,7 +14491,7 @@ MonoBehaviour:
   m_text: Special
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15556,8 +15683,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 7
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -15626,7 +15755,7 @@ MonoBehaviour:
   m_text: Chassis
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16174,8 +16303,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 8
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -16244,7 +16375,7 @@ MonoBehaviour:
   m_text: "SLOT 1/3 \u2013 PR\xC9DATEUR MK1"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16413,8 +16544,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 890735760}
@@ -17083,8 +17216,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 4
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 1
   labels: []
   icons: []
@@ -17683,8 +17818,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 6
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -18017,8 +18154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 5
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -18829,8 +18968,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1602626922}
@@ -19404,8 +19545,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 848771975}
@@ -19506,8 +19649,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 6
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -20763,8 +20908,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1786822872}
@@ -21122,8 +21269,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1726382249}
@@ -21194,7 +21343,7 @@ MonoBehaviour:
   m_text: Weapons
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -21704,8 +21853,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 6
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -21943,8 +22094,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1457849274}
@@ -22030,71 +22183,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
   m_VerticalFit: 2
---- !u!1001 &1638927385
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2107409826236812522, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      propertyPath: m_Name
-      value: ShipGarage_V2
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1147120796}
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 3150474306388093854, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
---- !u!4 &1638927386 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -3970243614316841892, guid: 7a25b6fc266e11947992a7d1b0cd86c1, type: 3}
-  m_PrefabInstance: {fileID: 1638927385}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1656096634
 GameObject:
   m_ObjectHideFlags: 0
@@ -22927,8 +23015,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1854225851}
@@ -23518,7 +23608,7 @@ MonoBehaviour:
   m_text: Defense
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -23913,8 +24003,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 17
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1158196245}
@@ -24165,8 +24257,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 3
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 1
   labels: []
   icons: []
@@ -24328,8 +24422,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 14
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons:
@@ -24536,7 +24632,7 @@ MonoBehaviour:
   m_text: Rename
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
-  m_sharedMaterial: {fileID: 8471667348456885641, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
+  m_sharedMaterial: {fileID: -2596854408073630020, guid: 4abb4c77214f7a64c86412a5c6bb90d0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -24763,8 +24859,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 13
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1449277867}
@@ -25098,8 +25196,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 14
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons:
@@ -25201,8 +25301,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1102166450}
@@ -25441,8 +25543,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1668528332}
@@ -25871,8 +25975,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 7
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -26974,8 +27080,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 22
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1563561630}
@@ -27136,8 +27244,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 12
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1615934304}
@@ -27998,8 +28108,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 18
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons:
@@ -28256,8 +28368,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 12
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels:
   - {fileID: 1752968841}
@@ -28456,8 +28570,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 5
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -28849,8 +28965,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Blockforge.Runtime::DSElement
   role: 18
   tone: 0
+  theme: 0
   selected: 0
   empty: 0
+  done: 0
   hairlineEdge: 0
   labels: []
   icons: []
@@ -29037,7 +29155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Blockforge.Runtime::GarageBuildController
   viewCamera: {fileID: 1707425946}
-  gridRoot: {fileID: 1638927386}
+  gridRoot: {fileID: 640724401}
   inventory: {fileID: 1748811173}
   toolbar: {fileID: 306087795}
   statsHud: {fileID: 457381722}
@@ -30023,7 +30141,7 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1638927385}
+  - {fileID: 640724400}
   - {fileID: 17477950}
   - {fileID: 1851936956}
   - {fileID: 724058141}

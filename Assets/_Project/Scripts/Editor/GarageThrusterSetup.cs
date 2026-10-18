@@ -43,10 +43,10 @@ public static class GarageThrusterSetup
         if (!BlockforgeScenes.OpenForSetup(BlockforgeScenes.Garage, out var scene))
             return;
 
-        var ship = GameObject.Find("ShipGarage_V2");
+        var ship = GameObject.Find(GarageSceneSetup.ShipName);
         if (ship == null)
         {
-            Debug.LogError("[GarageThrusters] 'ShipGarage_V2' introuvable : lance d'abord Blockforge > Setup Garage Ship.");
+            Debug.LogError($"[GarageThrusters] '{GarageSceneSetup.ShipName}' introuvable : lance d'abord Blockforge > Setup Garage Ship.");
             return;
         }
 

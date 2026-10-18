@@ -114,7 +114,7 @@ Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à l
 - `UIPreview` — banc d'essai (hors build) : 1 Victory, 2 Defeat, 0 Draw, 3 Results, 4 Workshop, 5 Store, 6 Tech Tree, M ReduceMotion
 - `Map_Test` — terrain d'essai (Red Canyon) : touche P du garage, le robot en cours
   apparaît sur le `SpawnPoint` et se conduit en ZQSD ; ESC ×2 ramène au garage d'origine
-- `Map_MARS` — future arène de combat
+- `Map_MARS` — future arène de combat (map v2 : `Map_Mars_v2.glb` depuis le 18/10/2026, l'ancien `Map_Mars.fbx` n'est plus instancié)
 
 ## Conventions
 
@@ -124,7 +124,7 @@ Les setups du garage (`GarageUISetup`, `GarageInventorySetup`) s'appliquent à l
   les blocs historiques gardent leur numéro (`Block_01_Cube`, `Block_11_Ailes`).
 - Modèles : `<Famille>_<Nom>.fbx` dans `Art/Models/Blocks/<Catégorie>/` ;
   icônes `Icon_<Nom>.png` (512×512) dans `Art/Textures/Icons/`. Décors en GLB à la
-  racine de `Art/Models/` (`ShipGarage_V2.glb`, `Map_Canyon.glb`, `Map_Arena.glb`),
+  racine de `Art/Models/` (`ShipGarage_V3.glb`, `Map_Canyon.glb`, `Map_Arena.glb`, `Map_Mars_v2.glb`),
   importés par glTFast (`com.unity.cloud.gltfast`), stockés en LFS.
 - Matériaux : `<Famille>_<Matériau>.mat` (`Wheel_Rubber`, `Shield_CyanChannel`)
   dans `Art/Materials/Blocks/`, `Spray_*` dans `Art/Materials/Garage/`.

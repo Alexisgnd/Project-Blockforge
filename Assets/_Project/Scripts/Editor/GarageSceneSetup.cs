@@ -6,8 +6,13 @@ using UnityEngine;
 // =========================================================
 // SETUP DE LA SCENE GARAGE (vaisseau Mothership)
 // Menu : Blockforge > Setup Garage Ship
-// - Remplace un ancien vaisseau (ShipGarage.fbx x300) par le GLB
-//   ShipGarage_V2.glb (glTFast) a l'identite, echelle 1.
+// - Vaisseau V3 (18/10/2026) : ShipGarage_V3.glb (glTFast) a
+//   l'identite, echelle 1. Remplace les versions precedentes
+//   (ShipGarage_V2.glb, ancien ShipGarage.fbx x300), dont les
+//   fichiers restent dans le projet
+// - Si la nouvelle version est deposee a la racine du projet
+//   (ShipGarage_V3.glb), elle est deplacee dans Art/Models
+//   puis importee
 //   Contrat du modele : baie de construction 31 x 31 x 31 m
 //   centree a l'origine, lignes BuildGrid_X_NN / BuildGrid_Y_NN
 //   (32 par axe = 31 cases de 1 m, le code mesure l'union des
@@ -26,8 +31,13 @@ using UnityEngine;
 public static class GarageSceneSetup
 {
     private const string OldModelPath = "Assets/_Project/Art/Models/ShipGarage.fbx";
-    public const string ModelPath = "Assets/_Project/Art/Models/ShipGarage_V2.glb";
-    private const string ShipName = "ShipGarage_V2";
+    private const string PreviousModelPath = "Assets/_Project/Art/Models/ShipGarage_V2.glb";
+    public const string ModelPath = "Assets/_Project/Art/Models/ShipGarage_V3.glb";
+    // Nouvelle version telle que deposee a la racine du projet
+    private const string IncomingModelPath = "ShipGarage_V3.glb";
+    public const string ShipName = "ShipGarage_V3";
+    // Noms des instances des versions precedentes a retirer
+    private static readonly string[] PreviousShipNames = { "ShipGarage", "ShipGarage_V2" };
     private const string CenterLineName = "centerLine";
 
     private struct GridInfo
@@ -56,6 +66,7 @@ public static class GarageSceneSetup
         if (!BlockforgeScenes.OpenForSetup(BlockforgeScenes.Garage, out var scene))
             return;
 
+        ImportIncomingModel();
         var model = BlockforgeScenes.LoadModelAsset(ModelPath);
         if (model == null)
         {
@@ -87,14 +98,35 @@ public static class GarageSceneSetup
     // VAISSEAU
     // =========================================================
 
+    // Deplace la version deposee a la racine du projet vers Art/Models. Ne
+    // remplace jamais un ShipGarage_V3.glb deja present dans le projet.
+    private static void ImportIncomingModel()
+    {
+        if (!File.Exists(IncomingModelPath))
+            return;
+
+        if (File.Exists(ModelPath))
+        {
+            Debug.LogWarning($"[GarageSceneSetup] {IncomingModelPath} present a la racine mais {ModelPath} existe deja : " +
+                             "fichier de la racine laisse tel quel, le GLB du projet est conserve.");
+            return;
+        }
+
+        File.Move(IncomingModelPath, ModelPath);
+        AssetDatabase.ImportAsset(ModelPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+        Debug.Log($"[GarageSceneSetup] {IncomingModelPath} deplace en {ModelPath}, import glTFast lance.");
+    }
+
     private static void RemoveOldShip(UnityEngine.SceneManagement.Scene scene)
     {
         var oldModel = AssetDatabase.LoadAssetAtPath<GameObject>(OldModelPath);
+        var previousModel = AssetDatabase.LoadAssetAtPath<GameObject>(PreviousModelPath);
         int removed = 0;
         foreach (var root in scene.GetRootGameObjects())
         {
-            bool isOld = root.name == "ShipGarage"
-                || (oldModel != null && PrefabUtility.GetCorrespondingObjectFromOriginalSource(root) == oldModel);
+            var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(root);
+            bool isOld = System.Array.IndexOf(PreviousShipNames, root.name) >= 0
+                || (source != null && (source == oldModel || source == previousModel));
             if (!isOld)
                 continue;
             Object.DestroyImmediate(root);
