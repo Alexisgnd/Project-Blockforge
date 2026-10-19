@@ -15,7 +15,10 @@ using UnityEngine.InputSystem;
 //            balle, tres rapide, droit (sans gravite), faible
 //            cout, etincelles a l'impact
 // - Plasma : boule lumineuse (WeaponProjectile) soumise a une
-//            gravite reduite, degats de zone a l'impact, cout moyen
+//            gravite reduite, explosion a l'impact (PlasmaExplosion :
+//            eclair, onde de choc et anneau au rayon exact de la
+//            zone, gerbe, braises, fumee, secousse camera) ; degats
+//            de zone degressifs et souffle sur les corps rigides.
 //            Cadence selon la rarete (N1 2,4 tirs/s -> N6 6 tirs/s),
 //            cout par tir ajuste pour garder la meme consommation
 //            d'energie par seconde
@@ -76,7 +79,8 @@ public class WeaponFireController : MonoBehaviour
     private readonly List<(LineRenderer line, float until)> beams = new();
     private readonly Stack<LineRenderer> beamPool = new();
     private Transform fxRoot;
-    private ParticleSystem sparks, plasmaBurst, teslaArcs, muzzleFlash, muzzleSmoke;
+    private ParticleSystem sparks, plasmaBurst, plasmaEmbers, plasmaSmoke, teslaArcs, muzzleFlash, muzzleSmoke;
+    private Shader hologramShader;
     private ParticleSystem.EmitParams emit;
 
     private static readonly Regex TierPattern = new(@"_N(\d)", RegexOptions.IgnoreCase);
@@ -315,34 +319,64 @@ public class WeaponFireController : MonoBehaviour
     // touche (RobotHealth : degats au bloc), zone eventuelle, etincelles
     public void ApplyHit(Collider collider, Vector3 point, Vector3 normal, Stats stats, Color color, int sparkCount)
     {
+        ShootableTarget directTarget = null;
+        RobotHealth directRobot = null;
         if (collider != null)
         {
-            var target = collider.GetComponentInParent<ShootableTarget>();
-            if (target != null)
-                target.Hit(stats.damage);
-            var robot = collider.GetComponentInParent<RobotHealth>();
-            if (robot != null && robot.gameObject != gameObject)
-                robot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position);
+            directTarget = collider.GetComponentInParent<ShootableTarget>();
+            if (directTarget != null)
+                directTarget.Hit(stats.damage);
+            directRobot = collider.GetComponentInParent<RobotHealth>();
+            if (directRobot != null && directRobot.gameObject != gameObject)
+                directRobot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position);
         }
         if (stats.splash > 0f && stats.kind == Kind.Plasma)
-        {
-            var hitRobots = new HashSet<RobotHealth>();
-            foreach (var col in Physics.OverlapSphere(point, stats.splash, ~0, QueryTriggerInteraction.Collide))
-            {
-                var target = col.GetComponentInParent<ShootableTarget>();
-                if (target != null)
-                    target.Hit(stats.damage * 0.5f);
-                var robot = col.GetComponentInParent<RobotHealth>();
-                if (robot != null && robot.gameObject != gameObject && hitRobots.Add(robot) && (collider == null || robot != collider.GetComponentInParent<RobotHealth>()))
-                    robot.Damage(point, stats.damage * 0.6f, stats.splash, transform.position);
-            }
-            Burst(plasmaBurst, point, normal, 18, PlasmaColor, 0.3f, 0.7f, 2f, 7f, 0.45f);
-            Burst(sparks, point, normal, 10, Color.white, 0.08f, 0.16f, 4f, 9f, 0.25f);
-        }
+            PlasmaBlast(point, normal, stats, directTarget, directRobot);
         else
-        {
             Burst(sparks, point, normal, sparkCount, color, 0.06f, 0.14f, 3f, 8f, 0.2f);
+    }
+
+    // Zone du plasma : degats degressifs (60 % au centre -> 15 % au bord) a ce qui n'a
+    // pas pris le coup direct, souffle sur les corps rigides, effets d'explosion
+    private void PlasmaBlast(Vector3 point, Vector3 normal, Stats stats, ShootableTarget directTarget, RobotHealth directRobot)
+    {
+        float radius = stats.splash;
+        var hitRobots = new HashSet<RobotHealth>();
+        var hitTargets = new HashSet<ShootableTarget>();
+        var pushed = new HashSet<Rigidbody>();
+        foreach (var col in Physics.OverlapSphere(point, radius, ~0, QueryTriggerInteraction.Collide))
+        {
+            Vector3 closest = col.bounds.ClosestPoint(point);   // (ClosestPoint refuse les MeshCollider concaves)
+            float falloff = Mathf.Lerp(1f, 0.25f, Mathf.Clamp01(Vector3.Distance(closest, point) / radius));
+
+            var target = col.GetComponentInParent<ShootableTarget>();
+            if (target != null && target != directTarget && hitTargets.Add(target))
+                target.Hit(stats.damage * 0.6f * falloff);
+
+            var robot = col.GetComponentInParent<RobotHealth>();
+            if (robot != null && robot.gameObject != gameObject && robot != directRobot && hitRobots.Add(robot))
+                robot.Damage(point, stats.damage * 0.6f, radius, transform.position);
+
+            // Souffle : robots ennemis, debris detaches, caisses (jamais le tireur)
+            var rb = col.attachedRigidbody;
+            if (rb != null && rb != body && !rb.isKinematic && pushed.Add(rb))
+            {
+                // Un robot encaisse une petite poussee (sinon il serait jongle a 6 tirs/s),
+                // un debris ou une caisse est projete
+                bool isRobot = rb.GetComponent<RobotHealth>() != null;
+                float kick = isRobot ? 0.45f + 0.04f * stats.damage / 30f : 3f;
+                rb.AddExplosionForce(rb.mass * kick, point, radius * 1.3f, 0.3f, ForceMode.Impulse);
+            }
         }
+
+        // Effets : la zone est montree au rayon exact
+        PlasmaExplosion.Spawn(point, normal, radius, PlasmaColor, hologramShader);
+        float k = Mathf.Clamp(radius / 3f, 0.8f, 1.8f);
+        Burst(plasmaBurst, point + normal * 0.2f, normal, Mathf.RoundToInt(26 * k), PlasmaColor, 0.35f * k, 0.9f * k, 2f * k, 8f * k, 0.4f);
+        Burst(plasmaEmbers, point + normal * 0.1f, normal, Mathf.RoundToInt(34 * k), Color.white, 0.05f, 0.12f, 6f * k, 15f * k, 0.6f);
+        Burst(sparks, point, normal, Mathf.RoundToInt(14 * k), Color.white, 0.08f, 0.16f, 4f, 10f, 0.25f);
+        Burst(plasmaSmoke, point + normal * 0.4f, normal, Mathf.RoundToInt(10 * k), PlasmaColor, 0.8f * k, 1.6f * k, 0.6f, 1.8f, 1.3f);
+        RobotFollowCamera.Shake(point, 0.22f + 0.05f * radius, 28f);
     }
 
     private static bool TryBounds(Transform t, out Bounds bounds)
@@ -365,6 +399,7 @@ public class WeaponFireController : MonoBehaviour
     {
         fxRoot = new GameObject("WeaponFX").transform;
         var holo = Shader.Find("Blockforge/Hologram");
+        hologramShader = holo;
         if (holo != null)
         {
             beamMaterial = BeamMaterial(holo, "LaserBeam", LaserColor, 2.6f);
@@ -375,7 +410,9 @@ public class WeaponFireController : MonoBehaviour
         if (dust != null)
         {
             sparks = BuildParticles(dust, "Sparks", 400, stretch: true, new Color(0.8f, 0.95f, 1f));
-            plasmaBurst = BuildParticles(dust, "PlasmaBurst", 200, stretch: false, PlasmaColor);
+            plasmaBurst = BuildParticles(dust, "PlasmaBurst", 300, stretch: false, PlasmaColor);
+            plasmaEmbers = BuildParticles(dust, "PlasmaEmbers", 400, stretch: true, new Color(1f, 0.75f, 1f));
+            plasmaSmoke = BuildParticles(dust, "PlasmaSmoke", 160, stretch: false, new Color(0.28f, 0.22f, 0.34f, 0.45f), additive: false);
             teslaArcs = BuildParticles(dust, "TeslaArcs", 300, stretch: true, TeslaColor);
             muzzleFlash = BuildParticles(dust, "MuzzleFlash", 80, stretch: false, new Color(1f, 0.93f, 0.8f));
             muzzleSmoke = BuildParticles(dust, "MuzzleSmoke", 120, stretch: false, new Color(0.5f, 0.5f, 0.52f, 0.3f), additive: false);

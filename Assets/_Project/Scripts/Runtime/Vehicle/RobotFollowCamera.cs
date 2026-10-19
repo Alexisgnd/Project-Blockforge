@@ -19,11 +19,40 @@ using UnityEngine.InputSystem;
 //   la camera de traverser le sol et les murs
 // - Apres un moment sans souris, se replace derriere le robot
 //   (autoAlign)
+// - Secousse (Shake) : une explosion proche (plasma) fait
+//   trembler l'oeil quelques dixiemes de seconde, sans toucher a
+//   la rotation (la visee reste exacte)
 // =========================================================
 
 public class RobotFollowCamera : MonoBehaviour
 {
     public Transform target;
+
+    // ---------- Secousse ----------
+    private static readonly System.Collections.Generic.List<RobotFollowCamera> shakeable = new();
+    private float trauma;
+
+    private void OnEnable() => shakeable.Add(this);
+    private void OnDisable() => shakeable.Remove(this);
+
+    // Secousse attenuee par la distance (rien au-dela de 'range' metres)
+    public static void Shake(Vector3 at, float strength, float range)
+    {
+        foreach (var cam in shakeable)
+        {
+            float k = Mathf.Clamp01(1f - Vector3.Distance(cam.transform.position, at) / Mathf.Max(0.1f, range));
+            cam.trauma = Mathf.Min(1f, cam.trauma + strength * k);
+        }
+    }
+
+    private Vector3 ShakeOffset()
+    {
+        if (trauma <= 0.001f)
+            return Vector3.zero;
+        float t = Time.time * 28f;
+        float amp = trauma * trauma * 0.35f;
+        return new Vector3(Mathf.PerlinNoise(t, 0.1f) - 0.5f, Mathf.PerlinNoise(0.7f, t) - 0.5f, Mathf.PerlinNoise(t, 3.3f) - 0.5f) * (2f * amp);
+    }
 
     [Header("Cadrage")]
     [Tooltip("Hauteur de l'oeil au-dessus du haut du robot (m)")]
@@ -153,7 +182,7 @@ public class RobotFollowCamera : MonoBehaviour
         if (Physics.SphereCast(pivot, collisionRadius, back, out var hit, distance, collisionMask, QueryTriggerInteraction.Ignore))
             distance = Mathf.Max(0.2f, hit.distance - 0.05f);
 
-        transform.SetPositionAndRotation(pivot + back * distance, rotation);
+        transform.SetPositionAndRotation(pivot + back * distance + ShakeOffset(), rotation);
     }
 
     private void LateUpdate()
@@ -199,6 +228,7 @@ public class RobotFollowCamera : MonoBehaviour
             }
         }
 
+        trauma = Mathf.Max(0f, trauma - 1.8f * Time.deltaTime);
         float follow = 1f - Mathf.Exp(-followSmoothing * Time.deltaTime);
         smoothedPivot = Vector3.Lerp(smoothedPivot, Pivot(), follow);
         Place(smoothedPivot);
