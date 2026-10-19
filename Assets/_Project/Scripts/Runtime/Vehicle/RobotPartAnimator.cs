@@ -9,10 +9,17 @@ using UnityEngine;
 //   la suspension (monte quand elle se comprime)
 // - Chenilles : Animator du modele (TankTrackBlockSetup),
 //   parametres Roll (sens) et RollSpeed (vitesse du sol)
-// - Pattes : demarche procedurale. Un pivot a la hanche porte
-//   bras, genou et tibia : balancement avant/arriere et lever du
-//   pied, en opposition de phase une patte sur deux, cadence
-//   selon la vitesse
+// - Pattes : demarche procedurale d'insecte. Un pivot a la hanche
+//   porte bras, genou et tibia, un second pivot au genou porte le
+//   tibia. Appui (60 % du cycle) : le pied pose balaie vers
+//   l'arriere a la vitesse du sol (il ne glisse pas) ; transfert
+//   (40 %) : la hanche leve le bras, le genou replie le tibia, le
+//   pied revient vers l'avant en arc. Les sens (avant, haut,
+//   repli) sont mesures au montage en tournant les pivots : ils
+//   restent justes pour une patte posee en miroir ou de l'autre
+//   cote. Pattes alternees le long de chaque flanc et d'un flanc
+//   a l'autre (diagonales a 4 pattes, tripodes a 6). Saut : les
+//   pattes poussent au decollage, se replient en l'air.
 // - Lames de survol : les pales / turbines au centre du conduit
 //   tournent (plus vite quand le robot accelere)
 // - Rotors : les pales blade_N tournent selon la portance
@@ -62,6 +69,13 @@ public class RobotPartAnimator : MonoBehaviour
         public Color[] glowBase;
         public Transform flame;
         public float flameLength;
+        // Pattes
+        public Transform legPivot, kneePivot;
+        public Quaternion legBase, kneeBase;
+        public Vector3 kneeAxis;           // repere du pivot de hanche
+        public float yawSign = 1f, liftSign = 1f, kneeSign = 1f;
+        public float reach = 0.6f;         // distance horizontale hanche -> pied (m)
+        public float amount, curYaw, curLift, curKnee;
     }
 
     private RobotLocomotion loco;
@@ -88,6 +102,20 @@ public class RobotPartAnimator : MonoBehaviour
                 case LocomotionKind.Rudder: BuildRudder(a); break;
             }
             animated.Add(a);
+        }
+        AssignLegPhases();
+    }
+
+    // Alternance : le long de chaque flanc (de l'avant vers l'arriere) une patte sur
+    // deux, et les deux flancs en opposition -> diagonales a 4 pattes, tripodes a 6
+    private void AssignLegPhases()
+    {
+        foreach (bool leftSide in new[] { true, false })
+        {
+            var side = animated.FindAll(x => x.unit.kind == LocomotionKind.Leg && (x.unit.center.x < 0f) == leftSide);
+            side.Sort((p, q) => q.unit.center.z.CompareTo(p.unit.center.z));
+            for (int i = 0; i < side.Count; i++)
+                side[i].phaseOffset = ((i % 2 == 0) ^ leftSide) ? 0.5f : 0f;
         }
     }
 
@@ -136,10 +164,13 @@ public class RobotPartAnimator : MonoBehaviour
     {
         var visual = a.unit.visual;
         var hip = RobotLocomotion.FindDeep(visual, "pitch_pin") ?? RobotLocomotion.FindDeep(visual, "hip_mount");
+        var upper = RobotLocomotion.FindDeep(visual, "upper_arm");
+        var knee = RobotLocomotion.FindDeep(visual, "knee_joint");
+        var lower = RobotLocomotion.FindDeep(visual, "lower_leg");
+        var foot = RobotLocomotion.FindDeep(visual, "foot_tip");
         var parts = new List<Transform>();
-        foreach (var name in new[] { "upper_arm", "knee_joint", "lower_leg" })
+        foreach (var p in new[] { upper, knee, lower })
         {
-            var p = RobotLocomotion.FindDeep(visual, name);
             if (p != null)
                 parts.Add(p);
         }
@@ -148,32 +179,76 @@ public class RobotPartAnimator : MonoBehaviour
 
         // Pivot de hanche : tout ce qui bouge passe dessous
         var parent = parts[0].parent;
-        var pivot = new GameObject("LegPivot").transform;
-        pivot.SetParent(parent, false);
-        Vector3 hipWorld = hip.GetComponent<Renderer>() != null ? hip.GetComponent<Renderer>().bounds.center : hip.position;
-        pivot.position = hipWorld;
-        pivot.localRotation = Quaternion.identity;
-        pivot.localScale = Vector3.one;
+        var pivot = NewPivot("LegPivot", parent, RendererCenter(hip));
         foreach (var p in parts)
             p.SetParent(pivot, true);
 
-        var s = new Spinner { t = pivot, basePos = pivot.localPosition, baseRot = pivot.localRotation, pivot = pivot.localPosition };
-        a.spinners.Add(s);
+        // Pivot de genou : le tibia (et le pied, son enfant) plie autour du genou
+        Transform kneePivot = null;
+        if (knee != null && lower != null && lower.parent == pivot)
+        {
+            kneePivot = NewPivot("KneePivot", pivot, RendererCenter(knee));
+            lower.SetParent(kneePivot, true);
+        }
+
+        a.legPivot = pivot;
+        a.legBase = pivot.localRotation;
+        a.kneePivot = kneePivot;
+        a.kneeBase = kneePivot != null ? kneePivot.localRotation : Quaternion.identity;
+
+        Vector3 hipRoot = loco.LocalPoint(pivot);
         Vector3 outward = Vector3.ProjectOnPlane(a.unit.contacts.Count > 0 ? a.unit.contacts[0].localOrigin - loco.LocalPoint(hip) : Vector3.right, Vector3.up);
+        var footRef = foot != null ? foot : parts[parts.Count - 1];
+        Vector3 footRoot = loco.LocalPoint(footRef);
+        Vector3 flat = Vector3.ProjectOnPlane(footRoot - hipRoot, Vector3.up);
+        if (flat.sqrMagnitude > 1e-3f)
+            outward = flat;
         if (outward.sqrMagnitude < 1e-4f)
             outward = Vector3.right;
         outward.Normalize();
-        a.swingAxis = ParentDirection(parent, Vector3.up).normalized;
-        // Lever le pied = tourner autour de (outward x haut) dans le sens qui monte le pied
-        a.liftAxis = ParentDirection(parent, Vector3.Cross(outward, Vector3.up)).normalized;
-        var ls = parent.lossyScale;
-        if (ls.x * ls.y * ls.z < 0f)
-            s.sign = -1f;
+        a.reach = Mathf.Max(0.25f, flat.magnitude);
 
-        // Une patte sur deux en opposition de phase (diagonales ensemble)
-        Vector3 c = a.unit.center;
-        bool left = c.x < 0f, front = c.z > 0f;
-        a.phaseOffset = left ^ front ? 0.5f : 0f;
+        Vector3 tangent = Vector3.Cross(outward, Vector3.up);
+        a.swingAxis = ParentDirection(parent, Vector3.up).normalized;
+        a.liftAxis = ParentDirection(parent, tangent).normalized;
+        if (kneePivot != null)
+            a.kneeAxis = kneePivot.parent.InverseTransformVector(transform.TransformDirection(tangent)).normalized;
+
+        // Sens mesures : avant = +Z du robot, lever = +Y, replier = pied vers la hanche
+        a.yawSign = ProbeSign(pivot, a.legBase, a.swingAxis, footRef, q => q.z);
+        a.liftSign = ProbeSign(pivot, a.legBase, a.liftAxis, footRef, q => q.y);
+        if (kneePivot != null)
+            a.kneeSign = ProbeSign(kneePivot, a.kneeBase, a.kneeAxis, footRef,
+                                   q => -Vector3.ProjectOnPlane(q - hipRoot, Vector3.up).magnitude);
+    }
+
+    private static Transform NewPivot(string name, Transform parent, Vector3 worldPosition)
+    {
+        var pivot = new GameObject(name).transform;
+        pivot.SetParent(parent, false);
+        pivot.position = worldPosition;
+        pivot.localRotation = Quaternion.identity;
+        pivot.localScale = Vector3.one;
+        return pivot;
+    }
+
+    private static Vector3 RendererCenter(Transform t)
+    {
+        var r = t.GetComponent<Renderer>();
+        if (r != null)
+            return r.bounds.center;
+        var child = t.GetComponentInChildren<Renderer>();
+        return child != null ? child.bounds.center : t.position;
+    }
+
+    // Tourne le pivot de 10 degres et regarde dans quel sens le pied a bouge
+    private float ProbeSign(Transform pivot, Quaternion baseRot, Vector3 axis, Transform probe, System.Func<Vector3, float> metric)
+    {
+        float before = metric(loco.LocalPoint(probe));
+        pivot.localRotation = Quaternion.AngleAxis(10f, axis) * baseRot;
+        float after = metric(loco.LocalPoint(probe));
+        pivot.localRotation = baseRot;
+        return after >= before ? 1f : -1f;
     }
 
     private void BuildHover(Animated a)
@@ -285,6 +360,80 @@ public class RobotPartAnimator : MonoBehaviour
         }
     }
 
+    // ---------- Demarche des pattes ----------
+
+    private const float LegDuty = 0.6f;          // part du cycle pied pose
+    private const float LegSwingDeg = 18f;       // balayage de la hanche (+/-)
+    private const float LegSwingMaxDeg = 30f;
+    private const float LegLiftDeg = 24f;        // hanche levee au milieu du transfert
+    private const float LegKneeDeg = 30f;        // genou replie au milieu du transfert
+    private const float LegMaxCadence = 3f;      // cycles par seconde
+
+    private void AnimateLeg(Animated a, float dt)
+    {
+        if (a.legPivot == null)
+            return;
+        var u = a.unit;
+        float v = u.groundSpeed;
+        float speed = Mathf.Abs(v);
+        a.amount = Mathf.MoveTowards(a.amount, u.anyGrounded ? Mathf.Clamp01(speed / 0.6f) : 0f, dt * 4f);
+
+        // Cadence calee sur la vitesse : pendant l'appui, le pied balaie 2 x amplitude
+        // sur le sol a la vitesse du robot, donc il reste en place
+        float amp = LegSwingDeg;
+        float cadence = speed > 0.01f ? LegDuty * speed / (2f * amp * Mathf.Deg2Rad * a.reach) : 0f;
+        if (cadence > LegMaxCadence)
+        {
+            amp = Mathf.Min(LegSwingMaxDeg, amp * cadence / LegMaxCadence);
+            cadence = LegMaxCadence;
+        }
+        if (a.amount > 0.01f)
+            cadence = Mathf.Max(cadence, 0.6f);
+        a.phase = Mathf.Repeat(a.phase + cadence * dt, 1f);
+
+        float p = Mathf.Repeat(a.phase + a.phaseOffset, 1f);
+        float swing, raise;
+        if (p < LegDuty)
+        {
+            swing = Mathf.Lerp(1f, -1f, p / LegDuty);      // appui : de l'avant vers l'arriere
+            raise = 0f;
+        }
+        else
+        {
+            float s = (p - LegDuty) / (1f - LegDuty);
+            swing = Mathf.Lerp(-1f, 1f, s * s * (3f - 2f * s));   // transfert : retour vers l'avant
+            raise = Mathf.Sin(s * Mathf.PI);
+        }
+        float dir = v >= 0f ? 1f : -1f;
+        float yaw = swing * amp * dir * a.amount;
+        float lift = raise * LegLiftDeg * a.amount;
+        float bend = raise * LegKneeDeg * a.amount;
+
+        // Saut : poussee au decollage, pattes repliees en l'air
+        float sinceJump = Time.time - loco.LastJumpTime;
+        if (sinceJump < 0.18f)
+        {
+            yaw *= 0.3f;
+            lift = -10f;
+            bend = -8f;
+        }
+        else if (!u.anyGrounded)
+        {
+            yaw = 0f;
+            lift = 16f;
+            bend = -12f;
+        }
+
+        float k = 1f - Mathf.Exp(-18f * dt);
+        a.curYaw = Mathf.Lerp(a.curYaw, yaw, k);
+        a.curLift = Mathf.Lerp(a.curLift, lift, k);
+        a.curKnee = Mathf.Lerp(a.curKnee, bend, k);
+        a.legPivot.localRotation = Quaternion.AngleAxis(a.curYaw * a.yawSign, a.swingAxis)
+                                   * Quaternion.AngleAxis(a.curLift * a.liftSign, a.liftAxis) * a.legBase;
+        if (a.kneePivot != null)
+            a.kneePivot.localRotation = Quaternion.AngleAxis(a.curKnee * a.kneeSign, a.kneeAxis) * a.kneeBase;
+    }
+
     private static Mesh BuildCone(float r0, float r1, float length, int sides)
     {
         var mesh = new Mesh { name = "ThrusterFlame" };
@@ -356,21 +505,8 @@ public class RobotPartAnimator : MonoBehaviour
                     }
                     break;
                 case LocomotionKind.Leg:
-                {
-                    if (a.spinners.Count == 0)
-                        break;
-                    float speed = Mathf.Abs(u.groundSpeed);
-                    float amount = Mathf.Clamp01(speed / 1.5f);
-                    a.phase = Mathf.Repeat(a.phase + (speed / 1.1f + (amount > 0f ? 0.2f : 0f)) * dt, 1f);
-                    float t = (a.phase + a.phaseOffset) * Mathf.PI * 2f;
-                    float dir = Mathf.Sign(u.groundSpeed == 0f ? 1f : u.groundSpeed);
-                    float swing = Mathf.Sin(t) * 24f * amount * dir;
-                    float lift = Mathf.Max(0f, Mathf.Cos(t)) * 14f * amount;
-                    var s = a.spinners[0];
-                    s.t.localRotation = Quaternion.AngleAxis(swing * s.sign, a.swingAxis)
-                                        * Quaternion.AngleAxis(-lift * s.sign, a.liftAxis) * s.baseRot;
+                    AnimateLeg(a, dt);
                     break;
-                }
                 case LocomotionKind.Hover:
                     a.angle = Mathf.Repeat(a.angle + (420f + 900f * u.output) * dt, 360f);
                     foreach (var s in a.spinners)
