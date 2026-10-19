@@ -6,7 +6,8 @@ using UnityEngine.SceneManagement;
 // PILOTAGE DU ROBOT DE TEST (entrees -> RobotLocomotion)
 // Z / S : avancer / reculer, Q / D : tourner, Shift : boost,
 // Espace / Ctrl : monter / descendre (rotors, propulseurs
-// orientes vers le haut), R : redresser le robot (RobotRecovery :
+// orientes vers le haut) ; Espace fait aussi sauter un robot a
+// pattes d'insecte, R : redresser le robot (RobotRecovery :
 // levitation, remise a plat, chute ; recharge de quelques
 // secondes), clic gauche : tirer (WeaponFireController).
 // Touches physiques W/S/A/D (Z/S/Q/D en AZERTY) ; les fleches
@@ -99,6 +100,9 @@ public class RobotTestDriver : MonoBehaviour
         // Curseur libre (menu, retour) : le robot ne recoit plus d'ordres
         if (Cursor.lockState != CursorLockMode.Locked)
             throttle = steer = lift = 0f;
+        // Espace : saut des robots a pattes d'insecte (au sol, recharge courte)
+        else if (kb.spaceKey.wasPressedThisFrame)
+            loco.RequestJump();
         Send(throttle, steer, lift, boost);
     }
 

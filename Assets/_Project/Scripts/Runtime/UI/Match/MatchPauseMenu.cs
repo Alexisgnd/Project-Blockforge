@@ -268,7 +268,7 @@ public class MatchPauseMenu : MonoBehaviour
         var title = Text(plate.transform, "Title", DSTextStyle.Label, BlockforgeTheme.InkMuted, "Controls");
         foreach (var (keys, what) in new[]
                  {
-                     ("Z|Q|S|D", "Drive"), ("Shift", "Boost"), ("Space|Ctrl", "Up / down (rotors, thrusters)"),
+                     ("Z|Q|S|D", "Drive"), ("Shift", "Boost"), ("Space", "Jump (insect legs) / up"), ("Ctrl", "Down (rotors, thrusters)"),
                      ("Mouse", "Aim"), ("Left click", "Fire"), ("Right click", "Zoom"), ("1|2|3", "Weapon slot"), ("R", "Self-right"),
                      ("F5", "Next demo robot"), ("Esc", "This menu"),
                  })

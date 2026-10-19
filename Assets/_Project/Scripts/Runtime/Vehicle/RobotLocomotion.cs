@@ -42,6 +42,9 @@ using UnityEngine;
 // niveau, charge portee) — le meme modele donne la vitesse
 // affichee dans le garage et les menus. Elle est recalculee quand
 // un bloc porteur est detruit (le robot ralentit).
+// Saut (pattes d'insecte) : Espace au sol (RequestJump) ; il faut
+// la moitie des pattes au sol, recharge de JumpCooldown secondes,
+// impulsion reduite par la surcharge (LoadFactor).
 // =========================================================
 
 public enum LocomotionKind { Wheel, Track, Leg, Hover, Rotor, Thruster, Rudder }
@@ -96,6 +99,11 @@ public class RobotLocomotion : MonoBehaviour
     public float rotorSpeed = RobotSpeedModel.RotorSpeed;
     public float boostMultiplier = 1.5f;
 
+    [Header("Saut (pattes d'insecte)")]
+    [Tooltip("Vitesse verticale donnee au decollage (m/s) : ~3 m de haut a 7,5 m/s")]
+    public float jumpSpeed = 7.5f;
+    public float jumpCooldown = 1.1f;
+
     [Header("Conduite")]
     public float turnRateDeg = 95f;
     [Tooltip("Abaissement du centre de masse, en part de la hauteur du robot")]
@@ -116,6 +124,9 @@ public class RobotLocomotion : MonoBehaviour
     public int GroundedContacts { get; private set; }
     public int TotalContacts { get; private set; }
     public bool HasRotors { get; private set; }
+    public bool CanJump => units.Exists(u => u.kind == LocomotionKind.Leg && !u.disabled);
+    // Instant du dernier saut (RobotPartAnimator : poussee des pattes)
+    public float LastJumpTime { get; private set; } = -10f;
     // Part de vitesse gardee malgre la surcharge (RobotSpeedModel), 1 = robot leger
     public float LoadFactor { get; private set; } = 1f;
     public int WeightKg { get; private set; }
@@ -357,6 +368,59 @@ public class RobotLocomotion : MonoBehaviour
         return RobotSpeedModel.EstimateTopSpeed(live, WeightKg);
     }
 
+    // ---------- Saut (pattes d'insecte) ----------
+
+    private bool jumpRequested;
+
+    // Espace au sol (RobotTestDriver) : traite au prochain pas physique
+    public void RequestJump()
+    {
+        if (CanJump)
+            jumpRequested = true;
+    }
+
+    private void TryJump()
+    {
+        jumpRequested = false;
+        if (Time.time - LastJumpTime < jumpCooldown)
+            return;
+        int legContacts = 0, legGrounded = 0;
+        foreach (var u in units)
+        {
+            if (u.kind != LocomotionKind.Leg || u.disabled)
+                continue;
+            foreach (var c in u.contacts)
+            {
+                legContacts++;
+                if (c.grounded)
+                    legGrounded++;
+            }
+        }
+        if (legContacts == 0 || legGrounded * 2 < legContacts)
+            return;
+        // Decollage le long de la normale du robot, redresse vers le haut ; la vitesse
+        // horizontale est gardee (sauter en courant porte loin)
+        Vector3 up = Vector3.Slerp(transform.up, Vector3.up, 0.6f).normalized;
+        float wanted = jumpSpeed * Mathf.Lerp(0.55f, 1f, Mathf.InverseLerp(RobotSpeedModel.MinLoadFactor, 1f, LoadFactor));
+        float along = Vector3.Dot(Body.linearVelocity, up);
+        if (along < wanted)
+            Body.AddForce(up * (wanted - Mathf.Max(0f, along)), ForceMode.VelocityChange);
+        // Les ressorts encore comprimes ne doivent pas freiner le decollage
+        foreach (var u in units)
+        {
+            foreach (var c in u.contacts)
+            {
+                c.compression = c.lastCompression = 0f;
+                c.grounded = false;
+            }
+        }
+        LastJumpTime = Time.time;
+        airborneUntil = Time.time + 0.2f;
+    }
+
+    // Juste apres le saut, les suspensions ne repoussent pas le robot (il quitte le sol)
+    private float airborneUntil = -10f;
+
     private static void SetFamily(LocomotionUnit unit, float maxSpeed, float accel, float grip, float friction)
     {
         unit.maxSpeed = maxSpeed;
@@ -389,6 +453,10 @@ public class RobotLocomotion : MonoBehaviour
         float boostK = boost ? boostMultiplier : 1f;
         float targetYaw = steer * turnRateDeg * Mathf.Deg2Rad;
 
+        if (jumpRequested)
+            TryJump();
+        bool justJumped = Time.time < airborneUntil;
+
         int grounded = 0;
         Vector3 groundNormal = Vector3.zero;
 
@@ -405,7 +473,8 @@ public class RobotLocomotion : MonoBehaviour
             foreach (var c in unit.contacts)
             {
                 Vector3 origin = transform.TransformPoint(c.localOrigin);
-                c.grounded = Cast(origin, -up, c.rest + 0.2f, out var hit) && hit.distance <= c.rest;
+                bool cast = Cast(origin, -up, c.rest + 0.2f, out var hit);
+                c.grounded = !justJumped && cast && hit.distance <= c.rest;
                 if (!c.grounded)
                 {
                     c.compression = 0f;
