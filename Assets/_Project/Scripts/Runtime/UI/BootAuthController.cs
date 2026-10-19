@@ -3,8 +3,19 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 // =========================================================
-// ECRAN D'AUTHENTIFICATION (scene Boot)
-// Relie l'UI Toolkit (BootAuth.uxml) au client PocketBase.
+// ECRAN DE DEMARRAGE (scene Boot) — compte du joueur
+// Relie l'UI Toolkit (BootAuth.uxml) a SessionService.
+// Trois panneaux :
+// - steam-panel    : Steam tourne -> connexion automatique par
+//                    ticket ; en cas d'echec, RETRY / PLAY OFFLINE
+//                    ou bascule vers un compte email ;
+// - login-panel    : email / mot de passe (compte standard), avec
+//                    PLAY OFFLINE (dernier compte vu sur cette
+//                    machine, sinon invite) ;
+// - register-panel : creation d'un compte standard.
+// Le chemin est choisi par SessionService.ShouldUseSteam (client
+// Steam present et pas de preference « compte email »).
+// Le client PocketBase est cree ici et partage par les scenes.
 // =========================================================
 
 [RequireComponent(typeof(UIDocument))]
@@ -21,6 +32,7 @@ public class BootAuthController : MonoBehaviour
 
     // Elements UI
     private VisualElement authContainer;
+    private VisualElement steamPanel;
     private VisualElement loginPanel;
     private VisualElement registerPanel;
     private TextField loginEmail;
@@ -31,9 +43,25 @@ public class BootAuthController : MonoBehaviour
     private TextField registerPasswordConfirm;
     private Label statusLabel;
 
+    // Panneau Steam
+    private Label steamTitle;
+    private VisualElement steamAvatar;
+    private VisualElement steamAvatarIcon;
+    private Label steamName;
+    private Label steamMessage;
+    private Button steamRetry;
+    private Button steamOffline;
+    private VisualElement steamHint;
+
+    private bool busy;
+    private bool leaving;
+
     private void Awake()
     {
-        client = new PocketBaseClient(pocketBaseUrl);
+        // Client partage ; conserve si la scene Boot est rechargee (reconnexion)
+        client = PocketBaseClient.Instance != null && PocketBaseClient.Instance.BaseUrl == pocketBaseUrl.TrimEnd('/')
+            ? PocketBaseClient.Instance
+            : new PocketBaseClient(pocketBaseUrl);
         PocketBaseClient.Instance = client;
     }
 
@@ -42,6 +70,7 @@ public class BootAuthController : MonoBehaviour
         var root = GetComponent<UIDocument>().rootVisualElement;
 
         authContainer = root.Q<VisualElement>("auth-container");
+        steamPanel = root.Q<VisualElement>("steam-panel");
         loginPanel = root.Q<VisualElement>("login-panel");
         registerPanel = root.Q<VisualElement>("register-panel");
         loginEmail = root.Q<TextField>("login-email");
@@ -52,31 +81,214 @@ public class BootAuthController : MonoBehaviour
         registerPasswordConfirm = root.Q<TextField>("register-password-confirm");
         statusLabel = root.Q<Label>("status-label");
 
+        steamTitle = root.Q<Label>("steam-title");
+        steamAvatar = root.Q<VisualElement>("steam-avatar");
+        steamAvatarIcon = root.Q<VisualElement>("steam-avatar-icon");
+        steamName = root.Q<Label>("steam-name");
+        steamMessage = root.Q<Label>("steam-message");
+        steamRetry = root.Q<Button>("steam-retry");
+        steamOffline = root.Q<Button>("steam-offline");
+        steamHint = root.Q<VisualElement>("steam-hint");
+
         root.Q<Button>("login-button").clicked += OnLoginClicked;
         root.Q<Button>("register-button").clicked += OnRegisterClicked;
-        root.Q<Button>("guest-button").clicked += OnGuestClicked;
+        root.Q<Button>("guest-button").clicked += OnPlayOfflineClicked;
         root.Q<Button>("forgot-password").clicked += OnForgotPasswordClicked;
         root.Q<Button>("goto-register").clicked += ShowRegisterPanel;
         root.Q<Button>("goto-login").clicked += ShowLoginPanel;
+        root.Q<Button>("goto-standard").clicked += OnUseStandardAccountClicked;
+        root.Q<Button>("goto-steam").clicked += OnUseSteamClicked;
+        if (steamRetry != null) steamRetry.clicked += OnSteamRetryClicked;
+        if (steamOffline != null) steamOffline.clicked += OnPlayOfflineClicked;
 
         BindPasswordToggle(root, "login-password-toggle", loginPassword);
         BindPasswordToggle(root, "register-password-toggle", registerPassword);
         BindPasswordToggle(root, "register-password-confirm-toggle", registerPasswordConfirm);
 
-        // Par defaut : seul le bloc connexion est visible
-        ShowLoginPanel();
+        SteamIdentityService.AvatarReady += RefreshSteamIdentity;
+
+        // Le lien « Sign in with Steam instead » n'a de sens que si Steam tourne
+        SetVisible(steamHint, SteamBootstrap.IsAvailable);
+
+        // Panneau de depart : decide dans Start (SessionService lit l'etat de Steam)
+        SetVisible(steamPanel, false);
+        SetVisible(loginPanel, false);
+        SetVisible(registerPanel, false);
+    }
+
+    private void OnDisable()
+    {
+        SteamIdentityService.AvatarReady -= RefreshSteamIdentity;
     }
 
     private void Start()
     {
+        // Retour sur Boot alors qu'une session en ligne existe (ne devrait pas arriver) : on passe
+        if (SessionService.IsOnline)
+        {
+            LoadNextScene();
+            return;
+        }
+
+        if (SessionService.ShouldUseSteam)
+        {
+            BeginSteamSignIn();
+            return;
+        }
+
+        ShowLoginPanel();
+        PrefillLastEmail();
 #if UNITY_EDITOR
         TryDevAutoLogin();
 #endif
     }
 
+    // =========================================================
+    // STEAM
+    // =========================================================
+
+    private async void BeginSteamSignIn()
+    {
+        ShowSteamPanel();
+        RefreshSteamIdentity();
+        SetSteamBusy(true, "Checking your Steam ticket with the server…");
+        ShowInfo("");
+
+        var result = await SessionService.SignInWithSteamAsync();
+        if (this == null)
+            return;
+
+        if (result.ok)
+        {
+            Toast.Success($"Signed in with Steam. Welcome back, {SessionService.DisplayName}.");
+            ShowSuccess($"Welcome back, {SessionService.DisplayName}.");
+            LoadNextScene();
+            return;
+        }
+
+        // Echec : Steam hors ligne, serveur injoignable ou ticket refuse
+        string message;
+        if (result.steamOffline)
+            message = "Steam is in offline mode, so the server can't verify your account. You can play offline with bots; your robots are saved on this computer and will sync later.";
+        else if (result.networkError)
+            message = "The server can't be reached right now. You can retry, or play offline with bots.";
+        else
+            message = $"The server didn't accept the Steam sign-in. {result.error}";
+
+        SetSteamBusy(false, message);
+        if (!result.steamOffline && !result.networkError)
+            ShowError(result.error);
+    }
+
+    private void OnSteamRetryClicked()
+    {
+        if (busy || leaving)
+            return;
+        if (!SteamBootstrap.IsAvailable)
+        {
+            ShowError("Steam isn't running anymore. Start Steam, or use an email account.");
+            return;
+        }
+        BeginSteamSignIn();
+    }
+
+    private void RefreshSteamIdentity()
+    {
+        if (steamName != null)
+            steamName.text = string.IsNullOrEmpty(SteamIdentityService.PersonaName) ? "Steam player" : SteamIdentityService.PersonaName;
+
+        if (steamAvatar == null)
+            return;
+        var texture = SteamIdentityService.Avatar;
+        if (texture == null && SessionService.Identity != null && SessionService.Identity.IsSteam && SessionService.Avatar != null)
+            texture = SessionService.Avatar.texture; // avatar en cache (Steam hors ligne)
+        if (texture != null)
+        {
+            steamAvatar.style.backgroundImage = new StyleBackground(texture);
+            SetVisible(steamAvatarIcon, false);
+        }
+        else
+        {
+            steamAvatar.style.backgroundImage = StyleKeyword.None;
+            SetVisible(steamAvatarIcon, true);
+        }
+    }
+
+    private void SetSteamBusy(bool connecting, string message)
+    {
+        busy = connecting;
+        if (steamTitle != null)
+            steamTitle.text = connecting ? "SIGNING IN WITH STEAM" : "STEAM SIGN-IN FAILED";
+        if (steamMessage != null)
+            steamMessage.text = message;
+        SetVisible(steamRetry, !connecting);
+        SetVisible(steamOffline, !connecting);
+    }
+
+    // =========================================================
+    // BASCULES ENTRE PANNEAUX
+    // =========================================================
+
+    private void ShowSteamPanel()
+    {
+        SetVisible(steamPanel, true);
+        SetVisible(loginPanel, false);
+        SetVisible(registerPanel, false);
+        ShowInfo("");
+    }
+
+    private void ShowLoginPanel()
+    {
+        SetVisible(steamPanel, false);
+        SetVisible(loginPanel, true);
+        SetVisible(registerPanel, false);
+        ShowInfo("");
+        loginEmail.Focus();
+    }
+
+    private void ShowRegisterPanel()
+    {
+        SetVisible(steamPanel, false);
+        SetVisible(loginPanel, false);
+        SetVisible(registerPanel, true);
+        ShowInfo("");
+        registerEmail.Focus();
+    }
+
+    // Steam present mais le joueur prefere son compte email : memorise pour les prochains lancements
+    private void OnUseStandardAccountClicked()
+    {
+        if (busy)
+            return;
+        SessionService.PreferStandardAccount = true;
+        ShowLoginPanel();
+        PrefillLastEmail();
+        ShowInfo("Email account selected. You can switch back to Steam from this screen.");
+    }
+
+    private void OnUseSteamClicked()
+    {
+        if (busy)
+            return;
+        if (!SteamBootstrap.IsAvailable)
+        {
+            ShowError("Steam isn't running. Start Steam and relaunch the game.");
+            return;
+        }
+        SessionService.PreferStandardAccount = false;
+        BeginSteamSignIn();
+    }
+
+    private void PrefillLastEmail()
+    {
+        var last = IdentityCache.LoadLast();
+        if (last != null && last.method == AuthMethod.Password && !string.IsNullOrEmpty(last.email) && string.IsNullOrEmpty(loginEmail.value))
+            loginEmail.value = last.email;
+    }
+
 #if UNITY_EDITOR
     // =========================================================
-    // AUTO-LOGIN DEV (editeur uniquement)
+    // AUTO-LOGIN DEV (editeur uniquement, chemin compte standard)
     // Lit dev_autologin.json a la racine du projet (gitignore,
     // jamais inclus dans un build) et lance la connexion.
     // =========================================================
@@ -126,31 +338,13 @@ public class BootAuthController : MonoBehaviour
 #endif
 
     // =========================================================
-    // BASCULE CONNEXION / INSCRIPTION
-    // =========================================================
-
-    private void ShowLoginPanel()
-    {
-        loginPanel.style.display = DisplayStyle.Flex;
-        registerPanel.style.display = DisplayStyle.None;
-        ShowInfo("");
-        loginEmail.Focus();
-    }
-
-    private void ShowRegisterPanel()
-    {
-        loginPanel.style.display = DisplayStyle.None;
-        registerPanel.style.display = DisplayStyle.Flex;
-        ShowInfo("");
-        registerEmail.Focus();
-    }
-
-    // =========================================================
-    // ACTIONS
+    // COMPTE STANDARD
     // =========================================================
 
     private async void OnLoginClicked()
     {
+        if (busy || leaving)
+            return;
         string email = loginEmail.value.Trim();
         string password = loginPassword.value;
 
@@ -164,36 +358,29 @@ public class BootAuthController : MonoBehaviour
         ShowInfo("Signing in…");
         var toast = Toast.Loading("Signing in…");
 
-        try
+        var result = await SessionService.SignInWithPasswordAsync(email, password);
+        if (result.ok)
         {
-            var auth = await client.LoginAsync(email, password);
             // Le toast survit au changement de scene : affiche en arrivant au menu
-            toast.Success($"Signed in. Welcome back, {DisplayName(auth.record)}.");
+            toast.Success($"Signed in. Welcome back, {SessionService.DisplayName}.");
             if (this == null) return;
-
-            ShowSuccess($"Welcome back, {DisplayName(auth.record)}.");
+            ShowSuccess($"Welcome back, {SessionService.DisplayName}.");
             LoadNextScene();
+            return;
         }
-        catch (PocketBaseException e)
-        {
-            string message = e.StatusCode == 400 ? "Wrong email or password." : e.Message;
-            toast.Error($"Couldn't sign in. {message}");
-            if (this == null) return;
-            SetBusy(false);
-            ShowError(message);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogException(e);
-            toast.Error("Couldn't sign in. Something went wrong; see the Console.");
-            if (this == null) return;
-            SetBusy(false);
-            ShowError("Erreur inattendue — voir la Console.");
-        }
+
+        toast.Error($"Couldn't sign in. {result.error}");
+        if (this == null) return;
+        SetBusy(false);
+        ShowError(result.networkError
+            ? "Can't reach the server. Check your connection, or play offline."
+            : result.error);
     }
 
     private async void OnRegisterClicked()
     {
+        if (busy || leaving)
+            return;
         string email = registerEmail.value.Trim();
         string username = registerUsername.value.Trim();
         string password = registerPassword.value;
@@ -230,11 +417,13 @@ public class BootAuthController : MonoBehaviour
 
             // Connexion directe apres l'inscription
             toast.Info("Account created. Signing in…");
-            var auth = await client.LoginAsync(email, password);
-            toast.Success($"Account created. Welcome, {DisplayName(auth.record)}.");
+            var result = await SessionService.SignInWithPasswordAsync(email, password);
+            if (!result.ok)
+                throw new PocketBaseException(0, result.error);
+            toast.Success($"Account created. Welcome, {SessionService.DisplayName}.");
             if (this == null) return;
 
-            ShowSuccess($"Account created. Welcome, {DisplayName(auth.record)}.");
+            ShowSuccess($"Account created. Welcome, {SessionService.DisplayName}.");
             LoadNextScene();
         }
         catch (PocketBaseException e)
@@ -250,12 +439,14 @@ public class BootAuthController : MonoBehaviour
             toast.Error("Couldn't create your account. Something went wrong; see the Console.");
             if (this == null) return;
             SetBusy(false);
-            ShowError("Erreur inattendue — voir la Console.");
+            ShowError("Unexpected error — see the Console.");
         }
     }
 
     private async void OnForgotPasswordClicked()
     {
+        if (busy)
+            return;
         string email = loginEmail.value.Trim();
         if (string.IsNullOrEmpty(email))
         {
@@ -285,7 +476,7 @@ public class BootAuthController : MonoBehaviour
             Debug.LogException(e);
             toast.Error("Couldn't send the reset email. Something went wrong; see the Console.");
             if (this == null) return;
-            ShowError("Erreur inattendue — voir la Console.");
+            ShowError("Unexpected error — see the Console.");
         }
         finally
         {
@@ -294,10 +485,23 @@ public class BootAuthController : MonoBehaviour
         }
     }
 
-    private void OnGuestClicked()
+    // =========================================================
+    // HORS LIGNE
+    // =========================================================
+
+    // Steam en cache, sinon dernier compte vu sur cette machine, sinon invite
+    private void OnPlayOfflineClicked()
     {
-        // La sauvegarde des robots exige un compte : pas d'acces invite pour l'instant
-        ShowError("You need an account to play: your robots are saved online.");
+        if (busy || leaving)
+            return;
+
+        SessionService.ContinueOffline();
+        var identity = SessionService.Identity;
+        if (identity != null && identity.IsGuest)
+            Toast.Info("Playing as a guest: your robots are saved on this computer only.");
+        else
+            Toast.Info($"Playing offline as {SessionService.DisplayName}. Your robots will sync when you're back online.");
+        LoadNextScene();
     }
 
     // =========================================================
@@ -318,20 +522,23 @@ public class BootAuthController : MonoBehaviour
         button.tooltip = "Show password";
     }
 
-    private static string DisplayName(PocketBaseUser user)
+    private static void SetVisible(VisualElement element, bool visible)
     {
-        if (!string.IsNullOrEmpty(user.username)) return user.username;
-        if (!string.IsNullOrEmpty(user.name)) return user.name;
-        return user.email;
+        if (element != null)
+            element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
-    private void SetBusy(bool busy)
+    private void SetBusy(bool value)
     {
-        authContainer.SetEnabled(!busy);
+        busy = value;
+        authContainer.SetEnabled(!value);
     }
 
     private void LoadNextScene()
     {
+        if (leaving)
+            return;
+        leaving = true;
         SceneManager.LoadScene(nextSceneName);
     }
 

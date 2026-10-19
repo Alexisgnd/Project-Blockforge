@@ -282,6 +282,81 @@
     margin-right: 4px;
 }
 
+/* ------------------ Panneau Steam (identite + etat) ------------------ */
+
+/* Avatar rond 56 px sur surface-inset, pseudo en title, « Steam account » en muted */
+.steam-identity {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.steam-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background-color: rgb(17, 21, 28);
+    border-width: 1px;
+    border-color: rgb(48, 57, 72);
+    -unity-background-scale-mode: scale-and-crop;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Pictogramme « user » tant que Steam n'a pas livre la photo */
+.steam-avatar-icon {
+    width: 24px;
+    height: 24px;
+    background-image: url("../DesignSystem/Resources/DesignSystem/Icons/user.png");
+    -unity-background-image-tint-color: rgb(57, 184, 232);
+    background-size: 24px 24px;
+}
+
+.steam-identity-text {
+    margin-left: 14px;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* title-md : Barlow 600, 17 px */
+.steam-name {
+    -unity-font-definition: url("../Fonts/Barlow-SemiBold.ttf");
+    font-size: 17px;
+    color: rgb(242, 245, 247);
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.steam-sub {
+    color: rgb(149, 159, 176);
+    font-size: 12px;
+    padding: 0;
+    margin: 2px 0 0 0;
+}
+
+/* Message d'etat du panneau (body-sm, ink-secondary) */
+.steam-message {
+    color: rgb(179, 189, 203);
+    font-size: 13px;
+    white-space: normal;
+    padding: 0;
+    margin: 0 0 16px 0;
+    min-height: 36px;
+}
+
+.steam-offline-button {
+    margin-top: 8px;
+}
+
+/* Elements masques par le code (panneaux, boutons selon l'etat) */
+.hidden {
+    display: none;
+}
+
 /* ------------------ Notice de statut (icone + mot + couleur) ------------------ */
 
 .status-label {

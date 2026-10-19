@@ -6,6 +6,31 @@
 
         <ui:VisualElement name="auth-container" class="auth-container">
 
+            <!-- ================= STEAM (connexion automatique) ================= -->
+            <ui:VisualElement name="steam-panel" class="panel">
+                <ui:Label name="steam-title" text="SIGNING IN WITH STEAM" class="panel-title" />
+
+                <ui:VisualElement class="steam-identity">
+                    <ui:VisualElement name="steam-avatar" class="steam-avatar">
+                        <ui:VisualElement name="steam-avatar-icon" class="steam-avatar-icon" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="steam-identity-text">
+                        <ui:Label name="steam-name" text="…" class="steam-name" />
+                        <ui:Label name="steam-sub" text="Steam account" class="steam-sub" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:Label name="steam-message" text="Checking your Steam ticket with the server…" class="steam-message" />
+
+                <ui:Button name="steam-retry" text="RETRY" class="primary-button" />
+                <ui:Button name="steam-offline" text="PLAY OFFLINE" class="secondary-button steam-offline-button" />
+
+                <ui:VisualElement class="register-hint">
+                    <ui:Label text="Prefer another account?" class="hint-label" />
+                    <ui:Button name="goto-standard" text="Use an email account" class="link-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
             <!-- ================= CONNEXION (Sign in) ================= -->
             <ui:VisualElement name="login-panel" class="panel">
                 <ui:Label text="SIGN IN" class="panel-title" />
@@ -29,11 +54,16 @@
                     <ui:VisualElement class="or-line" />
                 </ui:VisualElement>
 
-                <ui:Button name="guest-button" text="PLAY AS GUEST" class="secondary-button" />
+                <ui:Button name="guest-button" text="PLAY OFFLINE" class="secondary-button" />
 
                 <ui:VisualElement class="register-hint">
                     <ui:Label text="No account yet?" class="hint-label" />
                     <ui:Button name="goto-register" text="Create one" class="link-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="steam-hint" class="register-hint">
+                    <ui:Label text="Steam is running." class="hint-label" />
+                    <ui:Button name="goto-steam" text="Sign in with Steam instead" class="link-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
