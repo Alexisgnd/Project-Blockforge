@@ -1323,6 +1323,11 @@ public class GarageBuildController : MonoBehaviour
             statsHud.capacity = totalCpu;
             statsHud.health = totalHp;
             statsHud.weightT = totalKg / 1000f;
+            // Vitesse de pointe reelle (meme modele que la physique du match)
+            var defs = new List<BlockDefinition>(placedViews.Count);
+            foreach (var view in placedViews)
+                defs.Add(view.definition);
+            statsHud.speedKmh = RobotSpeedModel.ToKmh(RobotSpeedModel.EstimateTopSpeed(defs, totalKg));
             statsHud.Refresh();
         }
     }

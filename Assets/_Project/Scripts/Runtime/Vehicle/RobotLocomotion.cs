@@ -38,6 +38,10 @@ using UnityEngine;
 // chaque contact (slip) et la part d'adherence consommee par la
 // traction (traction) pour la poussiere des roues. Un bloc de
 // mouvement detruit (RobotHealth -> SetUnitDisabled) ne porte plus.
+// Vitesse de pointe de chaque bloc : RobotSpeedModel (famille,
+// niveau, charge portee) — le meme modele donne la vitesse
+// affichee dans le garage et les menus. Elle est recalculee quand
+// un bloc porteur est detruit (le robot ralentit).
 // =========================================================
 
 public enum LocomotionKind { Wheel, Track, Leg, Hover, Rotor, Thruster, Rudder }
@@ -85,11 +89,11 @@ public class RobotLocomotion : MonoBehaviour
 {
     // ---------- Reglages par famille ----------
     [Header("Vitesses maximales (m/s)")]
-    public float wheelSpeed = 16f;
-    public float trackSpeed = 10f;
-    public float legSpeed = 6f;
-    public float hoverSpeed = 14f;
-    public float rotorSpeed = 14f;
+    public float wheelSpeed = RobotSpeedModel.WheelSpeed;
+    public float trackSpeed = RobotSpeedModel.TrackSpeed;
+    public float legSpeed = RobotSpeedModel.LegSpeed;
+    public float hoverSpeed = RobotSpeedModel.HoverSpeed;
+    public float rotorSpeed = RobotSpeedModel.RotorSpeed;
     public float boostMultiplier = 1.5f;
 
     [Header("Conduite")]
@@ -112,6 +116,9 @@ public class RobotLocomotion : MonoBehaviour
     public int GroundedContacts { get; private set; }
     public int TotalContacts { get; private set; }
     public bool HasRotors { get; private set; }
+    // Part de vitesse gardee malgre la surcharge (RobotSpeedModel), 1 = robot leger
+    public float LoadFactor { get; private set; } = 1f;
+    public int WeightKg { get; private set; }
     public float RobotHeight { get; private set; } = 1f;
 
     private readonly RaycastHit[] hits = new RaycastHit[16];
@@ -130,6 +137,7 @@ public class RobotLocomotion : MonoBehaviour
     public void Setup(float cell, int weightKg)
     {
         cellSize = Mathf.Max(0.01f, cell);
+        WeightKg = weightKg;
         Body = GetComponent<Rigidbody>();
         Body.mass = Mathf.Max(2f, weightKg / 100f);
         Body.constraints = RigidbodyConstraints.None;
@@ -152,6 +160,7 @@ public class RobotLocomotion : MonoBehaviour
             RobotHeight = Mathf.Max(0.5f, robotBounds.size.y);
         Body.ResetCenterOfMass();
         Body.centerOfMass -= Vector3.up * (RobotHeight * centerOfMassDrop);
+        ApplySpeeds();
 
         // Repartition de la charge entre les contacts porteurs
         int supporting = 0;
@@ -178,7 +187,8 @@ public class RobotLocomotion : MonoBehaviour
             if (n > 0)
                 summary += $"{k} x{n} ";
         }
-        Debug.Log($"[RobotLocomotion] {units.Count} bloc(s) de mouvement : {summary}; masse {Body.mass:0.#}, {supporting} point(s) d'appui.");
+        Debug.Log($"[RobotLocomotion] {units.Count} bloc(s) de mouvement : {summary}; masse {Body.mass:0.#}, {supporting} point(s) d'appui, " +
+                  $"charge x{LoadFactor:0.00}, vitesse de pointe estimee {RobotSpeedModel.ToKmh(EstimatedTopSpeed())} km/h.");
     }
 
     private LocomotionUnit BuildUnit(PlacedBlockView view)
@@ -207,7 +217,7 @@ public class RobotLocomotion : MonoBehaviour
             unit.center = wb.center;
             unit.radius = LargestOther(wb.extents, axle);
             AddContact(unit, wb.center, unit.radius, unit.radius * 0.4f);
-            SetFamily(unit, wheelSpeed, 14f, 0.85f, 1.15f);
+            SetFamily(unit, wheelSpeed, RobotSpeedModel.WheelAccel, 0.85f, RobotSpeedModel.WheelFriction);
         }
         else if (family.Contains("track"))
         {
@@ -218,7 +228,7 @@ public class RobotLocomotion : MonoBehaviour
             float half = Mathf.Max(0f, vb.extents[along] - unit.radius);
             foreach (float f in new[] { -0.8f, 0f, 0.8f })
                 AddContact(unit, vb.center + Axis(along) * (half * f), unit.radius, unit.radius * 0.35f);
-            SetFamily(unit, trackSpeed, 10f, 0.95f, 1.3f);
+            SetFamily(unit, trackSpeed, RobotSpeedModel.TrackAccel, 0.95f, RobotSpeedModel.TrackFriction);
         }
         else if (family.Contains("leg"))
         {
@@ -234,7 +244,7 @@ public class RobotLocomotion : MonoBehaviour
             float reach = Mathf.Max(0.2f, hipY - footPos.y);
             AddContact(unit, new Vector3(footPos.x, hipY, footPos.z), reach, reach * 0.25f);
             unit.center = new Vector3(footPos.x, hipY, footPos.z);
-            SetFamily(unit, legSpeed, 8f, 0.9f, 1.2f);
+            SetFamily(unit, legSpeed, RobotSpeedModel.LegAccel, 0.9f, RobotSpeedModel.LegFriction);
         }
         else if (family.Contains("hover"))
         {
@@ -244,7 +254,7 @@ public class RobotLocomotion : MonoBehaviour
             unit.radius = LargestOther(vb.extents, duct);
             float height = hoverHeight * cellSize + vb.extents.y;
             AddContact(unit, vb.center, height, height * 0.6f, onGround: false);
-            SetFamily(unit, hoverSpeed, 9f, 0.18f, 0.6f);
+            SetFamily(unit, hoverSpeed, RobotSpeedModel.HoverAccel, 0.18f, RobotSpeedModel.HoverFriction);
         }
         else if (family.Contains("rotor"))
         {
@@ -308,6 +318,44 @@ public class RobotLocomotion : MonoBehaviour
         return 1;
     }
     public static float TierFactor(int tier) => 1f + TierStep * Mathf.Max(0, tier - 1);
+
+    // Vitesse de pointe des blocs au sol : base de la famille x niveau x charge
+    // (RobotSpeedModel). Rappelee quand un bloc porteur est detruit.
+    private void ApplySpeeds()
+    {
+        var live = new List<RobotSpeedModel.Unit>();
+        foreach (var u in units)
+        {
+            if (!u.disabled)
+                live.Add(new RobotSpeedModel.Unit(u.kind, u.tier));
+        }
+        LoadFactor = RobotSpeedModel.LoadFactor(WeightKg, RobotSpeedModel.Capacity(live));
+        foreach (var u in units)
+        {
+            float baseSpeed = u.kind switch
+            {
+                LocomotionKind.Wheel => wheelSpeed,
+                LocomotionKind.Track => trackSpeed,
+                LocomotionKind.Leg => legSpeed,
+                LocomotionKind.Hover => hoverSpeed,
+                _ => 0f,
+            };
+            if (baseSpeed > 0f)
+                u.maxSpeed = baseSpeed * RobotSpeedModel.GroundTierFactor(u.tier) * LoadFactor;
+        }
+    }
+
+    // Vitesse de pointe theorique du robot dans son etat actuel (m/s)
+    public float EstimatedTopSpeed()
+    {
+        var live = new List<RobotSpeedModel.Unit>();
+        foreach (var u in units)
+        {
+            if (!u.disabled)
+                live.Add(new RobotSpeedModel.Unit(u.kind, u.tier));
+        }
+        return RobotSpeedModel.EstimateTopSpeed(live, WeightKg);
+    }
 
     private static void SetFamily(LocomotionUnit unit, float maxSpeed, float accel, float grip, float friction)
     {
@@ -473,6 +521,7 @@ public class RobotLocomotion : MonoBehaviour
         }
         TotalContacts = supporting;
         HasRotors = units.Exists(u => u.kind == LocomotionKind.Rotor && !u.disabled);
+        ApplySpeeds();
         float share = Body.mass / Mathf.Max(1, supporting);
         float g = -Physics.gravity.y;
         foreach (var u in units)
@@ -526,7 +575,7 @@ public class RobotLocomotion : MonoBehaviour
         Body.AddTorque(up * (targetYaw - yawRate) * 4f, ForceMode.Acceleration);
         // Vitesse de pointe : celle des rotors, ou celle des propulseurs s'il y en a
         Vector3 horizontal = Vector3.ProjectOnPlane(Body.linearVelocity, Vector3.up);
-        float limit = Mathf.Max(rotorSpeed * k, ThrusterLimit()) * (boost ? boostMultiplier : 1f);
+        float limit = Mathf.Max(rotorSpeed * k * LoadFactor, ThrusterLimit()) * (boost ? boostMultiplier : 1f);
         if (horizontal.magnitude > limit)
             Body.AddForce(-horizontal.normalized * (horizontal.magnitude - limit) * 2f, ForceMode.Acceleration);
         Body.AddForce(-horizontal * (0.25f / k), ForceMode.Acceleration);
@@ -540,7 +589,7 @@ public class RobotLocomotion : MonoBehaviour
         foreach (var u in units)
         {
             if (u.kind == LocomotionKind.Thruster && !u.disabled)
-                limit = Mathf.Max(limit, 30f * TierFactor(u.tier));
+                limit = Mathf.Max(limit, RobotSpeedModel.ThrusterLimit(u.tier));
         }
         return limit;
     }
@@ -559,7 +608,7 @@ public class RobotLocomotion : MonoBehaviour
             if (speed > limit)
                 fire *= 0.2f;
             t.output = Mathf.MoveTowards(t.output, fire, Time.fixedDeltaTime * 4f);
-            float accel = 9f * TierFactor(t.tier) * (boost ? boostMultiplier : 1f);
+            float accel = RobotSpeedModel.ThrusterAccelBase * TierFactor(t.tier) * (boost ? boostMultiplier : 1f);
             Body.AddForceAtPosition(dir * (t.output * accel * Body.mass / thrusters.Count), transform.TransformPoint(t.center));
         }
     }

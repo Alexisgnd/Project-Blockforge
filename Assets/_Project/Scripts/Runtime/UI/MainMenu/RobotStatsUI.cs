@@ -4,7 +4,10 @@ using UnityEngine;
 // =========================================================
 // PANNEAU "STATISTIQUES" DU ROBOT SELECTIONNE
 // Purement visuel : recoit le robot du joueur (stats
-// PocketBase), met a jour les textes.
+// PocketBase), met a jour les textes. La vitesse est recalculee
+// depuis le blueprint (RobotSpeedModel, catalogue du hangar) :
+// les robots sauvegardes avant le calcul reel portaient tous
+// 92 km/h.
 // =========================================================
 
 public class RobotStatsUI : MonoBehaviour
@@ -19,6 +22,19 @@ public class RobotStatsUI : MonoBehaviour
     public TMP_Text energyValue;
     public TMP_Text weightValue;
     public TMP_Text blocksValue;
+
+    private HangarRobotShowcase catalogSource;
+
+    // Vitesse reelle depuis le blueprint ; a defaut, la valeur sauvegardee
+    public static int SpeedOf(RobotRecord robot, ref HangarRobotShowcase source)
+    {
+        if (source == null)
+            source = FindAnyObjectByType<HangarRobotShowcase>();
+        var stats = robot.stats ?? new RobotStats();
+        if (source != null && RobotSpeedModel.TryEstimateKmh(robot.data, source.Catalog, out int kmh))
+            return kmh;
+        return stats.speedKmh;
+    }
 
     public void Refresh(RobotRecord robot)
     {
@@ -35,7 +51,7 @@ public class RobotStatsUI : MonoBehaviour
         Set(capacityValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.cpu), "CPU"));
         Set(offensiveValue, Empty); // pas encore calculee (combat non commence)
         Set(healthValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.health), "HP"));
-        Set(speedValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.speedKmh), "km/h"));
+        Set(speedValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(SpeedOf(robot, ref catalogSource)), "km/h"));
         Set(energyValue, BlockforgeTheme.Num(stats.energy));
         Set(weightValue, BlockforgeTheme.QtyMuted(BlockforgeTheme.Num(stats.weightKg), "kg"));
         Set(blocksValue, BlockforgeTheme.Num(blocks));

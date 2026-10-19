@@ -3,8 +3,9 @@ using UnityEngine;
 
 // =========================================================
 // HUD GAUCHE DU GARAGE : capacites du robot en construction
-// Valeurs demo pour l'instant ; le gameplay appellera
-// Refresh() / les setters quand la construction evoluera.
+// CPU, PV, masse et vitesse sont calcules par
+// GarageBuildController (vitesse : RobotSpeedModel, la meme que
+// celle du robot en match).
 // =========================================================
 
 public class GarageStatsHUD : MonoBehaviour
@@ -14,7 +15,8 @@ public class GarageStatsHUD : MonoBehaviour
     public int capacityMax = 1000;
     public int health = 9800;
     public int healthMax = 12000;
-    public int speedKmh = 92;
+    public int speedKmh = 0;
+    [Tooltip("Pleine barre de vitesse (km/h)")]
     public int speedMax = 150;
     public int power = 120;
     public int powerMax = 200;
