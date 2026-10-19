@@ -15,12 +15,15 @@ using UnityEngine.InputSystem;
 //            balle, tres rapide, droit (sans gravite), faible
 //            cout, etincelles a l'impact
 // - Plasma : boule lumineuse (WeaponProjectile) soumise a une
-//            gravite reduite, explosion a l'impact (PlasmaExplosion :
-//            eclair, onde de choc et anneau au rayon exact de la
-//            zone, gerbe, braises, fumee, secousse camera) ; degats
-//            de zone degressifs et souffle sur les corps rigides.
-//            Cadence selon la rarete (N1 2,4 tirs/s -> N6 6 tirs/s),
-//            cout par tir ajuste pour garder la meme consommation
+//            gravite reduite, halo et arcs crepitants en vol
+//            (PlasmaBoltFX) ; explosion a l'impact (PlasmaExplosion :
+//            eclair, onde de choc, anneau et onde electrique au rayon
+//            exact de la zone, arcs electriques ramifies, brulure au
+//            sol, gerbe, braises, etincelles, fumee, secousse camera) ;
+//            degats de zone degressifs et souffle sur les corps rigides.
+//            Selon le niveau (N1..N6) : cadence 2,4 -> 6 tirs/s, boule
+//            plus grosse, zone de 2,2 -> 6 m, effets plus denses.
+//            Cout par tir ajuste pour garder la meme consommation
 //            d'energie par seconde
 // - Rail   : tir instantane lourd et lent, gros cout, long trait
 //            blanc, recul sur le robot
@@ -53,6 +56,7 @@ public class WeaponFireController : MonoBehaviour
         public float speed;         // projectile (m/s)
         public float gravity;       // part de la gravite subie par le projectile
         public float splash;        // rayon de zone (m)
+        public int tier;            // niveau de l'arme (N1..N6)
     }
 
     [Header("Portee")]
@@ -80,7 +84,9 @@ public class WeaponFireController : MonoBehaviour
     private readonly Stack<LineRenderer> beamPool = new();
     private Transform fxRoot;
     private ParticleSystem sparks, plasmaBurst, plasmaEmbers, plasmaSmoke, teslaArcs, muzzleFlash, muzzleSmoke;
-    private Shader hologramShader;
+    private Shader hologramShader, dustShader;
+    private Material plasmaHaloMaterial, plasmaArcMaterial;
+    private static readonly Color PlasmaArcColor = new(0.72f, 0.82f, 1f);
     private ParticleSystem.EmitParams emit;
 
     private static readonly Regex TierPattern = new(@"_N(\d)", RegexOptions.IgnoreCase);
@@ -126,7 +132,8 @@ public class WeaponFireController : MonoBehaviour
             damage = damage,
             speed = 58f + 4f * tier,
             gravity = 0.55f,
-            splash = 2.5f + 0.4f * tier,
+            splash = 2.2f + 0.76f * (tier - 1),   // N1 2,2 m -> N6 6 m
+            tier = tier,
         };
     }
 
@@ -145,6 +152,8 @@ public class WeaponFireController : MonoBehaviour
         if (beamMaterial != null) Destroy(beamMaterial);
         if (railMaterial != null) Destroy(railMaterial);
         if (plasmaMaterial != null) Destroy(plasmaMaterial);
+        if (plasmaHaloMaterial != null) Destroy(plasmaHaloMaterial);
+        if (plasmaArcMaterial != null) Destroy(plasmaArcMaterial);
         if (fxRoot != null) Destroy(fxRoot.gameObject);
     }
 
@@ -262,18 +271,21 @@ public class WeaponFireController : MonoBehaviour
 
     private void FirePlasma(Vector3 muzzle, Vector3 dir, Stats stats)
     {
+        float power = Mathf.Clamp01((stats.tier - 1) / 5f);
         var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         go.name = "PlasmaBolt";
         Destroy(go.GetComponent<Collider>());
         go.transform.position = muzzle + dir * 0.3f;
-        go.transform.localScale = Vector3.one * 0.38f;
+        go.transform.localScale = Vector3.one * Mathf.Lerp(0.32f, 0.62f, power);
         var r = go.GetComponent<MeshRenderer>();
         r.sharedMaterial = plasmaMaterial;
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
+        go.AddComponent<PlasmaBoltFX>().Init(plasmaHaloMaterial, plasmaArcMaterial, power);
         var bolt = go.AddComponent<WeaponProjectile>();
-        bolt.Launch(this, body, dir * stats.speed, stats, plasmaMaterial, trailTime: 0.22f, trailWidth: 0.34f, pulse: true, alignToVelocity: false);
-        MuzzleFX(muzzle, dir, PlasmaColor, 1.4f);
+        bolt.Launch(this, body, dir * stats.speed, stats, plasmaMaterial, trailTime: Mathf.Lerp(0.22f, 0.32f, power),
+                    trailWidth: Mathf.Lerp(0.3f, 0.6f, power), pulse: true, alignToVelocity: false);
+        MuzzleFX(muzzle, dir, PlasmaColor, Mathf.Lerp(1.3f, 2f, power));
     }
 
     private void FireTesla(RobotLoadoutState.Slot slot, Stats stats)
@@ -331,31 +343,41 @@ public class WeaponFireController : MonoBehaviour
                 directRobot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position);
         }
         if (stats.splash > 0f && stats.kind == Kind.Plasma)
-            PlasmaBlast(point, normal, stats, directTarget, directRobot);
+            PlasmaBlast(collider, point, normal, stats, directTarget, directRobot);
         else
             Burst(sparks, point, normal, sparkCount, color, 0.06f, 0.14f, 3f, 8f, 0.2f);
     }
 
     // Zone du plasma : degats degressifs (60 % au centre -> 15 % au bord) a ce qui n'a
     // pas pris le coup direct, souffle sur les corps rigides, effets d'explosion
-    private void PlasmaBlast(Vector3 point, Vector3 normal, Stats stats, ShootableTarget directTarget, RobotHealth directRobot)
+    private void PlasmaBlast(Collider hitCollider, Vector3 point, Vector3 normal, Stats stats, ShootableTarget directTarget, RobotHealth directRobot)
     {
         float radius = stats.splash;
+        float power = Mathf.Clamp01((stats.tier - 1) / 5f);
         var hitRobots = new HashSet<RobotHealth>();
         var hitTargets = new HashSet<ShootableTarget>();
         var pushed = new HashSet<Rigidbody>();
+        var arcTargets = new List<Vector3>();
         foreach (var col in Physics.OverlapSphere(point, radius, ~0, QueryTriggerInteraction.Collide))
         {
             Vector3 closest = col.bounds.ClosestPoint(point);   // (ClosestPoint refuse les MeshCollider concaves)
             float falloff = Mathf.Lerp(1f, 0.25f, Mathf.Clamp01(Vector3.Distance(closest, point) / radius));
 
             var target = col.GetComponentInParent<ShootableTarget>();
-            if (target != null && target != directTarget && hitTargets.Add(target))
-                target.Hit(stats.damage * 0.6f * falloff);
+            if (target != null && hitTargets.Add(target))
+            {
+                if (target != directTarget)
+                    target.Hit(stats.damage * 0.6f * falloff);
+                arcTargets.Add(closest);
+            }
 
             var robot = col.GetComponentInParent<RobotHealth>();
-            if (robot != null && robot.gameObject != gameObject && robot != directRobot && hitRobots.Add(robot))
-                robot.Damage(point, stats.damage * 0.6f, radius, transform.position);
+            if (robot != null && robot.gameObject != gameObject && hitRobots.Add(robot))
+            {
+                if (robot != directRobot)
+                    robot.Damage(point, stats.damage * 0.6f, radius, transform.position);
+                arcTargets.Add(closest);
+            }
 
             // Souffle : robots ennemis, debris detaches, caisses (jamais le tireur)
             var rb = col.attachedRigidbody;
@@ -369,14 +391,17 @@ public class WeaponFireController : MonoBehaviour
             }
         }
 
-        // Effets : la zone est montree au rayon exact
-        PlasmaExplosion.Spawn(point, normal, radius, PlasmaColor, hologramShader);
-        float k = Mathf.Clamp(radius / 3f, 0.8f, 1.8f);
-        Burst(plasmaBurst, point + normal * 0.2f, normal, Mathf.RoundToInt(26 * k), PlasmaColor, 0.35f * k, 0.9f * k, 2f * k, 8f * k, 0.4f);
-        Burst(plasmaEmbers, point + normal * 0.1f, normal, Mathf.RoundToInt(34 * k), Color.white, 0.05f, 0.12f, 6f * k, 15f * k, 0.6f);
-        Burst(sparks, point, normal, Mathf.RoundToInt(14 * k), Color.white, 0.08f, 0.16f, 4f, 10f, 0.25f);
-        Burst(plasmaSmoke, point + normal * 0.4f, normal, Mathf.RoundToInt(10 * k), PlasmaColor, 0.8f * k, 1.6f * k, 0.6f, 1.8f, 1.3f);
-        RobotFollowCamera.Shake(point, 0.22f + 0.05f * radius, 28f);
+        // Effets : la zone est montree au rayon exact ; brulure seulement sur un decor fixe
+        bool scorch = hitCollider != null && hitCollider.attachedRigidbody == null;
+        PlasmaExplosion.Spawn(point, normal, radius, power, PlasmaColor, hologramShader, dustShader, arcTargets, scorch);
+        float k = radius / 3f;
+        float dense = Mathf.Lerp(1f, 2.2f, power);
+        Burst(plasmaBurst, point + normal * 0.2f, normal, Mathf.RoundToInt(22 * dense), PlasmaColor, 0.3f * k, 0.8f * k, 2f * k, 7f * k, 0.4f);
+        Burst(plasmaEmbers, point + normal * 0.1f, normal, Mathf.RoundToInt(30 * dense), Color.white, 0.05f, 0.12f, 6f * k, 14f * k, 0.6f);
+        // Etincelles electriques : tres vives, tres courtes
+        Burst(sparks, point + normal * 0.05f, normal, Mathf.RoundToInt(18 * dense), Color.white, 0.06f, 0.14f, 9f * k, 22f * k, 0.16f);
+        Burst(plasmaSmoke, point + normal * 0.4f, normal, Mathf.RoundToInt(8 * dense), PlasmaColor, 0.8f * k, 1.6f * k, 0.6f, 1.8f, 1.4f);
+        RobotFollowCamera.Shake(point, Mathf.Lerp(0.18f, 0.45f, power), 20f + 6f * radius);
     }
 
     private static bool TryBounds(Transform t, out Bounds bounds)
@@ -404,9 +429,16 @@ public class WeaponFireController : MonoBehaviour
         {
             beamMaterial = BeamMaterial(holo, "LaserBeam", LaserColor, 2.6f);
             railMaterial = BeamMaterial(holo, "RailBeam", RailColor, 3.2f);
-            plasmaMaterial = BeamMaterial(holo, "PlasmaBolt", PlasmaColor, 3f);
+            plasmaMaterial = BeamMaterial(holo, "PlasmaBolt", Color.Lerp(PlasmaColor, Color.white, 0.35f), 3.6f);
+            plasmaHaloMaterial = PlasmaExplosion.Holo(holo, "PlasmaHalo", PlasmaColor, 2.6f, 0f);
+            plasmaHaloMaterial.SetFloat("_FillAlpha", 0.18f);
+            plasmaHaloMaterial.SetFloat("_RimPower", 1.4f);
+            plasmaHaloMaterial.SetFloat("_RimStrength", 1.8f);
+            plasmaArcMaterial = PlasmaExplosion.Holo(holo, "PlasmaBoltArc", PlasmaArcColor, 5f, 2f);
+            plasmaArcMaterial.SetFloat("_Flicker", 0.35f);
         }
         var dust = Shader.Find("Blockforge/DustParticle");
+        dustShader = dust;
         if (dust != null)
         {
             sparks = BuildParticles(dust, "Sparks", 400, stretch: true, new Color(0.8f, 0.95f, 1f));
