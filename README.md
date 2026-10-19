@@ -1,97 +1,126 @@
 # Project Blockforge
 
-Jeu de construction et de combat de robots par blocs, dans l'esprit de Robocraft.
-On assemble son robot dans un garage à partir d'un catalogue de pièces (châssis,
-roues, propulseurs, armes, boucliers…), puis on ira l'affronter sur des cartes
-comme Mars.
+Jeu de construction et de combat de robots par blocs, dans l'esprit de Robocraft :
+on assemble son robot dans un garage à partir d'un catalogue de pièces, puis on
+l'emmène au combat.
 
-Moteur : **Unity 6 (6000.5.6f1) + HDRP**. Backend : **PocketBase** (comptes et
-sauvegarde des robots), compte **Steam** optionnel via Steamworks.NET (App ID
-1926750). Sources 3D : **Blender**.
-
-> Projet en cours de prototypage. Le garage est jouable, le combat n'existe pas
-> encore. Voir [État du projet](#état-du-projet).
+| | |
+|---|---|
+| Moteur | **Unity 6 (6000.5.6f1) + HDRP** |
+| Backend | **PocketBase** sur VPS (comptes, sauvegarde des robots) |
+| Plateforme | **Steam** (App ID 1926750) via Steamworks.NET, compte Steam optionnel |
+| Sources 3D | **Blender 5.x** (blocs en FBX), décors en GLB (glTFast) |
+| Sortie visée | **Accès anticipé gratuit, décembre 2026** : combat contre des bots sur une carte, pas de multijoueur |
 
 ---
 
 ## Sommaire
 
 1. [État du projet](#état-du-projet)
-2. [Démarrer](#démarrer)
-3. [Structure du dépôt](#structure-du-dépôt)
-4. [Catalogue des blocs](#catalogue-des-blocs)
-5. [Pipeline 3D (Blender → Unity)](#pipeline-3d-blender--unity)
-6. [Contribuer](#contribuer)
+2. [Steam et comptes](#steam-et-comptes)
+3. [Démarrer](#démarrer)
+4. [Structure du dépôt](#structure-du-dépôt)
+5. [Catalogue des blocs](#catalogue-des-blocs)
+6. [Pipeline 3D et décors](#pipeline-3d-et-décors)
+7. [Contribuer](#contribuer)
    - [Code](#code-c--unity)
    - [3D](#3d-modélisation)
    - [Musique et son](#musique-et-son)
    - [Game design, UI, tests, docs](#game-design-ui-tests-docs)
    - [Workflow Git et commits](#workflow-git-et-commits)
-7. [Licence](#licence)
+8. [Licence](#licence)
 
 ---
 
 ## État du projet
 
-| Système | État |
+*Mis à jour le 19 octobre 2026.*
+
+| Domaine | État |
 |---|---|
-| Écran de démarrage : connexion Steam automatique (ticket vérifié par PocketBase) ou compte email / mot de passe, mode hors ligne (robots en cache local, synchro à la reconnexion) | fonctionnel (à valider avec la clé Web API) |
-| Menu principal (hangar, 3 slots de robots, choix du mode de jeu) | fonctionnel |
-| Garage : grille de pose (14×14 sur l'ancien vaisseau, 31×31×31 dans Garage_V2), pince, inventaire par catégorie et famille, recherche | fonctionnel |
-| Garage : mode miroir (M, jumeau par le plan de la ligne centrale) | fonctionnel |
-| Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
-| Garage V2 : vaisseau Mothership (GLB), baie 31 × 31 × 31 m, joueur sur `PlayerSpawn` | généré par script, à valider en jeu |
-| Sauvegarde des robots sur PocketBase | fonctionnel |
-| Scène de test (P depuis le garage) : canyon Red Canyon, robot assemblé depuis le blueprint, conduite ZQSD, caméra de poursuite | prototype |
-| Catalogue de blocs avec vrais modèles 3D | 82 blocs, tous modélisés (voir le catalogue) |
-| Carte Mars | scène et planète en place, gameplay à venir |
-| Combat, physique de roues, multijoueur | pas commencé |
+| **Compte Steam** : connexion automatique, pseudo et avatar, ticket vérifié par PocketBase | fonctionnel, validé de bout en bout |
+| **Compte standard** (email / mot de passe) quand Steam n'est pas lancé | fonctionnel |
+| **Mode hors ligne** : robots en cache local, synchro à la reconnexion, bouton *Reconnect* | fonctionnel |
+| **Page Steam** (nom, textes EN/FR, genres, tags, accès anticipé, questionnaire de contenu) | publiée côté Steamworks ; images du magasin et build à faire |
+| Menu principal : hangar 3D, 3 baies de robots, écrans Play / Build, header (TopBar) | fonctionnel |
+| Écrans Tech tree, Workshop, Store | interface en place, données factices (pas encore d'économie) |
+| Garage : grille, pince, inventaire, recherche, miroir, spray de peinture, historique | fonctionnel |
+| Règle d'armement : 3 types d'armes / modules max par robot | fonctionnel (dialogue de remplacement dans le garage) |
+| Garage V2 (vaisseau Mothership, baie 31 × 31 × 31) | généré par script, à valider en jeu |
+| Combat : visée, tir, projectiles, dégâts par bloc, énergie, bots ennemis, arène | prototype jouable (scène de test) |
+| Match : intro, HUD, minicarte, pause, fin de partie, résultats | prototype |
+| Catalogue : 82 blocs, 17 familles, tous modélisés | fait (modèles procéduraux à améliorer) |
+| Audio | gestionnaire de musique en place ; SFX à produire |
+| Carte Mars | scène en place, pas de gameplay |
+| Multijoueur, tests automatisés, licence | pas commencé / non définie |
+
+L'interface du jeu est en **anglais** et suit le design system BlockForge
+(`DESIGN_SYSTEM.md`, `Scripts/Runtime/UI/{Theme,Widgets,DesignSystem}`).
+
+---
+
+## Steam et comptes
+
+Le jeu se lance **avec ou sans Steam**. Le serveur ne fait jamais confiance au
+SteamID envoyé par le client : seul un ticket vérifié auprès de Valve fait foi.
+
+```
+Steam lancé ──► ticket Web API ──► PocketBase /api/blockforge/steam-auth ──► Valve (AuthenticateUserTicket)
+                                          │
+                                          └─► compte users trouvé ou créé par steamId ──► token PocketBase
+Pas de Steam ──► écran email / mot de passe (compte standard)
+Hors ligne   ──► cache local du dernier compte, jeu contre les bots, synchro au retour
+```
+
+| Brique | Rôle |
+|---|---|
+| `Steam/SteamBootstrap` | `SteamAPI.Init` tolérant (Steam absent = pas d'erreur), callbacks, arrêt |
+| `Steam/SteamIdentityService` | SteamID, pseudo, avatar, ticket `GetAuthTicketForWebApi("blockforge-backend")` |
+| `Account/SessionService` | états *None / Connecting / Online / Offline / Guest*, connexion Steam ou email, reconnexion |
+| `Account/IdentityCache` | dernier compte connu et son avatar, sur le disque |
+| `Account/RobotStore` | robots en local d'abord ; synchro : la dernière modification (`editedAt`) gagne, suppressions par pierre tombale, robots invité adoptés dans les baies libres |
+| `UI/MainMenu/PlayerChip` | pseudo, avatar rond, pastille d'état, bouton *Reconnect* / *Sign in* |
+| `Tools/PocketBase/pb_hooks` | routes `steam-auth` et `steam-link` (+ `steam_utils.js`) ; schéma et installation dans `Tools/PocketBase/README.md` |
+
+Points à connaître :
+
+- **Clé Web API publisher** : variable d'environnement `STEAM_WEB_API_KEY` du
+  service PocketBase, jamais dans le dépôt ni dans le jeu.
+- **`steam_appid.txt`** (1926750) à la racine sert à l'éditeur ; le compte Steam
+  doit posséder l'app.
+- Un compte Steam et un compte email restent **séparés**. La route `steam-link`
+  permet de les rattacher, l'interface n'existe pas encore.
+- Côté Steamworks : jeu gratuit en accès anticipé, développeur et éditeur
+  « Swtch (Aka. Alexis GND) », anglais + français, exécutable `BlockForge.exe`.
+  Le *Product Name* Unity doit passer à `BlockForge` avant le premier build
+  (ce qui déplace aussi le dossier du cache local).
 
 ---
 
 ## Démarrer
 
-### Prérequis
-
-- **Git** et **Git LFS** (`git lfs install` *avant* de cloner : les FBX, PNG et .blend
-  sont stockés en LFS, sans quoi vous obtiendrez des fichiers pointeurs de 130 octets).
-- **Unity Hub** avec l'éditeur **6000.5.6f1** (une autre 6000.5.x devrait convenir).
-- **Blender 5.x** uniquement si vous touchez aux sources 3D (`Tools/Blender`).
-
-### Installation
+**Prérequis** : Git + **Git LFS** (`git lfs install` *avant* de cloner, sinon les
+FBX, PNG et .blend arrivent en pointeurs de 130 octets), Unity Hub avec
+**6000.5.6f1**, Blender 5.x seulement pour les sources 3D.
 
 ```bash
 git lfs install
 git clone https://github.com/Alexisgnd/Project-Blockforge.git
 ```
 
-1. Dans Unity Hub, *Add project from disk* → dossier du clone.
-2. Première ouverture : l'import des assets prend plusieurs minutes. Les scripts
-   éditeur `Blockforge` (`Assets/_Project/Scripts/Editor`) exécutent ensuite une fois
-   leurs « setups » (matériaux, catalogue de blocs, scène Garage) et posent un
-   marqueur dans `Library/`. On peut les relancer à la main via le menu
-   **Blockforge > Setup …**.
-3. Ouvrir `Assets/_Project/Scenes/Boot.unity` et lancer le Play mode.
-   Boot → MainMenu → Garage.
+1. Unity Hub → *Add project from disk*. Le premier import prend plusieurs minutes ;
+   les scripts éditeur exécutent ensuite une fois leurs *setups* (relançables via
+   **Blockforge > Setup …**).
+2. Ouvrir `Assets/_Project/Scenes/Boot.unity` et lancer le Play mode
+   (Boot → MainMenu → Garage).
+3. Compte : Steam ouvert → connexion automatique ; sinon email / mot de passe
+   (`dev_autologin.json` à la racine, ignoré par Git, remplit le formulaire) ;
+   sinon *Play offline*.
 
-### Compte et backend
-
-Les comptes et les robots vivent sur une instance PocketBase hébergée par le
-mainteneur (`Tools/PocketBase/` : hooks à installer, schéma des collections).
-
-- **Steam ouvert** : le jeu se connecte tout seul avec le compte Steam (pseudo et
-  avatar affichés dans le header). Le ticket Steam est vérifié par le serveur ;
-  l'App ID est 1926750 (`steam_appid.txt` à la racine pour l'éditeur, le compte
-  Steam doit posséder l'app). Le package `com.rlabrecque.steamworks.net` est déclaré
-  dans `Packages/manifest.json` (UPM, git).
-- **Sans Steam** : écran email / mot de passe (compte standard). Demandez un compte
-  de test, ou créez-en un depuis l'écran. En développement, `dev_autologin.json` à
-  la racine (ignoré par Git, ne jamais le committer) remplit le formulaire.
-- **Hors ligne** (serveur injoignable, Steam en mode hors ligne ou *Play offline*) :
-  on joue contre les bots avec les robots en cache local
-  (`%USERPROFILE%/AppData/LocalLow/<société>/Blockforge/BlockForge/<compte>/`) ;
-  tout se synchronise à la reconnexion (dernière modification gagne). Un clic sur
-  le nom du joueur dans le header retente la connexion.
+Le cache local est dans
+`%USERPROFILE%/AppData/LocalLow/<société>/<produit>/BlockForge/<compte>/`.
+Depuis le garage, **P** lance la scène de test avec le robot en cours,
+**ESC** deux fois pour revenir.
 
 ---
 
@@ -99,192 +128,84 @@ mainteneur (`Tools/PocketBase/` : hooks à installer, schéma des collections).
 
 ```
 Project-Blockforge/
-├── Assets/
-│   ├── _Project/            ← TOUT notre contenu (le préfixe _ le garde en tête de liste)
-│   │   ├── Art/
-│   │   │   ├── Models/Blocks/{Chassis,Movement,Weapons,Special}/   FBX des blocs
-│   │   │   ├── Models/*.glb                                         décors GLB (ShipGarage_V2, Map_Canyon, Map_Arena) importés par glTFast
-│   │   │   ├── Materials/{Blocks,Garage,Map}/                       matériaux HDRP/Lit
-│   │   │   ├── Textures/{Blocks,Icons,Map}/                         textures et icônes 512 px
-│   │   │   └── Animations/, Garage/, Hangar/, Shaders/, VFX/
-│   │   ├── Audio/{Music,SFX,Mixers}/   (vide pour l'instant, voir Contribuer)
-│   │   ├── Data/Blocks/                un asset BlockDefinition par bloc
-│   │   ├── Data/GameModes/             modes de jeu
-│   │   ├── Resources/                  matériau placeholder des blocs sans modèle
-│   │   ├── Scenes/                     Boot, MainMenu, Garage, Garage_V2, Map_MARS, Map_Test
-│   │   ├── Scripts/Runtime/            code du jeu   (asmdef Blockforge.Runtime)
-│   │   ├── Scripts/Editor/             outils éditeur (asmdef Blockforge.Editor)
-│   │   └── UI/                         UXML/USS de l'écran d'auth, polices, sprites
-│   ├── Settings/                       HDRP, Input System (du template Unity)
-│   ├── TextMesh Pro/                   essentiels TMP (SDFFunctions.hlsl patché pour le ray tracing)
-│   └── ThirdParty/                     assets externes, jamais mélangés à _Project
-├── Packages/, ProjectSettings/         manifeste UPM et réglages Unity
-├── Tools/Blender/                      sources .blend de tous les modèles + scripts de pipeline
-├── Tools/Maps/                         générateurs Python des cartes de test (arène, canyon) + aperçus
-├── ARCHITECTURE.md                     découpage du code et principes
-└── README.md
+├── Assets/_Project/          tout notre contenu
+│   ├── Art/                  modèles FBX/GLB, matériaux HDRP, textures, icônes, VFX
+│   ├── Audio/                musique, SFX, mixers
+│   ├── Data/                 BlockDefinition (un par bloc), modes de jeu
+│   ├── Scenes/               Boot, MainMenu, Garage, Garage_V2, Map_MARS, Map_Test
+│   ├── Scripts/Runtime/      jeu (asmdef Blockforge.Runtime) : Account, Steam, Network,
+│   │                         Garage, Player, Vehicle, Combat, Meta, Audio, UI…
+│   ├── Scripts/Editor/       outils et setups (asmdef Blockforge.Editor)
+│   └── UI/                   UXML/USS de l'écran d'auth, polices, sprites du design system
+├── Assets/ThirdParty/        assets externes, jamais mélangés à _Project
+├── Tools/Blender/            sources .blend et scripts de pipeline
+├── Tools/Maps/               générateurs Python des cartes de test
+├── Tools/PocketBase/         hooks serveur (Steam) et schéma des collections
+├── ARCHITECTURE.md           découpage du code et principes
+├── DESIGN_SYSTEM.md          direction UI, palette, composants
+└── steam_appid.txt
 ```
 
 Ignorés par Git : `Library/`, `Temp/`, `Logs/`, `UserSettings/`, `Builds-Profiles/`,
-`*.blend1`, `.plastic/` (Unity Version Control n'est pas utilisé, le dépôt de
-référence est GitHub).
+`*.blend1`, `.plastic/`.
 
 ---
 
 ## Catalogue des blocs
 
 Le jeu est *data-driven* : chaque bloc est un asset `BlockDefinition`
-(`Assets/_Project/Data/Blocks/Block_<Famille>_N<tier>_<Nom>.asset`) qui porte le nom,
-la famille, la catégorie, les stats (coût CPU, masse, résistance), l'empreinte en
-cases (`footprint`, largeur × hauteur × profondeur), la face d'ancrage (`anchor`),
-l'icône et le prefab d'aperçu. La liste canonique vit dans
-`Scripts/Editor/GarageInventorySetup.cs` ; les scripts `<Famille>BlockSetup` la
-resynchronisent avec les assets (**Blockforge > Resync Block Definitions** la rejoue
-seule).
+(`Data/Blocks/Block_<Famille>_N<tier>_<Nom>.asset`) qui porte stats (CPU, masse,
+résistance), empreinte en cases (`footprint`), face d'ancrage (`anchor`), icône et
+prefab. La liste canonique est dans `Scripts/Editor/GarageInventorySetup.cs`
+(**Blockforge > Resync Block Definitions**).
 
-Un bloc occupe toutes les cases de son empreinte : le modèle est mis à l'échelle
-pour remplir sa boîte, sa face d'ancrage est plaquée contre la case visée et la
-boîte s'étend à l'opposé (une roue se pose par son moyeu, une électroplate par sa
-fixation arrière, tout le reste par sa base). Tout ce qui n'est pas châssis
-s'accroche à la face visée, dessus, dessous ou sur un flanc (un laser se monte
-aussi bien sur le côté d'un cube que sur son toit) ; la molette tourne autour de
-cette face. Les pièces de châssis restent droites et ne font que du lacet. Seule
-la case visée et l'orientation (face × 4 + quart de tour) sont sauvegardées ; les
-anciennes valeurs 0 à 3 restent valides.
+Règles de pose :
 
-Trois règles complètent la pose :
+- **Rien ne flotte** : seul le châssis se pose sur le sol de la baie, tout le
+  reste s'accroche à une pièce existante (dessus, dessous ou flanc).
+- **Centré sur son support** : les cases réservées sont arrondies au nombre impair
+  supérieur sur les axes perpendiculaires à l'ancrage ; le modèle garde sa taille.
+- **Le robot se soulève sur ses roues** : la pièce la plus basse pose sur le sol.
+- Sauvegarde : case visée + orientation (face × 4 + quart de tour).
 
-- **Rien ne flotte.** Un bloc qui s'accroche à une face (mouvement, armes, défense,
-  spécial) doit toucher une pièce déjà posée, sinon le fantôme reste rouge. Seul le
-  châssis se pose librement sur le sol de la baie : c'est par lui qu'on commence.
-- **Le bloc est centré sur celui qui le porte.** Les cases réservées sont arrondies
-  au nombre impair supérieur sur les deux axes perpendiculaires à la face d'ancrage
-  (une roue déclarée 1×2×2 en réserve 1×3×3), car un nombre pair de cases tomberait
-  à cheval entre deux cases. Le modèle, lui, garde la taille déclarée dans le
-  catalogue : il ne grandit pas, il se recentre. Les hélices, déjà en 3×1×3, ne
-  bougent pas.
-- **Le robot se soulève sur ses roues.** Une roue ou une patte montée sur le flanc
-  du plancher descend plus bas que lui ; ces cases sous le sol de la baie sont
-  autorisées et tout le robot est relevé d'autant, pour que la pièce la plus basse
-  pose sur le sol au lieu de s'y encastrer. La scène de test applique la même règle
-  au moment de faire apparaître le robot.
+| Catégorie | Familles (tiers) |
+|---|---|
+| Châssis | pièces pleines (12), tiges (5) |
+| Mouvement | roues (6), chenilles animées (4), pattes d'insecte (2), lames de survol (6), hélices (3), ailerons (7), propulseurs (5) |
+| Armes | lasers (6), lanceurs de plasma (6), canons électriques (4), lames de Tesla (3) |
+| Défense | distributeurs nano (3), électroplates (8) |
+| Spécial | radar animé (1), disque de bouclier (1) |
 
-Un robot sauvegardé avant ces règles peut perdre un bloc dont les cases réservées
-chevauchent maintenant un voisin ; le garage le dit dans la console au chargement.
-
-| Catégorie | Famille | Tiers | Empreinte (L×H×P) | Ancrage |
-|---|---|---|---|---|
-| Châssis | Pièces pleines (cube, pentes, coins, cône, pyramide…) | 12 | 1×1×1 | base |
-| Châssis | Tiges (courte, longue, arc, diagonales 2D/3D) | 5 | 1×1×1, tige longue 1×2×1 (échelle native, les plaques débordent) | base |
-| Mouvement | Roues — Scout → Monster | 6 | 1×2×2 → 2×3×3 | moyeu (côté) |
-| Mouvement | Chenilles — Bison → Mammoth (animées) | 4 | 1×1×3 → 2×2×4 | base |
-| Mouvement | Pattes d'insecte — Walker, Soldier | 2 | 1×2×1, 2×2×1 | plaque de hanche (côté) |
-| Mouvement | Lames de survol — Squall → Hurricane | 6 | 2×1×2 → 3×1×3 | arrière |
-| Mouvement | Hélices (rotors) — Recon, Invader, Assault | 3 | 3×1×3 | base |
-| Mouvement | Ailerons — Hawk → Bat | 7 | 1×2×1 → 2×4×1 | base |
-| Mouvement | Propulseurs — Lynx → Cheetah | 5 | 2×2×2 → 2×2×3 | base |
-| Armes | Lasers — Wasp → Leviathan | 6 | 1×1×1 → 2×2×4 | base |
-| Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | 1×2×2 → 3×3×4 | base |
-| Armes | Canons électriques (rail) — Piercer → Erazer | 4 | 2×2×4 → 2×3×6 | base |
-| Armes | Lames de Tesla — Slicer → Nova | 3 | 1×2×4 → 1×3×5 | base |
-| Défense | Distributeurs nano — Blinder → Constructor | 3 | 1×2×2 → 1×2×3 | base |
-| Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | 1×2×1 → 3×4×1 | arrière |
-| Spécial | Radar (panneaux repliables, animé) | 1 | 1×2×2 (replié) | base |
-| Spécial | Disque de bouclier | 1 | 2×2×2 | arrière |
-
-Toutes les familles ont un modèle 3D. Les empreintes sont mesurées au repos : le
-radar déplié et les lames de Tesla en action déborderont de leur boîte, c'est
-accepté.
-
-Un bloc dont le champ `art` est vide dans `GarageInventorySetup` s'affiche en
-cube gris (placeholder) : il n'en reste plus aucun, toutes les familles sont
-modélisées. Les ailes, un temps prévues, sont couvertes par les ailerons.
+Empreintes et ancrages détaillés : `GarageInventorySetup.cs`.
 
 ---
 
-## Pipeline 3D (Blender → Unity)
+## Pipeline 3D et décors
 
-Chaque famille de blocs suit le même chemin, entièrement automatisé côté Unity :
+**Blocs (Blender → FBX → Unity, automatisé côté Unity)** :
 
-1. **Source** : un fichier `Tools/Blender/<Famille>.blend`, une collection par bloc,
-   une racine `Empty` nommée comme le futur FBX, pièces en `snake_case`.
-2. **Export FBX** : un FBX par bloc dans `Assets/_Project/Art/Models/Blocks/<Catégorie>/`
-   (`Chassis_Cube.fbx`, `Wheel_Scout.fbx`, `Rudder_N3_Kestrel.fbx`…).
-   Réglages Blender : axes par défaut (Forward -Z, Up Y), **Apply Transform décoché**
-   (`bake_space_transform = False`, indispensable avec des Empties), animations
-   uniquement si le bloc en a.
-3. **Icône** : rendu 512×512 fond transparent dans
-   `Assets/_Project/Art/Textures/Icons/Icon_<Nom>.png` (même nom de base que le FBX).
-   `Tools/Blender/rudders_pipeline.py` montre un pipeline complet import GLB →
-   renommage → export FBX → rendu des icônes.
-4. **Matériaux** : un script éditeur `<Famille>MaterialSetup.cs` recrée les matériaux
-   HDRP/Lit (`Art/Materials/Blocks/<Famille>_<Matériau>.mat`) à partir d'une table
-   couleur / metallic / smoothness, et remappe les matériaux des FBX dessus.
-5. **Catalogue** : `<Famille>BlockSetup.cs` relie FBX + icône aux assets
-   `BlockDefinition` et met à jour la scène Garage.
-6. **Blocs animés** (chenilles) : l'armature et ses clips sont exportés dans le FBX
-   (une take par piste NLA, ici `Roll_Forward` / `Roll_Reverse`, 16 s @ 60 fps en
-   boucle exacte). Le `MaterialSetup` passe le rig en Generic et coche Loop Time ;
-   le `BlockSetup` crée un `AnimatorController` (`Art/Animations/<Nom>.controller`,
-   états Idle / avant / arrière pilotés par le float `Roll`) et un prefab variant
-   `Art/Prefabs/Blocks/<Nom>.prefab` qui remplace le FBX brut comme prefab d'aperçu.
+1. `Tools/Blender/<Famille>.blend`, une collection par bloc, racine `Empty` nommée
+   comme le FBX.
+2. Export d'un FBX par bloc dans `Art/Models/Blocks/<Catégorie>/` (Forward -Z, Up Y,
+   **Apply Transform décoché**).
+3. Icône 512 × 512 transparente dans `Art/Textures/Icons/Icon_<Nom>.png`.
+4. `<Famille>MaterialSetup.cs` recrée les matériaux HDRP/Lit et les remappe.
+5. `<Famille>BlockSetup.cs` relie FBX + icône aux `BlockDefinition`.
+6. Blocs animés : clips dans le FBX, `AnimatorController` et prefab variant générés.
 
-Conventions à respecter (ouvrir `Tools/Blender/Chassis.blend` ou `Wheels.blend`
-comme référence) :
+Conventions : 1 case = 1 m ; l'avant regarde vers **-Y Blender** (+Z Unity) ;
+l'import FBX **inverse l'axe X** ; peu de matériaux, nommés explicitement ;
+style low-poly (armure blanche, graphite, acier, liserés cyan émissifs).
+**Blockforge > Report Block Bounds** vérifie l'ajustement.
 
-- Échelle : un cube de châssis = 1 m = une case de la grille du garage. Les autres
-  blocs sont modélisés à l'échelle qui leur va ; Unity les ajuste dans leur empreinte
-  en cases (`footprint` dans `GarageInventorySetup`). Seules les tiges gardent
-  l'échelle native (1 m = 1 case), car elles relient des centres de cases.
-- Orientation : l'avant du bloc regarde vers **-Y Blender** (soit +Z dans Unity) ;
-  par exemple la tuyère d'un propulseur pointe vers +Y. Attention, l'import FBX
-  **inverse l'axe X** : ce qui est à +X dans Blender se retrouve à -X dans Unity
-  (le moyeu des roues est à +X dans Blender, donc ancré côté -X dans Unity).
-- Pivot sur la racine Empty. Sa position n'est plus critique : Unity aligne le modèle
-  sur ses bounds exacts et plaque sa face d'ancrage (`anchor` : base, côté, arrière)
-  contre la boîte. **Blockforge > Report Block Bounds** écrit
-  `Library/BlockBoundsReport.txt` pour vérifier l'ajustement et le côté des faces.
-- Style low-poly stylisé, palette cohérente avec les blocs existants (armure blanche,
-  graphite, acier, liserés cyan émissifs).
-- Peu de matériaux par bloc, nommés explicitement : c'est ce nom que le script
-  `MaterialSetup` utilise pour le remap.
+**Décors GLB** (`Art/Models/*.glb`, importés par glTFast) :
 
-### Décors : vaisseau V2 et cartes de test (GLB)
-
-Les décors générés hors Blender arrivent en **GLB** dans `Assets/_Project/Art/Models/`
-(package `com.unity.cloud.gltfast` : import automatique, matériaux HDRP générés, fichiers
-en LFS) et les scènes se (re)construisent par script :
-
-- `ShipGarage_V2.glb` (Mothership) → **Blockforge > Setup Garage V2 Scene** copie
-  `Garage.unity` en `Garage_V2.unity`, remplace l'ancien vaisseau par le GLB à l'identité
-  (échelle 1), ajoute la ligne centrale du miroir, recâble la grille et place le joueur.
-  Contrat du modèle : mètres, Y vertical, baie de construction **31 × 31 × 31 m** centrée
-  à l'origine ; lignes `BuildGrid_X_NN` / `BuildGrid_Y_NN` (32 par axe : le code prend
-  l'union des lignes, retire une épaisseur et compte les cases, soit 31 cases de 1 m) ;
-  empties `BuildBounds_Min` / `BuildBounds_Max`, `BuildOrigin`, `PlayerSpawn` ; aucun
-  collider. **Setup Garage UI** / **Setup Garage Inventory** s'appliquent ensuite à la
-  scène garage ouverte, et **Blockforge > MainMenu -> Garage V2** fait entrer le menu
-  principal dans la V2 (retour avec *MainMenu -> Garage (V1)*).
-- `Map_Canyon.glb` (**Red Canyon**, la map de test : raffinerie dans un canyon, circuit au
-  sol, mesa, pont du réacteur, toitures, viaduc rompu, 12 cibles, 1,4 km avec son décor,
-  17 Mo) → **Blockforge > Setup Map Test Scene**. La variante
-  *… (arène plate)* charge à la place `Map_Arena.glb`, l'arène d'entraînement 180 × 160 m
-  (rampes calibrées 10 à 45°, cibles, murs d'escalade, plateformes), pratique pour un essai
-  de conduite rapide. Le setup pose soleil, volume, caméra de poursuite, map instanciée
-  avec un `MeshCollider` par maillage solide, `SpawnPoint` du modèle (sinon créé à
-  (0, 0.2, 0)) et `TestSceneBootstrap` (`RobotTestSpawner`, case de 1 m) ; sans GLB, un sol
-  plat et quelques obstacles procéduraux sont générés. Restent **sans collision** : les
-  marquages et liserés décoratifs (noms contenant `Marking`, `Deck_joint`, `_dash`, `Lane_`,
-  `edge_paint`, `height_band`, `Spawn_ring`…) et le groupe `BACKGROUND_NON_PLAYABLE` du
-  canyon, ses 154 000 triangles de décor extérieur que le fichier déclare non jouables.
-  Contrat : mètres, Y vertical, sol praticable vers y = 0, un empty `SpawnPoint` ~0,2 m
-  au-dessus du sol, normales vers l'extérieur, pas de collider ; regrouper le décor non
-  jouable sous un objet nommé `BACKGROUND_NON_PLAYABLE`. Au lancement, le robot vérifie
-  qu'il a bien un sol sous lui et le dit dans la console. Les générateurs Python et les
-  aperçus sont dans `Tools/Maps/TrainingArena/`.
-
-Depuis le garage, **P** charge `Map_Test` avec le robot en cours (non sauvegardé) ;
-**ESC** libère le curseur, un second **ESC** ramène au garage d'origine.
+- `ShipGarage_V2.glb` → **Blockforge > Setup Garage V2 Scene** (baie 31 m,
+  empties `BuildBounds_*`, `BuildOrigin`, `PlayerSpawn`).
+- `Map_Canyon.glb` (Red Canyon) et `Map_Arena.glb` → **Blockforge > Setup Map Test
+  Scene** (colliders générés, décor non jouable sous `BACKGROUND_NON_PLAYABLE`).
+- Contrat commun : mètres, Y vertical, sol vers y = 0, pas de collider dans le
+  fichier. Générateurs et aperçus : `Tools/Maps/`.
 
 ---
 
@@ -418,6 +339,6 @@ Conventions :
 
 ## Licence
 
-Pas encore définie. Le code et les assets restent pour l'instant la propriété de
-leurs auteurs respectifs ; contactez le mainteneur avant toute réutilisation hors
-du projet. Une licence sera choisie avant la première version publique.
+Pas encore définie. Le code et les assets restent la propriété de leurs auteurs ;
+contactez le mainteneur avant toute réutilisation hors du projet. Une licence sera
+choisie avant la sortie en accès anticipé.
