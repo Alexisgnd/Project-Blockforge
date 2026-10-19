@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 // =========================================================
 // SAUVEGARDE, TEST ET SORTIE DU GARAGE
-// T      : popup "nom du robot" puis envoi vers PocketBase.
+// T      : popup "nom du robot" puis sauvegarde via RobotStore
+//          (cache local d'abord, PocketBase si en ligne ; hors
+//          ligne le robot attend la prochaine synchro).
 // P      : lance un test du robot (scene Map_Test ; le
 //          blueprint reste en memoire dans RobotSession).
 // ECHAP  : ferme popup/inventaire, sinon quitte le garage —
@@ -191,12 +193,8 @@ public class GarageSaveController : MonoBehaviour
         if (saving)
             return;
 
-        var client = PocketBaseClient.Instance;
-        if (client == null || !client.IsAuthenticated)
-        {
-            AuthGuard.EnsureAuthenticated();
+        if (!AuthGuard.EnsureAuthenticated())
             return;
-        }
 
         saving = true;
         string robotName = RobotSession.Blueprint.name;
@@ -215,17 +213,21 @@ public class GarageSaveController : MonoBehaviour
 
         try
         {
-            var record = await client.SaveRobotAsync(
-                RobotSession.RecordId, RobotSession.Blueprint.name, RobotSession.Slot,
+            var result = await RobotStore.SaveAsync(
+                RobotSession.RecordId, RobotSession.ClientId, RobotSession.Blueprint.name, RobotSession.Slot,
                 RobotSession.Blueprint, stats);
             // Resolu avant le test "this == null" : le toast survit a une sortie du garage
-            toast.Success($"{robotName} saved to bay {RobotSession.Slot + 1:00}.");
+            if (result.online)
+                toast.Success($"{robotName} saved to bay {RobotSession.Slot + 1:00}.");
+            else
+                toast.Warning($"{robotName} saved on this computer (bay {RobotSession.Slot + 1:00}). It will sync when you're back online.");
             if (this == null)
                 return;
 
-            RobotSession.RecordId = record.id;
+            RobotSession.RecordId = result.record.id;
+            RobotSession.ClientId = result.record.clientId;
             RobotSession.Dirty = false;
-            SetSlotText($"{robotName} saved");
+            SetSlotText(result.online ? $"{robotName} saved" : $"{robotName} saved offline");
             await Awaitable.WaitForSecondsAsync(1.5f);
         }
         catch (PocketBaseException e)

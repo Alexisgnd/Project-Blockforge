@@ -5,8 +5,9 @@ using UnityEngine.UI;
 
 // =========================================================
 // GESTION DES 3 SLOTS DE ROBOTS DU MENU D'ACCUEIL
-// Charge les robots du joueur depuis PocketBase (memes
-// donnees que l'ecran Construire) ; notifie la selection.
+// Charge les robots du joueur via RobotStore (cache local,
+// PocketBase quand la session est en ligne ; memes donnees que
+// l'ecran Construire) ; notifie la selection.
 // Slot vide : un clic ouvre l'ecran Construire.
 // La selection est memorisee par compte (PlayerPrefs).
 // Design system : chaque baie est un RobotSlot (DSElement) ;
@@ -58,7 +59,7 @@ public class RobotSlotManager : MonoBehaviour
     }
 
     // =========================================================
-    // CHARGEMENT DEPUIS POCKETBASE
+    // CHARGEMENT (RobotStore : cache local + PocketBase si en ligne)
     // =========================================================
 
     // Recharge les robots du joueur (au demarrage et au retour sur l'accueil,
@@ -68,8 +69,7 @@ public class RobotSlotManager : MonoBehaviour
         if (loading)
             return;
 
-        var client = PocketBaseClient.Instance;
-        if (client == null || !client.IsAuthenticated)
+        if (!SessionService.HasIdentity)
             return; // AuthGuard renvoie deja vers Boot
 
         loading = true;
@@ -81,7 +81,7 @@ public class RobotSlotManager : MonoBehaviour
 
         try
         {
-            var robots = await client.ListRobotsAsync();
+            var robots = await RobotStore.ListAsync();
             if (this == null)
                 return;
 
@@ -95,16 +95,18 @@ public class RobotSlotManager : MonoBehaviour
             RefreshSlotLabels();
             SelectSlot(PickInitialSlot());
         }
-        catch (PocketBaseException e)
+        catch (System.Exception e)
         {
-            Debug.LogWarning($"[RobotSlots] Chargement des robots impossible : {e.Message}");
+            // Les erreurs reseau basculent la session hors ligne dans RobotStore et renvoient
+            // le cache : on n'arrive ici que sur une erreur inattendue (cache illisible...).
+            Debug.LogException(e);
             // Meme message que l'ecran Construire : le toast fusionne les doublons
             Toast.Error($"Couldn't load your robots. {e.Message}");
             if (this == null)
                 return;
             recordsBySlot = null;
             for (int i = 0; i < slotButtons.Length; i++)
-                SetSlotTexts(i, BayLabel(i), "Offline", "");
+                SetSlotTexts(i, BayLabel(i), "Unavailable", "");
             SetSelection(-1);
         }
         finally
@@ -177,10 +179,11 @@ public class RobotSlotManager : MonoBehaviour
         return -1;
     }
 
+    // Memorisee par identite locale (compte Steam, compte standard ou invite)
     private static string SelectedSlotKey()
     {
-        string userId = PocketBaseClient.Instance?.User?.id;
-        return SelectedSlotKeyPrefix + (string.IsNullOrEmpty(userId) ? "guest" : userId);
+        string key = SessionService.Identity?.LocalKey;
+        return SelectedSlotKeyPrefix + (string.IsNullOrEmpty(key) ? PlayerIdentity.GuestKey : key);
     }
 
     // =========================================================

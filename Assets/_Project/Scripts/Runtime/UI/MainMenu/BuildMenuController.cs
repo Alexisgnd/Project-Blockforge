@@ -6,10 +6,12 @@ using UnityEngine.UI;
 
 // =========================================================
 // ECRAN "CHOISIR UN SLOT DE CONSTRUCTION"
-// Charge les robots du joueur depuis PocketBase :
+// Charge les robots du joueur via RobotStore (cache local +
+// PocketBase si en ligne) :
 // slot occupe -> MODIFIER / SUPPRIMER, slot libre -> CREER.
 // La suppression passe par une popup de confirmation
-// (action irreversible cote serveur).
+// (action irreversible ; hors ligne, elle est portee au serveur
+// a la prochaine synchro).
 // Chaque baie occupee affiche un vrai apercu 3D du robot
 // (RobotThumbnailRenderer), rendu a chaque rechargement.
 // =========================================================
@@ -74,13 +76,12 @@ public class BuildMenuController : MonoBehaviour
     }
 
     // =========================================================
-    // CHARGEMENT DEPUIS POCKETBASE
+    // CHARGEMENT (RobotStore : cache local + PocketBase si en ligne)
     // =========================================================
 
     private async void RefreshFromServer()
     {
-        var client = PocketBaseClient.Instance;
-        if (client == null || !client.IsAuthenticated)
+        if (!SessionService.HasIdentity)
             return; // AuthGuard renvoie deja vers Boot
 
         if (usedCountText != null)
@@ -88,7 +89,7 @@ public class BuildMenuController : MonoBehaviour
 
         try
         {
-            var robots = await client.ListRobotsAsync();
+            var robots = await RobotStore.ListAsync();
             if (this == null)
                 return;
 
@@ -112,7 +113,7 @@ public class BuildMenuController : MonoBehaviour
                     data.robotName = record.name;
                     data.tierLabel = BlockforgeTheme.Qty(stats.cpu, "CPU");
                     data.health = stats.health;
-                    data.speedKmh = stats.speedKmh;
+                    data.speedKmh = RobotStatsUI.SpeedOf(record, ref showcase);
                     data.energy = stats.energy;
                     data.massT = stats.weightKg / 1000f;
                 }
@@ -125,16 +126,21 @@ public class BuildMenuController : MonoBehaviour
             }
 
             if (usedCountText != null)
-                usedCountText.text = $"{used} / {cards.Length} bays used";
+            {
+                int pending = RobotStore.PendingChanges;
+                usedCountText.text = SessionService.IsOnline || pending == 0
+                    ? $"{used} / {cards.Length} bays used"
+                    : $"{used} / {cards.Length} bays used · {pending} waiting to sync";
+            }
         }
-        catch (PocketBaseException e)
+        catch (System.Exception e)
         {
-            Debug.LogWarning($"[BuildMenu] Chargement des robots impossible : {e.Message}");
+            Debug.LogException(e);
             Toast.Error($"Couldn't load your robots. {e.Message}");
             if (this == null)
                 return;
             if (usedCountText != null)
-                usedCountText.text = "Offline";
+                usedCountText.text = "Unavailable";
         }
     }
 
@@ -225,14 +231,10 @@ public class BuildMenuController : MonoBehaviour
     private async void ConfirmDelete()
     {
         var record = RecordAt(pendingDeleteSlot);
-        var client = PocketBaseClient.Instance;
         if (record == null || deleting)
             return;
-        if (client == null || !client.IsAuthenticated)
-        {
-            AuthGuard.EnsureAuthenticated();
+        if (!AuthGuard.EnsureAuthenticated())
             return;
-        }
 
         deleting = true;
         SetDeleteButtonsInteractable(false);
@@ -241,8 +243,11 @@ public class BuildMenuController : MonoBehaviour
 
         try
         {
-            await client.DeleteRobotAsync(record.id);
-            toast.Success($"{record.name} deleted. Bay {record.slot + 1:00} is free.");
+            await RobotStore.DeleteAsync(record);
+            if (SessionService.IsOnline)
+                toast.Success($"{record.name} deleted. Bay {record.slot + 1:00} is free.");
+            else
+                toast.Warning($"{record.name} deleted on this computer. Bay {record.slot + 1:00} is free; the server will follow when you're back online.");
             if (this == null)
                 return;
 
