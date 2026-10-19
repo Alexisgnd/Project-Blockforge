@@ -37,6 +37,7 @@ public static class GameModesUISetup
     private const float BottomBlockH = 240f;
     private const float PanelPadX = 32f;
     private const float StatW = 170f, StatGap = 24f;
+    private const float PrimaryActionMinW = 280f; // « Find a match » : plus large que « Play with bots »
 
     [MenuItem("Blockforge/Setup MainMenu Play Screens")]
     public static void Setup()
@@ -469,38 +470,50 @@ public static class GameModesUISetup
         DesignSystemApply.SetImage(DesignSystemApply.F(b + "Divider"), BlockforgeTheme.BorderSubtle);
 
         // ----- Actions -----
+        // En ligne d'abord : « Find a match » est l'action principale (primary,
+        // control-lg, plus large) ; « Play with bots » passe en secondaire
+        // (control-md, libelle button-md). Une seule action accent par region.
         const string a = "PlayScreen/Detail/Block/Actions/";
         float x = 0f;
-        var play = DesignSystemApply.F(a + "PlayButton");
-        if (play != null)
-        {
-            var text = play.Find("Text")?.GetComponent<TMP_Text>();
-            DesignSystemApply.Txt(text, DSTextStyle.ButtonLG, BlockforgeTheme.InkOnAccent, "Play with bots", TextAlignmentOptions.Center);
-            var icon = play.Find("Icon")?.GetComponent<Image>();
-            DesignSystemApply.SetIcon(icon, "play", BlockforgeTheme.InkOnAccent, 18f);
-            var el = DesignSystemApply.El(play, DSRole.ButtonPrimary, new[] { text });
-            if (el != null && icon != null)
-                el.icons = new Graphic[] { icon };
-            float w = IconButtonWidth(text, 18f, 0f);
-            DesignSystemApply.Place(play, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlLg + 4f), new Vector2(0, 0.5f));
-            IconButtonText(text, 18f, 0f);
-            x += w + BlockforgeTheme.Space4;
-        }
         var find = DesignSystemApply.F(a + "FindMatchButton");
         if (find != null)
         {
             var text = find.Find("Text")?.GetComponent<TMP_Text>();
-            DesignSystemApply.Txt(text, DSTextStyle.ButtonLG, BlockforgeTheme.InkPrimary, "Find a match", TextAlignmentOptions.Center);
+            DesignSystemApply.Txt(text, DSTextStyle.ButtonLG, BlockforgeTheme.InkOnAccent, "Find a match", TextAlignmentOptions.Center);
             var icon = find.Find("Icon")?.GetComponent<Image>();
-            DesignSystemApply.SetIcon(icon, "group", BlockforgeTheme.InkPrimary, 18f);
-            var lockIcon = find.Find("LockIcon")?.GetComponent<Image>();
-            DesignSystemApply.SetIcon(lockIcon, "lock", BlockforgeTheme.InkSecondary, 14f);
-            var el = DesignSystemApply.El(find, DSRole.ButtonSecondary, new[] { text });
+            DesignSystemApply.SetIcon(icon, "group", BlockforgeTheme.InkOnAccent, 18f);
+            var lockIcon = find.Find("LockIcon");
+            if (lockIcon != null)
+                lockIcon.gameObject.SetActive(false); // disponible : plus de cadenas
+            var el = DesignSystemApply.El(find, DSRole.ButtonPrimary, new[] { text });
             if (el != null && icon != null)
                 el.icons = new Graphic[] { icon };
-            float w = IconButtonWidth(text, 18f, 14f + BlockforgeTheme.Space2);
-            DesignSystemApply.Place(find, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlLg + 4f), new Vector2(0, 0.5f));
-            IconButtonText(text, 18f, 14f + BlockforgeTheme.Space2);
+            float w = Mathf.Max(PrimaryActionMinW, IconButtonWidth(text, 18f, 0f));
+            DesignSystemApply.Place(find, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlLg), new Vector2(0, 0.5f));
+            IconButtonText(text, 18f, 0f);
+            x += w + BlockforgeTheme.Space4;
+        }
+        var play = DesignSystemApply.F(a + "PlayButton");
+        if (play != null)
+        {
+            var text = play.Find("Text")?.GetComponent<TMP_Text>();
+            DesignSystemApply.Txt(text, DSTextStyle.ButtonMD, BlockforgeTheme.InkPrimary, "Play with bots", TextAlignmentOptions.Center);
+            var icon = play.Find("Icon")?.GetComponent<Image>();
+            DesignSystemApply.SetIcon(icon, "play", BlockforgeTheme.InkPrimary, 16f);
+            if (icon != null)
+                icon.rectTransform.anchoredPosition = new Vector2(BlockforgeTheme.Space4, 0);
+            var el = DesignSystemApply.El(play, DSRole.ButtonSecondary, new[] { text });
+            if (el != null && icon != null)
+                el.icons = new Graphic[] { icon };
+            float w = BlockforgeTheme.Space4 + 16f + BlockforgeTheme.Space2 + DesignSystemApply.PrefWidth(text) + BlockforgeTheme.Space4;
+            DesignSystemApply.Place(play, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(w, BlockforgeTheme.ControlMd), new Vector2(0, 0.5f));
+            if (text != null)
+            {
+                text.rectTransform.anchorMin = Vector2.zero;
+                text.rectTransform.anchorMax = Vector2.one;
+                text.rectTransform.offsetMin = new Vector2(BlockforgeTheme.Space4 + 16f + BlockforgeTheme.Space2, 0);
+                text.rectTransform.offsetMax = new Vector2(-BlockforgeTheme.Space4, 0);
+            }
             x += w + BlockforgeTheme.Space4;
         }
         var hint = DesignSystemApply.F(a + "KeyHint");
@@ -511,7 +524,7 @@ public static class GameModesUISetup
             DesignSystemApply.Txt(keyText, DSTextStyle.Key, BlockforgeTheme.InkPrimary, "Enter", TextAlignmentOptions.Center);
             DesignSystemApply.El(key, DSRole.KeyCap, new[] { keyText });
             var caption = hint.Find("Caption")?.GetComponent<TMP_Text>();
-            DesignSystemApply.Txt(caption, DSTextStyle.Caption, BlockforgeTheme.InkSecondary, "Play with bots", TextAlignmentOptions.MidlineLeft);
+            DesignSystemApply.Txt(caption, DSTextStyle.Caption, BlockforgeTheme.InkSecondary, "Find a match", TextAlignmentOptions.MidlineLeft);
             DesignSystemApply.Place(hint, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(240, 24), new Vector2(0, 0.5f));
         }
         DesignSystemApply.Txt(DesignSystemApply.T(a + "Reason"), DSTextStyle.Caption, BlockforgeTheme.InkMuted, null, TextAlignmentOptions.MidlineRight);

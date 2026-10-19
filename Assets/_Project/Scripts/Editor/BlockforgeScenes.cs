@@ -30,11 +30,14 @@ public static class BlockforgeScenes
     public const string Garage = "Assets/_Project/Scenes/Garage.unity";
     public const string MapMars = "Assets/_Project/Scenes/Map_MARS.unity";
     public const string MapTest = "Assets/_Project/Scenes/Map_Test.unity";
+    // Attente du matchmaking en ligne : l'espace et le Super Destroyer
+    // (Blockforge > Setup Matchmaking Space Scene)
+    public const string MatchmakingSpace = "Assets/_Project/Scenes/Matchmaking_Space.unity";
     // Banc d'essai du Forge Loader : hors build
     public const string LoaderPreview = "Assets/_Project/Scenes/LoaderPreview.unity";
 
     // Boot doit rester en index 0 (premiere scene chargee par le build)
-    public static readonly string[] BuildOrder = { Boot, MainMenu, Garage, MapMars, MapTest };
+    public static readonly string[] BuildOrder = { Boot, MainMenu, Garage, MapMars, MapTest, MatchmakingSpace };
 
     public static bool IsGarageScene(string path)
     {

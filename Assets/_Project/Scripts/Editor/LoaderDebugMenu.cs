@@ -7,6 +7,9 @@ using UnityEngine;
 // - Matchmaking mock on Play screen : rend « Find a match »
 //   cliquable sur l'ecran Play avec la recherche simulee (case a
 //   cocher, memorisee) ;
+// - Hold matchmaking at 1 player : la recherche de l'ecran Play
+//   reste a 1 joueur (pas de transition vers la map) ; coche par
+//   defaut, memorise ;
 // - Start mock matchmaking / Mock screen load / Mock splash
 //   (Play mode) : les trois contextes sur l'ecran courant ;
 // - Reduce motion: follow system : oublie le choix du joueur.
@@ -35,6 +38,20 @@ public static class LoaderDebugMenu
     public static bool ToggleMockValidate()
     {
         Menu.SetChecked(Root + "Matchmaking mock on Play screen", MatchmakingService.MockEnabled);
+        return true;
+    }
+
+    [MenuItem(Root + "Hold matchmaking at 1 player")]
+    public static void ToggleHold()
+    {
+        MatchmakingService.HoldAtOnePlayer = !MatchmakingService.HoldAtOnePlayer;
+        Debug.Log($"[Debug] Recherche bloquee a 1 joueur : {MatchmakingService.HoldAtOnePlayer} (effet a la prochaine recherche).");
+    }
+
+    [MenuItem(Root + "Hold matchmaking at 1 player", true)]
+    public static bool ToggleHoldValidate()
+    {
+        Menu.SetChecked(Root + "Hold matchmaking at 1 player", MatchmakingService.HoldAtOnePlayer);
         return true;
     }
 

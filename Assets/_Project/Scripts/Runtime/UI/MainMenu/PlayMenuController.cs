@@ -12,15 +12,21 @@ using UnityEngine.UI;
 // chiffres) et les actions. Cliquer un mode met la ligne en
 // selection et remplit la fiche ; il n'y a plus d'ecran de
 // details separe.
-// « Play with bots » (action principale, touche Entree) : le
-// robot selectionne sur l'accueil est charge dans RobotSession
-// puis MatchIntro joue la transition (voile, volets bleu /
-// rouge, ecran Versus 5 v 5) et charge la scene du mode.
-// « Find a match » (en ligne) n'existe pas encore : desactive,
-// avec un cadenas et sa raison au survol (regle du DS). Avec le
-// matchmaking simule (Blockforge > Debug > Loader), il lance une
-// recherche : bandeau du Forge Loader (MatchmakingService), puis
-// la meme transition Versus que « Play with bots ».
+// « Find a match » (en ligne, action principale : bouton
+// primary control-lg, touche Entree) lance une recherche :
+// bandeau du Forge Loader (MatchmakingService ; source simulee
+// tant que le service en ligne n'existe pas) et
+// petit fondu au noir vers la scene d'attente Matchmaking_Space
+// (l'espace et le Super Destroyer, MatchmakingSpaceScene), puis
+// la meme transition Versus que « Play with bots ». Recherche
+// annulee : retour au menu, qui rouvre cet ecran
+// (ReopenOnReturn).
+// « Play with bots » (secondaire, control-md) : le robot
+// selectionne sur l'accueil est charge dans RobotSession puis
+// MatchIntro joue la transition (voile, volets bleu / rouge,
+// ecran Versus 5 v 5) et charge la scene du mode.
+// Sans robot, les deux actions sont indisponibles (cadenas du
+// DS absent, raison au survol).
 // =========================================================
 
 public class PlayMenuController : MonoBehaviour
@@ -52,15 +58,18 @@ public class PlayMenuController : MonoBehaviour
     public Button changeRobotButton;
 
     [Header("Actions (remplies par le setup)")]
-    [Tooltip("Play with bots : action principale")]
+    [Tooltip("Play with bots : action secondaire")]
     public Button playButton;
-    [Tooltip("Find a match : en ligne, pas encore disponible")]
+    [Tooltip("Find a match : en ligne, action principale (Entree)")]
     public Button findMatchButton;
     [Tooltip("Raison affichee au survol d'une action indisponible")]
     public TMP_Text reasonText;
 
     // Choix du joueur au lancement, lu par la scene de jeu
     public static bool PlayWithBots { get; private set; } = true;
+
+    // Retour de la scene d'attente du matchmaking : le menu rouvre l'ecran Play
+    public static bool ReopenOnReturn;
 
     public GameModeDefinition Current { get; private set; }
 
@@ -80,17 +89,11 @@ public class PlayMenuController : MonoBehaviour
             changeRobotButton.onClick.AddListener(ChangeRobot);
         if (findMatchButton != null)
         {
-            if (MatchmakingService.MockEnabled)
-            {
-                // Recherche simulee (outil de dev) : le bandeau de matchmaking du Forge Loader
-                findMatchButton.interactable = true;
-                findMatchButton.onClick.AddListener(FindMatch);
-            }
-            else
-            {
-                findMatchButton.interactable = false; // en ligne : pas encore disponible
-                HoverReason.Attach(findMatchButton.gameObject, this, "Online matchmaking is coming soon.");
-            }
+            findMatchButton.onClick.AddListener(FindMatch);
+            // Plus de cadenas « bientot disponible » (scene generee avant le deverrouillage)
+            var lockIcon = findMatchButton.transform.Find("LockIcon");
+            if (lockIcon != null)
+                lockIcon.gameObject.SetActive(false);
         }
         if (reasonText != null)
             reasonText.text = "";
@@ -121,16 +124,16 @@ public class PlayMenuController : MonoBehaviour
 
     private void Update()
     {
-        // Entree : action principale de l'ecran (KeyHint « Enter · Play with bots »)
+        // Entree : action principale de l'ecran (KeyHint « Enter · Find a match »)
         var kb = Keyboard.current;
-        if (kb == null || MatchIntro.IsRunning || MatchmakingService.IsActive)
+        if (kb == null || MatchIntro.IsRunning || MatchmakingService.IsActive || SceneFade.IsRunning)
             return;
-        if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && playButton != null && playButton.interactable)
+        if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && findMatchButton != null && findMatchButton.interactable)
         {
             // Pas quand un champ de saisie a le focus
             var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             if (selected == null || selected.GetComponent<TMP_InputField>() == null)
-                LaunchCurrentMode();
+                FindMatch();
         }
     }
 
@@ -219,10 +222,12 @@ public class PlayMenuController : MonoBehaviour
 
         // Sans robot, pas de match : action indisponible avec sa raison
         blockedReason = has ? null : "Build a robot in a free bay first.";
-        if (playButton != null)
+        foreach (var button in new[] { findMatchButton, playButton })
         {
-            playButton.interactable = has;
-            HoverReason.Attach(playButton.gameObject, this, blockedReason);
+            if (button == null)
+                continue;
+            button.interactable = has;
+            HoverReason.Attach(button.gameObject, this, blockedReason);
         }
     }
 
@@ -252,29 +257,39 @@ public class PlayMenuController : MonoBehaviour
             return;
         }
 
+        StartMatch(Current, robot);
+    }
+
+    // Statique : appele aussi depuis la scene d'attente du matchmaking,
+    // quand cet ecran (scene MainMenu) n'existe plus
+    private static void StartMatch(GameModeDefinition mode, RobotRecord record)
+    {
+        if (mode == null || record == null || MatchIntro.IsRunning)
+            return;
+
         PlayWithBots = true;
 
         // Le robot de l'accueil part au combat ; Echap x2 / Leave match revient ici
-        RobotSession.Load(robot);
+        RobotSession.Load(record);
         RobotSession.ReturnSceneName = "MainMenu";
 
-        if (!Application.CanStreamedLevelBeLoaded(Current.sceneName))
+        if (!Application.CanStreamedLevelBeLoaded(mode.sceneName))
         {
-            Toast.Error($"Couldn't start the match. Scene '{Current.sceneName}' is not in the build.");
+            Toast.Error($"Couldn't start the match. Scene '{mode.sceneName}' is not in the build.");
             return;
         }
 
         MusicManager.PlayTrack(MusicTrack.Matchmaking);
 
-        var data = MatchIntroData.Bots(Current, SessionService.DisplayName, robot);
-        MatchIntro.Begin(data, Current.sceneName);
+        var data = MatchIntroData.Bots(mode, SessionService.DisplayName, record);
+        MatchIntro.Begin(data, mode.sceneName);
     }
 
     // ---------- Matchmaking (simule tant que le service en ligne n'existe pas) ----------
 
     private void FindMatch()
     {
-        if (Current == null || MatchIntro.IsRunning || MatchmakingService.IsActive)
+        if (Current == null || MatchIntro.IsRunning || MatchmakingService.IsActive || SceneFade.IsRunning)
             return;
         if (robot == null)
         {
@@ -284,13 +299,36 @@ public class PlayMenuController : MonoBehaviour
 
         var theme = LoaderTheme.Load();
         var mode = Current;
+        var record = robot;
         MusicManager.PlayTrack(MusicTrack.Matchmaking);
         MatchmakingService.Begin(mode.title, theme.defaultRegion, mode.teamSize * 2, theme.estimatedSeconds,
-                                 new MockMatchmakingSource(), found =>
+                                 MatchmakingService.HoldAtOnePlayer ? (IMatchmakingSource)new HoldMatchmakingSource() : new MockMatchmakingSource(),
+                                 found =>
                                  {
-                                     // Match complet : meme transition Versus que « Play with bots »
-                                     if (found && this != null && Current == mode)
-                                         LaunchCurrentMode();
+                                     // Match complet : meme transition Versus que « Play with bots ».
+                                     // Cet ecran a disparu avec le menu : mode et robot captures au clic.
+                                     if (found)
+                                         StartMatch(mode, record);
                                  });
+
+        // Petit fondu au noir vers l'espace : le bandeau reste par-dessus
+        if (Application.CanStreamedLevelBeLoaded(MatchmakingSpaceScene.SceneName))
+        {
+            MatchmakingSpaceScene.EnteredFromSearch = true;
+            MatchmakingCinematic.SelectedBay = record.slot + 1; // le vaisseau garage de cette baie sort du Super Destroyer
+            SceneFade.Load(MatchmakingSpaceScene.SceneName);
+        }
+        else
+        {
+            Debug.LogWarning($"[PlayMenu] Scene '{MatchmakingSpaceScene.SceneName}' absente du build : la recherche reste sur le menu. " +
+                             "Lance Blockforge > Setup Matchmaking Space Scene.");
+        }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        PlayWithBots = true;
+        ReopenOnReturn = false;
     }
 }

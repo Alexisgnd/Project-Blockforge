@@ -203,6 +203,13 @@ public class MainMenuController : MonoBehaviour
 
         SetActiveTab(SectionHome);
 
+        // Retour d'une recherche de match annulee (scene Matchmaking_Space) : ecran Play
+        if (PlayMenuController.ReopenOnReturn)
+        {
+            PlayMenuController.ReopenOnReturn = false;
+            ShowPlayMenu();
+        }
+
         // Le cache local (RobotStore) peut avoir deja repondu dans cette frame :
         // on affiche alors directement le robot selectionne au lieu du texte d'attente
         if (slotManager != null && slotManager.SelectedIndex >= 0)

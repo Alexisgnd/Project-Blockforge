@@ -12,9 +12,13 @@ using UnityEngine;
 //   en ligne n'existe pas, sinon le backend appelle Report(found).
 // - Cancel() : Echap / bouton Cancel de la manette.
 // - Plein : Found ; le bandeau laisse le mark se verrouiller, puis
-//   onFinished(true) part (ex. MatchIntro).
-// MockEnabled (Debug > Loader) rend « Find a match » cliquable sur
-// l'ecran Play avec la source simulee ; desactive par defaut.
+//   onFinished(true) part (ex. MatchIntro). TransitionGate (optionnel,
+//   pose par la cinematique d'attente) retient ce depart tant qu'il
+//   renvoie false : le vaisseau garage finit de sortir du cadre.
+// HoldAtOnePlayer (Debug > Loader, active par defaut) : la recherche
+// lancee depuis l'ecran Play reste a 1 joueur (HoldMatchmakingSource),
+// sans transition vers la map, le temps de travailler la cinematique
+// d'attente (scene Matchmaking_Space). Decoche : joueurs simules.
 // =========================================================
 
 public enum MatchmakingState { Idle, Searching, Found }
@@ -28,6 +32,7 @@ public interface IMatchmakingSource
 public static class MatchmakingService
 {
     private const string MockKey = "Blockforge.MatchmakingMock";
+    private const string HoldKey = "Blockforge.MatchmakingHoldAtOne";
 
     public static MatchmakingState State { get; private set; } = MatchmakingState.Idle;
     public static string ModeTitle { get; private set; } = "";
@@ -46,11 +51,22 @@ public static class MatchmakingService
 
     private static IMatchmakingSource source;
     private static Action<bool> onFinished;
+    private static bool completionPending;
+
+    // Vrai = la transition peut partir (null : tout de suite)
+    public static Func<bool> TransitionGate;
 
     public static bool MockEnabled
     {
         get => PlayerPrefs.GetInt(MockKey, 0) == 1;
         set { PlayerPrefs.SetInt(MockKey, value ? 1 : 0); PlayerPrefs.Save(); }
+    }
+
+    // Recherche bloquee a 1 joueur (pas de match, pas de transition vers la map)
+    public static bool HoldAtOnePlayer
+    {
+        get => PlayerPrefs.GetInt(HoldKey, 1) == 1;
+        set { PlayerPrefs.SetInt(HoldKey, value ? 1 : 0); PlayerPrefs.Save(); }
     }
 
     public static void Begin(string modeTitle, string region, int total, float estimatedSeconds,
@@ -105,12 +121,17 @@ public static class MatchmakingService
     // Appele par le bandeau une fois le mark verrouille et le bandeau parti
     public static void CompleteTransition()
     {
-        if (State == MatchmakingState.Found)
+        if (State != MatchmakingState.Found)
+            return;
+        if (TransitionGate == null || TransitionGate())
             Finish(true);
+        else
+            completionPending = true; // Tick finit la transition quand la porte s'ouvre
     }
 
     private static void Finish(bool matched)
     {
+        completionPending = false;
         State = MatchmakingState.Idle;
         source = null;
         var callback = onFinished;
@@ -122,6 +143,11 @@ public static class MatchmakingService
     // Horloge : ForgeLoaderHost.Update (temps reel)
     internal static void Tick(float deltaSeconds)
     {
+        if (completionPending && State == MatchmakingState.Found && (TransitionGate == null || TransitionGate()))
+        {
+            Finish(true);
+            return;
+        }
         if (State != MatchmakingState.Searching)
             return;
         int before = Mathf.FloorToInt(ElapsedSeconds);
@@ -138,6 +164,8 @@ public static class MatchmakingService
         State = MatchmakingState.Idle;
         source = null;
         onFinished = null;
+        completionPending = false;
+        TransitionGate = null;
         Started = null;
         Changed = null;
         MatchFound = null;
@@ -173,4 +201,10 @@ public sealed class MockMatchmakingSource : IMatchmakingSource
         int add = random.NextDouble() < 0.2 ? 2 : 1;
         return Mathf.Min(total, found + add);
     }
+}
+
+// Personne ne rejoint : la recherche reste a 1 joueur jusqu'a l'annulation
+public sealed class HoldMatchmakingSource : IMatchmakingSource
+{
+    public int Tick(float deltaSeconds, int found, int total) => 1;
 }

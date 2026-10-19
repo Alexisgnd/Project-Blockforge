@@ -37,6 +37,9 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/_Project/Scenes/Map_Test.unity
     m_guid: 844cc27c4e0585b4e8f4048efa8f2ba6
+  - m_enabled: 1
+    m_path: Assets/_Project/Scenes/Matchmaking_Space.unity
+    m_guid: 2cf3431940a3b7047bcfdb01c3314032
   m_HasScriptingDefines: 0
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:
