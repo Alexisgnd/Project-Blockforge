@@ -6,7 +6,8 @@ roues, propulseurs, armes, boucliers…), puis on ira l'affronter sur des cartes
 comme Mars.
 
 Moteur : **Unity 6 (6000.5.6f1) + HDRP**. Backend : **PocketBase** (comptes et
-sauvegarde des robots). Sources 3D : **Blender**.
+sauvegarde des robots), compte **Steam** optionnel via Steamworks.NET (App ID
+1926750). Sources 3D : **Blender**.
 
 > Projet en cours de prototypage. Le garage est jouable, le combat n'existe pas
 > encore. Voir [État du projet](#état-du-projet).
@@ -34,7 +35,7 @@ sauvegarde des robots). Sources 3D : **Blender**.
 
 | Système | État |
 |---|---|
-| Écran de démarrage + authentification PocketBase | fonctionnel |
+| Écran de démarrage : connexion Steam automatique (ticket vérifié par PocketBase) ou compte email / mot de passe, mode hors ligne (robots en cache local, synchro à la reconnexion) | fonctionnel (à valider avec la clé Web API) |
 | Menu principal (hangar, 3 slots de robots, choix du mode de jeu) | fonctionnel |
 | Garage : grille de pose (14×14 sur l'ancien vaisseau, 31×31×31 dans Garage_V2), pince, inventaire par catégorie et famille, recherche | fonctionnel |
 | Garage : mode miroir (M, jumeau par le plan de la ligne centrale) | fonctionnel |
@@ -75,10 +76,22 @@ git clone https://github.com/Alexisgnd/Project-Blockforge.git
 
 ### Compte et backend
 
-L'authentification passe par une instance PocketBase hébergée par le mainteneur.
-Demandez un compte de test pour jouer. En développement, un fichier
-`dev_autologin.json` à la racine (ignoré par Git, ne jamais le committer) permet
-l'auto-connexion.
+Les comptes et les robots vivent sur une instance PocketBase hébergée par le
+mainteneur (`Tools/PocketBase/` : hooks à installer, schéma des collections).
+
+- **Steam ouvert** : le jeu se connecte tout seul avec le compte Steam (pseudo et
+  avatar affichés dans le header). Le ticket Steam est vérifié par le serveur ;
+  l'App ID est 1926750 (`steam_appid.txt` à la racine pour l'éditeur, le compte
+  Steam doit posséder l'app). Le package `com.rlabrecque.steamworks.net` est déclaré
+  dans `Packages/manifest.json` (UPM, git).
+- **Sans Steam** : écran email / mot de passe (compte standard). Demandez un compte
+  de test, ou créez-en un depuis l'écran. En développement, `dev_autologin.json` à
+  la racine (ignoré par Git, ne jamais le committer) remplit le formulaire.
+- **Hors ligne** (serveur injoignable, Steam en mode hors ligne ou *Play offline*) :
+  on joue contre les bots avec les robots en cache local
+  (`%USERPROFILE%/AppData/LocalLow/<société>/Blockforge/BlockForge/<compte>/`) ;
+  tout se synchronise à la reconnexion (dernière modification gagne). Un clic sur
+  le nom du joueur dans le header retente la connexion.
 
 ---
 
