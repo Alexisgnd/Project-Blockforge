@@ -6,7 +6,8 @@
 
 public static class RobotSession
 {
-    public static string RecordId;                          // null = pas encore sauvegarde
+    public static string RecordId;                          // null = jamais pousse sur le serveur
+    public static string ClientId;                          // identite stable cote client (GUID), cle du cache local
     public static int Slot;
     public static RobotBlueprint Blueprint = new();
 
@@ -26,6 +27,7 @@ public static class RobotSession
     public static void StartNew(int slot)
     {
         RecordId = null;
+        ClientId = RobotStore.NewClientId();
         Slot = slot;
         Blueprint = new RobotBlueprint { name = $"ROBOT {slot + 1}" };
         Dirty = true; // jamais sauvegarde
@@ -34,6 +36,7 @@ public static class RobotSession
     public static void Load(RobotRecord record)
     {
         RecordId = record.id;
+        ClientId = string.IsNullOrEmpty(record.clientId) ? record.id : record.clientId;
         Slot = record.slot;
         Blueprint = record.data ?? new RobotBlueprint();
         Blueprint.name = record.name;
