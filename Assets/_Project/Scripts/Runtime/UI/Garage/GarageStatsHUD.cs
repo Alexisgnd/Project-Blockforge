@@ -5,7 +5,8 @@ using UnityEngine;
 // HUD GAUCHE DU GARAGE : capacites du robot en construction
 // CPU, PV, masse et vitesse sont calcules par
 // GarageBuildController (vitesse : RobotSpeedModel, la meme que
-// celle du robot en match).
+// celle du robot en match). La ligne Power (energie) est masquee
+// tant qu'elle n'est pas calculee (showPower).
 // =========================================================
 
 public class GarageStatsHUD : MonoBehaviour
@@ -18,6 +19,8 @@ public class GarageStatsHUD : MonoBehaviour
     public int speedKmh = 0;
     [Tooltip("Pleine barre de vitesse (km/h)")]
     public int speedMax = 150;
+    [Tooltip("Affiche la ligne Power (energie) : pas encore calculee, masquee")]
+    public bool showPower = false;
     public int power = 120;
     public int powerMax = 200;
     public float weightT = 8.5f;
@@ -39,6 +42,8 @@ public class GarageStatsHUD : MonoBehaviour
 
     private void Start()
     {
+        if (!showPower)
+            StatRowHider.HideRowOf(powerValue, true);
         Refresh();
     }
 

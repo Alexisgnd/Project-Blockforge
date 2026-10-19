@@ -98,6 +98,8 @@ public class BuildSlotCard : MonoBehaviour
 
         filledGroup.SetActive(data.occupied);
         emptyGroup.SetActive(!data.occupied);
+        // Energie pas encore calculee : ligne masquee (la carte garde sa taille)
+        StatRowHider.HideRowOf(energyValue, false);
 
         if (data.occupied)
         {

@@ -7,7 +7,7 @@ using UnityEngine;
 // PocketBase), met a jour les textes. La vitesse est recalculee
 // depuis le blueprint (RobotSpeedModel, catalogue du hangar) :
 // les robots sauvegardes avant le calcul reel portaient tous
-// 92 km/h.
+// 92 km/h. L'energie est masquee tant qu'elle n'est pas calculee.
 // =========================================================
 
 public class RobotStatsUI : MonoBehaviour
@@ -23,7 +23,16 @@ public class RobotStatsUI : MonoBehaviour
     public TMP_Text weightValue;
     public TMP_Text blocksValue;
 
+    [Tooltip("Affiche la ligne d'energie (pas encore calculee : masquee)")]
+    public bool showEnergy = false;
+
     private HangarRobotShowcase catalogSource;
+
+    private void Awake()
+    {
+        if (!showEnergy)
+            StatRowHider.HideRowOf(energyValue, true);
+    }
 
     // Vitesse reelle depuis le blueprint ; a defaut, la valeur sauvegardee
     public static int SpeedOf(RobotRecord robot, ref HangarRobotShowcase source)
