@@ -75,13 +75,58 @@ public static partial class BlockforgeTheme
 
     // Reglage « reduire les animations » : plus aucun deplacement ni mise a
     // l'echelle, seuls des fondus courts subsistent (Fade) ; les durees de
-    // mouvement (Duration) tombent a zero.
+    // mouvement (Duration) tombent a zero. Tant que le joueur n'a rien choisi,
+    // la valeur suit le systeme quand il l'expose (Windows : « Afficher les
+    // animations dans Windows » desactive => animations reduites).
     private const string ReduceMotionKey = "Blockforge.ReduceMotion";
     public static bool ReduceMotion
     {
-        get => PlayerPrefs.GetInt(ReduceMotionKey, 0) == 1;
+        get => PlayerPrefs.HasKey(ReduceMotionKey) ? PlayerPrefs.GetInt(ReduceMotionKey, 0) == 1 : SystemReduceMotion;
         set { PlayerPrefs.SetInt(ReduceMotionKey, value ? 1 : 0); PlayerPrefs.Save(); }
     }
+
+    // Revient a la valeur du systeme
+    public static void ResetReduceMotionToSystem()
+    {
+        PlayerPrefs.DeleteKey(ReduceMotionKey);
+        PlayerPrefs.Save();
+    }
+
+    private static bool? systemReduceMotion;
+
+    // Preference du systeme d'exploitation, lue une fois ; faux quand elle n'existe pas
+    public static bool SystemReduceMotion
+    {
+        get
+        {
+            if (systemReduceMotion == null)
+            {
+                bool reduce = false;
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                try
+                {
+                    int animate = 1;
+                    if (SystemParametersInfo(SpiGetClientAreaAnimation, 0, ref animate, 0))
+                        reduce = animate == 0;
+                }
+                catch (System.Exception)
+                {
+                    reduce = false;
+                }
+#endif
+                systemReduceMotion = reduce;
+            }
+            return systemReduceMotion.Value;
+        }
+    }
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    private const uint SpiGetClientAreaAnimation = 0x1042;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool SystemParametersInfo(uint action, uint param, ref int value, uint winIni);
+#endif
 
     // Duree d'un deplacement / d'une mise a l'echelle : 0 en animations reduites
     public static float Duration(float seconds) => ReduceMotion ? 0f : seconds;

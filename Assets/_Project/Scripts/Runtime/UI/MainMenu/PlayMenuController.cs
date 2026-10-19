@@ -17,7 +17,10 @@ using UnityEngine.UI;
 // puis MatchIntro joue la transition (voile, volets bleu /
 // rouge, ecran Versus 5 v 5) et charge la scene du mode.
 // « Find a match » (en ligne) n'existe pas encore : desactive,
-// avec un cadenas et sa raison au survol (regle du DS).
+// avec un cadenas et sa raison au survol (regle du DS). Avec le
+// matchmaking simule (Blockforge > Debug > Loader), il lance une
+// recherche : bandeau du Forge Loader (MatchmakingService), puis
+// la meme transition Versus que « Play with bots ».
 // =========================================================
 
 public class PlayMenuController : MonoBehaviour
@@ -77,8 +80,17 @@ public class PlayMenuController : MonoBehaviour
             changeRobotButton.onClick.AddListener(ChangeRobot);
         if (findMatchButton != null)
         {
-            findMatchButton.interactable = false; // en ligne : pas encore disponible
-            HoverReason.Attach(findMatchButton.gameObject, this, "Online matchmaking is coming soon.");
+            if (MatchmakingService.MockEnabled)
+            {
+                // Recherche simulee (outil de dev) : le bandeau de matchmaking du Forge Loader
+                findMatchButton.interactable = true;
+                findMatchButton.onClick.AddListener(FindMatch);
+            }
+            else
+            {
+                findMatchButton.interactable = false; // en ligne : pas encore disponible
+                HoverReason.Attach(findMatchButton.gameObject, this, "Online matchmaking is coming soon.");
+            }
         }
         if (reasonText != null)
             reasonText.text = "";
@@ -111,7 +123,7 @@ public class PlayMenuController : MonoBehaviour
     {
         // Entree : action principale de l'ecran (KeyHint « Enter · Play with bots »)
         var kb = Keyboard.current;
-        if (kb == null || MatchIntro.IsRunning)
+        if (kb == null || MatchIntro.IsRunning || MatchmakingService.IsActive)
             return;
         if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && playButton != null && playButton.interactable)
         {
@@ -256,5 +268,29 @@ public class PlayMenuController : MonoBehaviour
 
         var data = MatchIntroData.Bots(Current, SessionService.DisplayName, robot);
         MatchIntro.Begin(data, Current.sceneName);
+    }
+
+    // ---------- Matchmaking (simule tant que le service en ligne n'existe pas) ----------
+
+    private void FindMatch()
+    {
+        if (Current == null || MatchIntro.IsRunning || MatchmakingService.IsActive)
+            return;
+        if (robot == null)
+        {
+            Toast.Warning("Build a robot first. Pick a free bay on the home screen.");
+            return;
+        }
+
+        var theme = LoaderTheme.Load();
+        var mode = Current;
+        MusicManager.PlayTrack(MusicTrack.Matchmaking);
+        MatchmakingService.Begin(mode.title, theme.defaultRegion, mode.teamSize * 2, theme.estimatedSeconds,
+                                 new MockMatchmakingSource(), found =>
+                                 {
+                                     // Match complet : meme transition Versus que « Play with bots »
+                                     if (found && this != null && Current == mode)
+                                         LaunchCurrentMode();
+                                 });
     }
 }

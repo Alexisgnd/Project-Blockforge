@@ -244,7 +244,7 @@ public class MainMenuController : MonoBehaviour
         // Pas encore d'ecran Play ? On lance directement l'arene.
         if (playMenu == null)
         {
-            SceneManager.LoadScene(arenaSceneName);
+            SceneLoader.Load(arenaSceneName);
             return;
         }
 
@@ -263,7 +263,7 @@ public class MainMenuController : MonoBehaviour
         // Pas encore d'ecran de slots ? On ouvre directement le garage.
         if (buildMenu == null)
         {
-            SceneManager.LoadScene(garageSceneName);
+            SceneLoader.Load(garageSceneName);
             return;
         }
 

@@ -72,7 +72,22 @@ public class ToastHost : MonoBehaviour
     }
 
     private static ToastHost instance;
+    private static bool hidden;
+    private Canvas canvas;
     private readonly List<Entry> entries = new();
+
+    // Masque les notices sans les perdre (bandeau de matchmaking : rien ne se
+    // pose sur la cinematique) ; elles reapparaissent ensuite
+    public static bool Hidden
+    {
+        get => hidden;
+        set
+        {
+            hidden = value;
+            if (instance != null && instance.canvas != null)
+                instance.canvas.enabled = !value;
+        }
+    }
     private RectTransform stack;
 
     private static float Anim => BlockforgeTheme.Duration(BlockforgeTheme.MotionPanel);
@@ -137,7 +152,8 @@ public class ToastHost : MonoBehaviour
 
     private void BuildCanvas()
     {
-        var canvas = gameObject.AddComponent<Canvas>();
+        canvas = gameObject.AddComponent<Canvas>();
+        canvas.enabled = !hidden;
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 1000; // au-dessus des menus, HUD et ecran Boot
         var scaler = gameObject.AddComponent<CanvasScaler>();

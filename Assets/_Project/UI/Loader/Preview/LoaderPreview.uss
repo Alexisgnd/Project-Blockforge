@@ -1,0 +1,100 @@
+/* Scene LoaderPreview : outil de verification, hors build (couleurs du DS, theme dark) */
+
+.preview {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+
+.preview__panel {
+    width: 380px;
+    margin: 16px;
+    padding: 16px;
+    background-color: rgba(31, 37, 49, 0.94);
+    border-width: 1px;
+    border-color: rgb(48, 57, 72);
+    border-radius: 6px;
+    -unity-font-definition: url("../../Fonts/Barlow-Regular.ttf");
+    color: rgb(242, 245, 247);
+}
+
+.preview__title {
+    -unity-font-definition: url("../../Fonts/BarlowCondensed-Bold.ttf");
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: rgb(242, 245, 247);
+}
+
+.preview__panel .unity-label { color: rgb(179, 189, 203); }
+
+.preview__row {
+    flex-direction: row;
+    margin: 6px 0;
+}
+
+.preview__button {
+    flex-grow: 1;
+    height: 32px;
+}
+
+.preview__readout {
+    margin-top: 8px;
+    -unity-font-definition: url("../../Fonts/JetBrainsMono-Medium.ttf");
+    font-size: 12px;
+    color: rgb(149, 159, 176);
+}
+
+.backdrop {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgb(23, 27, 36);
+}
+
+.backdrop__header {
+    height: 80px;
+    padding-left: 40px;
+    justify-content: center;
+    background-color: rgb(31, 37, 49);
+}
+
+.backdrop__title {
+    -unity-font-definition: url("../../Fonts/BarlowCondensed-Bold.ttf");
+    font-size: 28px;
+    color: rgb(242, 245, 247);
+}
+
+.backdrop__body {
+    flex-grow: 1;
+    flex-direction: row;
+    padding: 40px;
+}
+
+.backdrop__card {
+    flex-grow: 1;
+    margin-right: 24px;
+    background-color: rgb(36, 43, 54);
+    border-radius: 6px;
+}
+
+.backdrop__card--accent { background-color: rgb(22, 57, 75); }
+.backdrop__card--warm { background-color: rgb(70, 44, 28); }
+
+/* Controles par defaut lisibles sur le panneau sombre */
+.preview__panel .unity-button,
+.preview__panel .unity-base-popup-field__input,
+.preview__panel .unity-base-text-field__input,
+.preview__panel .unity-toggle__checkmark {
+    background-color: rgb(17, 21, 28);
+    border-color: rgb(48, 57, 72);
+    color: rgb(242, 245, 247);
+}
+
+.preview__panel .unity-button:hover {
+    background-color: rgb(44, 52, 65);
+}
+
+.preview__panel .unity-base-popup-field__text,
+.preview__panel .unity-text-element {
+    color: rgb(242, 245, 247);
+}

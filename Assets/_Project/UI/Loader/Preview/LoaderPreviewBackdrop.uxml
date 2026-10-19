@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- Faux « ecran precedent » derriere le chargement d'ecran (outil, hors build) -->
+    <Style src="LoaderPreview.uss" />
+    <ui:VisualElement class="backdrop" picking-mode="Ignore">
+        <ui:VisualElement class="backdrop__header">
+            <ui:Label text="GARAGE" class="backdrop__title" />
+        </ui:VisualElement>
+        <ui:VisualElement class="backdrop__body">
+            <ui:VisualElement class="backdrop__card backdrop__card--accent" />
+            <ui:VisualElement class="backdrop__card" />
+            <ui:VisualElement class="backdrop__card" />
+            <ui:VisualElement class="backdrop__card backdrop__card--warm" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

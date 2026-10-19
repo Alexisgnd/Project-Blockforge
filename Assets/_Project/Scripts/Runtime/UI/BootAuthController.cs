@@ -160,8 +160,14 @@ public class BootAuthController : MonoBehaviour
 
         if (result.ok)
         {
-            Toast.Success($"Signed in with Steam. Welcome back, {SessionService.DisplayName}.");
-            ShowSuccess($"Welcome back, {SessionService.DisplayName}.");
+            // Etat « connecte » visible sur le panneau Steam ; BootSplash le laisse
+            // affiche un instant avant de lancer le logo de chargement
+            RefreshSteamIdentity();
+            if (steamTitle != null)
+                steamTitle.text = "SIGNED IN WITH STEAM";
+            if (steamMessage != null)
+                steamMessage.text = $"Welcome back, {SessionService.DisplayName}. Getting your hangar ready…";
+            ShowSuccess($"Signed in as {SessionService.DisplayName}.");
             LoadNextScene();
             return;
         }
@@ -539,7 +545,7 @@ public class BootAuthController : MonoBehaviour
         if (leaving)
             return;
         leaving = true;
-        SceneManager.LoadScene(nextSceneName);
+        SceneLoader.Load(nextSceneName); // splash du lancement ou chargement d'ecran (Forge Loader)
     }
 
     private void ShowError(string message) => SetStatus(message, "status--error");

@@ -100,7 +100,7 @@ public static class HubSetup
     }
 
     // Tailles de Game view pour les verifications de cadrage (API interne : best effort)
-    private static void AddGameViewSizes()
+    internal static void AddGameViewSizes() // aussi pour la scene LoaderPreview
     {
         try
         {

@@ -1,0 +1,301 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 550181a7b6b051647b97c7ab8711d27b, type: 3}
+  m_Name: LoaderTheme
+  m_EditorClassIdentifier: Blockforge.Runtime::LoaderTheme
+  panelSettings: {fileID: 11400000, guid: 84f87ba78077b4c4a97a4b1b778ec235, type: 2}
+  ease:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 4
+      outSlope: 4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.02403067
+      value: 0.096903935
+      inSlope: 4.0562854
+      outSlope: 4.0562854
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.04641204
+      value: 0.1877315
+      inSlope: 4.048
+      outSlope: 4.048
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.06757813
+      value: 0.27265626
+      inSlope: 3.962264
+      outSlope: 3.962264
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.08796296
+      value: 0.35185185
+      inSlope: 3.7931035
+      outSlope: 3.7931035
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.108000584
+      value: 0.4254919
+      inSlope: 3.5444686
+      outSlope: 3.5444686
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.128125
+      value: 0.49375
+      inSlope: 3.2307692
+      outSlope: 3.2307692
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.14877026
+      value: 0.55679977
+      inSlope: 2.8742268
+      outSlope: 2.8742268
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.17037037
+      value: 0.6148148
+      inSlope: 2.5
+      outSlope: 2.5
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.19335938
+      value: 0.66796875
+      inSlope: 2.1311476
+      outSlope: 2.1311476
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.2181713
+      value: 0.71643525
+      inSlope: 1.785235
+      outSlope: 1.785235
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.24524015
+      value: 0.7603877
+      inSlope: 1.4732004
+      outSlope: 1.4732004
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.275
+      value: 0.8
+      inSlope: 1.1999999
+      outSlope: 1.1999999
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.30788484
+      value: 0.83544564
+      inSlope: 0.9661228
+      outSlope: 0.9661228
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.3443287
+      value: 0.8668981
+      inSlope: 0.76923084
+      outSlope: 0.76923084
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.38476562
+      value: 0.89453125
+      inSlope: 0.6055046
+      outSlope: 0.6055046
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.42962965
+      value: 0.91851854
+      inSlope: 0.47058815
+      outSlope: 0.47058815
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.4793547
+      value: 0.93903357
+      inSlope: 0.360166
+      outSlope: 0.360166
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.534375
+      value: 0.95625
+      inSlope: 0.27027026
+      outSlope: 0.27027026
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5951244
+      value: 0.97034144
+      inSlope: 0.19741318
+      outSlope: 0.19741318
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.662037
+      value: 0.9814815
+      inSlope: 0.13861388
+      outSlope: 0.13861388
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7355469
+      value: 0.9898437
+      inSlope: 0.09137055
+      outSlope: 0.09137055
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.816088
+      value: 0.99560183
+      inSlope: 0.053608224
+      outSlope: 0.053608224
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.9040943
+      value: 0.9989294
+      inSlope: 0.023618339
+      outSlope: 0.023618339
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  splashSteps:
+  - Loading parts
+  - Building the arena
+  - Waking the robots
+  - Syncing the match
+  - Ready
+  buildFormat: "Build {0} \xB7 {1}"
+  tips:
+  - A robot loses the blocks it is hit on. Put your weapons where the armour is.
+  - Keys 1, 2 and 3 switch between your weapon and module types.
+  - Press R to self-right a robot that landed on its back.
+  - Heavier builds take more hits, lighter builds get there first.
+  screenPlans:
+  - sceneName: Garage
+    steps:
+    - Entering the garage
+    - Loading your bays
+    - Placing the robot
+    - Ready
+  - sceneName: MainMenu
+    steps:
+    - Entering the hangar
+    - Loading your bays
+    - Placing the robot
+    - Ready
+  - sceneName: Map_Test
+    steps:
+    - Entering the test range
+    - Building the arena
+    - Placing the robot
+    - Ready
+  - sceneName: Map_MARS
+    steps:
+    - Entering the arena
+    - Building the arena
+    - Placing the robot
+    - Ready
+  - sceneName: Boot
+    steps:
+    - Back to sign-in
+    - Ready
+  defaultScreenSteps:
+  - Loading
+  - Ready
+  matchmakingCinematic: {fileID: 0}
+  defaultRegion: EU West
+  seats: 10
+  estimatedSeconds: 90
+  mockLoad:
+    fastTo: 0.45
+    fastSeconds: 0.6
+    slowTo: 0.6
+    slowSeconds: 1.6
+    stallSeconds: 0.5
+    quickSeconds: 0.45

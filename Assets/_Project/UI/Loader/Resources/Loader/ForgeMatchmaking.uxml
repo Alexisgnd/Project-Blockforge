@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- FORGE LOADER : MATCHMAKING
+         La cinematique occupe tout l'ecran ; l'attente tient dans un bandeau de 96 px
+         en bas, sous un scrim de 260 px, liseré 2 px bleu -> transparent -> rouge.
+         De gauche a droite, 28 px d'ecart : mark 52 px ; titre + mode ; filet ;
+         PLAYERS (10 sieges + n / 10) ; ELAPSED ; ESTIMATED ; espace ; Esc Cancel.
+         Attente indeterminee : pas de pourcentage. Rien d'autre sur la cinematique. -->
+    <Style src="LoaderTheme.uss" />
+    <Style src="ForgeLoader.uss" />
+    <ui:VisualElement name="matchmaking" class="forge-theme forge-mm forge-fill" picking-mode="Ignore">
+        <ui:VisualElement name="cinematic" class="forge-fill forge-mm__cinematic" />
+        <ForgeGradient name="scrim" class="forge-mm__scrim" direction="Vertical" />
+        <ui:VisualElement name="strip" class="forge-mm__strip">
+            <ForgeGradient name="hairline" class="forge-mm__hairline" direction="Horizontal" />
+            <ForgeLoader name="mark" class="forge-mm__mark forge-mm__item" />
+            <ui:VisualElement class="forge-mm__title forge-mm__item" picking-mode="Ignore">
+                <ui:Label name="title" text="SEARCHING FOR PLAYERS" class="forge-mm__title-text forge-text-condensed forge-tracking-title forge-on-image" />
+                <ui:Label name="mode" text="Team Deathmatch · EU West" class="forge-mm__mode forge-text-sans forge-on-image" />
+            </ui:VisualElement>
+            <ui:VisualElement class="forge-mm__divider forge-mm__item" picking-mode="Ignore" />
+            <ui:VisualElement class="forge-mm__stat forge-mm__item" picking-mode="Ignore">
+                <ui:Label text="PLAYERS" class="forge-label forge-text-sans-semibold forge-tracking-label forge-on-image" />
+                <ui:VisualElement class="forge-mm__seats-row" picking-mode="Ignore">
+                    <ui:VisualElement name="seats" class="forge-mm__seats" picking-mode="Ignore" />
+                    <ui:Label name="count" text="1 / 10" class="forge-mm__count forge-text-mono forge-on-image" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="forge-mm__stat forge-mm__item" picking-mode="Ignore">
+                <ui:Label text="ELAPSED" class="forge-label forge-text-sans-semibold forge-tracking-label forge-on-image" />
+                <ui:Label name="elapsed" text="0:00" class="forge-mm__readout forge-text-mono forge-on-image" />
+            </ui:VisualElement>
+            <ui:VisualElement class="forge-mm__stat forge-mm__item" picking-mode="Ignore">
+                <ui:Label text="ESTIMATED" class="forge-label forge-text-sans-semibold forge-tracking-label forge-on-image" />
+                <ui:Label name="estimated" text="1:30" class="forge-mm__readout forge-text-mono forge-on-image" />
+            </ui:VisualElement>
+            <ui:VisualElement class="forge-mm__spacer" picking-mode="Ignore" />
+            <ui:Button name="cancel" text="" class="forge-ghost" tooltip="Stop searching">
+                <ui:Label text="Esc" class="forge-keycap forge-text-mono" picking-mode="Ignore" />
+                <ui:Label text="Cancel" class="forge-ghost__label forge-text-sans-semibold forge-on-image" picking-mode="Ignore" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

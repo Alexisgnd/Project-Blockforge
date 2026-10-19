@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- Panneau de controle de la scene LoaderPreview (outil, hors build) -->
+    <Style src="LoaderPreview.uss" />
+    <ui:VisualElement name="preview" class="preview" picking-mode="Ignore">
+        <ui:VisualElement name="panel" class="preview__panel">
+            <ui:Label text="FORGE LOADER PREVIEW" class="preview__title" />
+            <ui:DropdownField name="context" label="Context" />
+            <ui:Slider name="speed" label="Speed" low-value="0.1" high-value="3" value="1" show-input-field="true" />
+            <ui:Slider name="progress" label="Progress" low-value="0" high-value="1" value="0" show-input-field="true" />
+            <ui:VisualElement class="preview__row">
+                <ui:Button name="simulate" text="Simulate load" class="preview__button" />
+                <ui:Button name="finish" text="Finish now" class="preview__button" />
+            </ui:VisualElement>
+            <ui:Toggle name="reduce" label="Reduce motion" />
+            <ui:Label name="readout" text="" class="preview__readout" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

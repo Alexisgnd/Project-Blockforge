@@ -195,13 +195,13 @@ public class BuildMenuController : MonoBehaviour
             return;
 
         RobotSession.Load(record);
-        SceneManager.LoadScene(garageSceneName);
+        SceneLoader.Load(garageSceneName);
     }
 
     private void OnCreateSlot(int index)
     {
         RobotSession.StartNew(index);
-        SceneManager.LoadScene(garageSceneName);
+        SceneLoader.Load(garageSceneName);
     }
 
     // =========================================================

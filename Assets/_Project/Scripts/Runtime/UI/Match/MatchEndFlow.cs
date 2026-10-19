@@ -113,7 +113,7 @@ public sealed class MatchEndFlow : MonoBehaviour
         yield return results.FadeOut(BlockforgeTheme.MotionScreen);
         Time.timeScale = 1f;
         RobotSession.ReturnSceneName = hubSceneName;
-        SceneManager.LoadScene(hubSceneName);
+        SceneLoader.Load(hubSceneName);
     }
 
     // Menu Debug : ouvre directement les resultats (sans overlay)
@@ -140,6 +140,6 @@ public sealed class MatchEndFlow : MonoBehaviour
         yield return results.FadeOut(BlockforgeTheme.MotionScreen);
         Time.timeScale = 1f;
         RobotSession.ReturnSceneName = hubSceneName;
-        SceneManager.LoadScene(hubSceneName);
+        SceneLoader.Load(hubSceneName);
     }
 }

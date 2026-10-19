@@ -115,7 +115,7 @@ public class GarageSaveController : MonoBehaviour
         RobotSession.ReturnSceneName = SceneManager.GetActiveScene().name;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        SceneManager.LoadScene(testSceneName);
+        SceneLoader.Load(testSceneName);
     }
 
     // =========================================================
@@ -150,7 +150,7 @@ public class GarageSaveController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        SceneManager.LoadScene(mainMenuSceneName);
+        SceneLoader.Load(mainMenuSceneName);
     }
 
     // =========================================================

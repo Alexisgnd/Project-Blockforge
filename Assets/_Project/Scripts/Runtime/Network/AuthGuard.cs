@@ -25,7 +25,7 @@ public static class AuthGuard
         Cursor.visible = true;
 
         Debug.Log("[AuthGuard] Aucune session — retour à l'écran de démarrage.");
-        SceneManager.LoadScene(BootSceneName);
+        SceneLoader.Load(BootSceneName);
         return false;
     }
 

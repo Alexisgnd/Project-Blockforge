@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- FORGE LOADER : SPLASH DU LANCEMENT (plein ecran)
+         Degrade + grille 64 px ; colonne centree : mark 190 px, wordmark 300 px
+         (monte et apparait au verrouillage), barre 360 px avec etape et pourcentage ;
+         build en bas a gauche, astuce en bas a droite. -->
+    <Style src="LoaderTheme.uss" />
+    <Style src="ForgeLoader.uss" />
+    <ui:VisualElement name="splash" class="forge-theme forge-splash forge-fill">
+        <ForgeGradient class="forge-fill forge-splash__backdrop" direction="Vertical" />
+        <ForgeGrid class="forge-fill forge-grid" />
+        <ui:VisualElement name="column" class="forge-fill forge-splash__column" picking-mode="Ignore">
+            <ForgeLoader name="mark" class="forge-splash__mark" />
+            <ui:VisualElement name="wordmark" class="forge-wordmark forge-splash__wordmark" picking-mode="Ignore" />
+            <ui:VisualElement class="forge-progress forge-splash__progress" picking-mode="Ignore">
+                <ForgeBar name="bar" class="forge-bar" />
+                <ui:VisualElement class="forge-progress__row" picking-mode="Ignore">
+                    <ui:Label name="step" text="Loading parts" class="forge-step forge-text-sans" />
+                    <ui:Label name="percent" text="0%" class="forge-percent forge-text-mono" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="build" text="Build" class="forge-splash__build forge-text-mono-medium" picking-mode="Ignore" />
+        <ui:Label name="tip" text="" class="forge-splash__tip forge-text-sans" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

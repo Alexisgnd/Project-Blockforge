@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- FORGE LOADER : CHARGEMENT D'ECRAN (garage <-> hub <-> match)
+         L'ecran precedent reste dessous, assombri ; plaque translucide centree,
+         coins du haut coupes : mark 84 px, barre 260 px, etape et pourcentage.
+         Pas de wordmark. -->
+    <Style src="LoaderTheme.uss" />
+    <Style src="ForgeLoader.uss" />
+    <ui:VisualElement name="screen-load" class="forge-theme forge-screenload forge-fill">
+        <ui:VisualElement name="dim" class="forge-fill forge-screenload__dim" />
+        <ChamferPanel name="plate" class="forge-plate forge-screenload__plate" picking-mode="Ignore">
+            <ForgeLoader name="mark" class="forge-screenload__mark" />
+            <ui:VisualElement class="forge-progress forge-screenload__progress" picking-mode="Ignore">
+                <ForgeBar name="bar" class="forge-bar" />
+                <ui:VisualElement class="forge-progress__row" picking-mode="Ignore">
+                    <ui:Label name="step" text="Loading" class="forge-step forge-text-sans forge-on-image" />
+                    <ui:Label name="percent" text="0%" class="forge-percent forge-text-mono forge-on-image" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ChamferPanel>
+    </ui:VisualElement>
+</ui:UXML>

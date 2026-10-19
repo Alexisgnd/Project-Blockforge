@@ -119,7 +119,7 @@ public class RobotTestDriver : MonoBehaviour
         string scene = string.IsNullOrEmpty(RobotSession.ReturnSceneName) ? fallbackReturnScene : RobotSession.ReturnSceneName;
         Time.timeScale = 1f;
         SetCursorLocked(false);
-        SceneManager.LoadScene(scene);
+        SceneLoader.Load(scene);
     }
 
     public static void SetCursorLocked(bool locked)

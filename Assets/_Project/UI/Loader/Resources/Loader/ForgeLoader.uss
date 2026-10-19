@@ -1,0 +1,288 @@
+/* =========================================================
+   FORGE LOADER — MISE EN PAGE DES TROIS CONTEXTES
+   Splash (lancement), chargement d'ecran, bandeau de
+   matchmaking. Aucune valeur ici : tout vient des variables de
+   LoaderTheme.uss (var(--forge-…)).
+   ========================================================= */
+
+.forge-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* ---------- Progression partagee ---------- */
+
+.forge-progress {
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.forge-progress .forge-bar {
+    height: var(--forge-bar-height);
+}
+
+.forge-progress__row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--forge-progress-gap);
+}
+
+.forge-step {
+    font-size: var(--forge-step-size);
+    color: var(--forge-ink-step);
+    padding: 0;
+    margin: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.forge-percent {
+    font-size: var(--forge-step-size);
+    color: var(--forge-ink);
+    padding: 0;
+    margin: 0;
+    -unity-text-align: middle-right;
+    flex-shrink: 0;
+}
+
+/* ---------- 1. Splash ---------- */
+
+.forge-splash {
+    background-color: var(--forge-ground);
+}
+
+.forge-splash__column {
+    justify-content: center;
+    align-items: center;
+}
+
+.forge-splash__mark {
+    margin-bottom: var(--forge-splash-gap-mark);
+}
+
+.forge-splash__wordmark {
+    width: var(--forge-wordmark-width);
+    height: var(--forge-wordmark-height);
+    margin-bottom: var(--forge-splash-gap-wordmark);
+}
+
+.forge-splash__progress {
+    width: var(--forge-splash-bar-width);
+}
+
+.forge-splash__build {
+    position: absolute;
+    left: var(--forge-splash-edge);
+    bottom: var(--forge-splash-edge);
+    font-size: var(--forge-build-size);
+    color: var(--forge-ink-label);
+    padding: 0;
+    margin: 0;
+}
+
+.forge-splash__tip {
+    position: absolute;
+    right: var(--forge-splash-edge);
+    bottom: var(--forge-splash-edge);
+    max-width: var(--forge-tip-width);
+    font-size: var(--forge-tip-size);
+    color: var(--forge-ink-tip);
+    -unity-text-align: lower-right;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+/* ---------- 2. Chargement d'ecran ---------- */
+
+.forge-screenload {
+    justify-content: center;
+    align-items: center;
+}
+
+.forge-screenload__dim {
+    background-color: var(--forge-dim);
+}
+
+.forge-screenload__plate {
+    align-items: center;
+    padding-top: var(--forge-plate-pad-top);
+    padding-left: var(--forge-plate-pad-side);
+    padding-right: var(--forge-plate-pad-side);
+    padding-bottom: var(--forge-plate-pad-bottom);
+}
+
+.forge-screenload__mark {
+    margin-bottom: var(--forge-plate-gap);
+}
+
+.forge-screenload__progress {
+    width: var(--forge-screen-bar-width);
+}
+
+/* ---------- 3. Matchmaking ---------- */
+
+.forge-mm__cinematic {
+    background-color: var(--forge-ground);
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.forge-mm__scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--forge-strip-height);
+    height: var(--forge-scrim-height);
+}
+
+.forge-mm__strip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--forge-strip-height);
+    flex-direction: row;
+    align-items: center;
+    padding-left: var(--forge-strip-pad);
+    padding-right: var(--forge-strip-pad);
+    background-color: var(--forge-strip-fill);
+}
+
+.forge-mm__hairline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--forge-hairline);
+}
+
+/* 28 px entre les blocs (USS n'a pas de gap) */
+.forge-mm__item {
+    margin-right: var(--forge-strip-gap);
+    flex-shrink: 0;
+}
+
+.forge-mm__title {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.forge-mm__title-text {
+    font-size: var(--forge-title-size);
+    color: var(--forge-ink);
+    padding: 0;
+    margin: 0;
+}
+
+.forge-mm__mode {
+    font-size: var(--forge-subtitle-size);
+    color: var(--forge-ink-step);
+    padding: 0;
+    margin: 0;
+}
+
+.forge-mm__divider {
+    width: var(--forge-divider);
+    height: var(--forge-divider-height);
+    background-color: var(--forge-divider-color);
+}
+
+.forge-label {
+    font-size: var(--forge-label-size);
+    color: var(--forge-ink-label);
+    padding: 0;
+    margin: 0;
+    margin-bottom: var(--forge-label-gap);
+}
+
+.forge-mm__stat {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.forge-mm__readout {
+    font-size: var(--forge-readout-size);
+    color: var(--forge-ink);
+    padding: 0;
+    margin: 0;
+}
+
+.forge-mm__seats-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.forge-mm__seats {
+    flex-direction: row;
+    align-items: center;
+}
+
+.forge-seat {
+    width: var(--forge-seat-width);
+    height: var(--forge-seat-height);
+    margin-right: var(--forge-seat-gap);
+}
+
+.forge-mm__count {
+    font-size: var(--forge-count-size);
+    color: var(--forge-ink);
+    padding: 0;
+    margin: 0;
+    margin-left: var(--forge-seat-gap);
+}
+
+.forge-mm__spacer {
+    flex-grow: 1;
+}
+
+/* Bouton ghost « Esc Cancel » : pas de fond, touche en KeyCap */
+.forge-mm .forge-ghost {
+    flex-direction: row;
+    align-items: center;
+    height: var(--forge-ghost-height);
+    padding: 0;
+    padding-left: var(--forge-ghost-pad);
+    padding-right: var(--forge-ghost-pad);
+    margin: 0;
+    background-color: var(--forge-ghost-fill);
+    border-width: 0;
+    flex-shrink: 0;
+}
+
+.forge-mm .forge-ghost:hover,
+.forge-mm .forge-ghost:focus {
+    background-color: var(--forge-ghost-hover);
+}
+
+.forge-mm .forge-ghost:hover:active {
+    background-color: var(--forge-ghost-active);
+}
+
+.forge-keycap {
+    height: var(--forge-keycap-height);
+    padding: 0;
+    padding-left: var(--forge-keycap-pad);
+    padding-right: var(--forge-keycap-pad);
+    margin: 0;
+    margin-right: var(--forge-keycap-pad);
+    font-size: var(--forge-keycap-size);
+    color: var(--forge-ink);
+    background-color: var(--forge-keycap-fill);
+    border-width: var(--forge-keycap-border-width);
+    border-color: var(--forge-keycap-border);
+    border-radius: var(--forge-keycap-radius);
+    -unity-text-align: middle-center;
+}
+
+.forge-ghost__label {
+    font-size: var(--forge-button-size);
+    color: var(--forge-ink-step);
+    padding: 0;
+    margin: 0;
+}

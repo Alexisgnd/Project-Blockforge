@@ -1,0 +1,191 @@
+/* =========================================================
+   FORGE LOADER — THEME (seul fichier avec des couleurs et des px)
+   - .forge-theme : variables lues par la mise en page
+     (ForgeLoader.uss, en var(--…)) ;
+   - classes des elements dessines : proprietes custom lues en
+     C# (ForgeLoader, ChamferPanel, ForgeBar, ForgeGradient,
+     ForgeGrid) ;
+   - primitives de texte (familles, tailles, ombre).
+   Les couleurs du logo (--forge-arm, --forge-core…) appartiennent
+   au logo : ne jamais les reutiliser dans l'interface.
+   Reference 1920 x 1080, mise a l'echelle sur la hauteur
+   (LoaderPanelSettings).
+   ========================================================= */
+
+.forge-theme {
+    /* Fond et encres */
+    --forge-ground: #0C1017;
+    --forge-ink: #F2F5F7;
+    --forge-ink-step: #B3BDCB;
+    --forge-ink-label: #959FB0;
+    --forge-ink-tip: #B3BDCB;
+
+    /* Progression (barre + ligne etape / pourcentage) */
+    --forge-bar-height: 4px;
+    --forge-progress-gap: 10px;
+    --forge-step-size: 14px;
+
+    /* Splash */
+    --forge-splash-bar-width: 360px;
+    --forge-wordmark-width: 300px;
+    --forge-wordmark-height: 40px;
+    --forge-splash-gap-mark: 28px;
+    --forge-splash-gap-wordmark: 44px;
+    --forge-splash-edge: 40px;
+    --forge-build-size: 12px;
+    --forge-tip-size: 13px;
+    --forge-tip-width: 460px;
+
+    /* Chargement d'ecran */
+    --forge-dim: rgba(11, 14, 20, 0.62);
+    --forge-plate-pad-top: 28px;
+    --forge-plate-pad-side: 40px;
+    --forge-plate-pad-bottom: 24px;
+    --forge-plate-gap: 20px;
+    --forge-screen-bar-width: 260px;
+
+    /* Matchmaking */
+    --forge-strip-height: 96px;
+    --forge-strip-fill: rgba(23, 27, 36, 0.72);
+    --forge-strip-pad: 40px;
+    --forge-strip-gap: 28px;
+    --forge-scrim-height: 260px;
+    --forge-hairline: 2px;
+    --forge-divider: 1px;
+    --forge-divider-height: 48px;
+    --forge-divider-color: rgba(242, 245, 247, 0.14);
+    --forge-title-size: 22px;
+    --forge-subtitle-size: 14px;
+    --forge-label-size: 11px;
+    --forge-label-gap: 6px;
+    --forge-readout-size: 18px;
+    --forge-count-size: 14px;
+    --forge-seat-width: 22px;
+    --forge-seat-height: 10px;
+    --forge-seat-gap: 4px;
+    --forge-ghost-fill: rgba(0, 0, 0, 0);
+    --forge-ghost-hover: rgba(242, 245, 247, 0.06);
+    --forge-ghost-active: rgba(242, 245, 247, 0.10);
+    --forge-ghost-height: 40px;
+    --forge-ghost-pad: 12px;
+    --forge-keycap-fill: #11151C;
+    --forge-keycap-border: #303948;
+    --forge-keycap-border-width: 1px;
+    --forge-keycap-height: 22px;
+    --forge-keycap-pad: 6px;
+    --forge-keycap-radius: 3px;
+    --forge-keycap-size: 12px;
+    --forge-button-size: 14px;
+}
+
+/* ---------- Mark (couleurs du logo uniquement) ---------- */
+
+.forge-loader {
+    --forge-arm: #00B9EE;
+    --forge-core: #FFD34B;
+    --forge-core-dim: #5A4A16;
+    --forge-core-hot: #FFF2B0;
+    --forge-core-breath: #FFE58A;
+    --forge-ring: #FFD34B;
+    --forge-min-size: 48;
+}
+
+/* Glyph statique sous 48 px */
+.forge-loader__glyph {
+    background-image: url("../../../DesignSystem/Resources/DesignSystem/Logo/mark.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Tailles du mark par contexte (px rendus) */
+.forge-splash__mark { --forge-size: 190; }
+.forge-screenload__mark { --forge-size: 84; }
+.forge-mm__mark { --forge-size: 52; }
+
+/* ---------- Barre ---------- */
+
+.forge-bar {
+    --bar-track: #11151C;
+    --bar-fill: #39B8E8;
+    --bar-chamfer: 4;
+}
+
+/* ---------- Fonds dessines ---------- */
+
+.forge-splash__backdrop {
+    --gradient-start: #141A24;
+    --gradient-end: #0C1017;
+}
+
+.forge-grid {
+    --grid-size: 64;
+    --grid-line: 1;
+    --grid-color: rgba(255, 255, 255, 0.06);
+}
+
+.forge-plate {
+    --chamfer-fill: rgba(23, 27, 36, 0.72);
+    --chamfer-top-left: 14;
+    --chamfer-top-right: 14;
+}
+
+.forge-mm__scrim {
+    --gradient-start: rgba(23, 27, 36, 0);
+    --gradient-end: rgba(23, 27, 36, 0.72);
+}
+
+.forge-mm__hairline {
+    --gradient-start: #6BA2FF;
+    --gradient-mid: rgba(0, 0, 0, 0);
+    --gradient-end: #FF6F5E;
+}
+
+/* Sieges : vide, joueur trouve, joueur local */
+.forge-seat {
+    --chamfer-fill: rgba(242, 245, 247, 0.12);
+    --chamfer-top-right: 3;
+    --chamfer-bottom-left: 3;
+}
+
+.forge-seat--found { --chamfer-fill: #6BA2FF; }
+.forge-seat--self { --chamfer-fill: #39B8E8; }
+
+/* ---------- Wordmark ---------- */
+
+/* Monte de 6 px en apparaissant au verrouillage (splash) */
+.forge-splash__wordmark { --forge-wordmark-rise: 6; }
+
+.forge-wordmark {
+    background-image: url("../../../DesignSystem/Resources/DesignSystem/Logo/wordmark.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* ---------- Texte ---------- */
+
+.forge-text-sans {
+    -unity-font-definition: url("../../../Fonts/Barlow-Regular.ttf");
+}
+
+.forge-text-sans-semibold {
+    -unity-font-definition: url("../../../Fonts/Barlow-SemiBold.ttf");
+}
+
+.forge-text-condensed {
+    -unity-font-definition: url("../../../Fonts/BarlowCondensed-Bold.ttf");
+}
+
+.forge-text-mono {
+    -unity-font-definition: url("../../../Fonts/JetBrainsMono-SemiBold.ttf");
+}
+
+.forge-text-mono-medium {
+    -unity-font-definition: url("../../../Fonts/JetBrainsMono-Medium.ttf");
+}
+
+/* Tout texte pose sur une image : 0 1 2 px noir a 85 % */
+.forge-on-image {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+/* Interlettrage : .04 em a 22 px, .09 em a 11 px (USS n'a que des px) */
+.forge-tracking-title { letter-spacing: 0.88px; }
+.forge-tracking-label { letter-spacing: 0.99px; }
