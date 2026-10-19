@@ -254,8 +254,7 @@ public class PlayMenuController : MonoBehaviour
 
         MusicManager.PlayTrack(MusicTrack.Matchmaking);
 
-        string pseudo = PocketBaseClient.Instance?.User?.name;
-        var data = MatchIntroData.Bots(Current, string.IsNullOrEmpty(pseudo) ? "Guest" : pseudo, robot);
+        var data = MatchIntroData.Bots(Current, SessionService.DisplayName, robot);
         MatchIntro.Begin(data, Current.sceneName);
     }
 }

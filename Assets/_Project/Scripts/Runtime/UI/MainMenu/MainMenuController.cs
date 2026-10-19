@@ -9,11 +9,19 @@ using UnityEngine.SceneManagement;
 // sections de la navigation du haut (Home, Play, Build, Tech
 // tree, Workshop, Store) et les infos du joueur dans le header
 // (puce joueur, credits).
+// La puce joueur du header (PlayerChip) affiche le pseudo et
+// l'avatar Steam quand il y en a un, et l'etat de la session
+// (en ligne / hors ligne / invite) ; un clic hors ligne retente
+// la connexion.
 // Tech tree, Workshop et Store sont des HubScreen crees au
 // lancement sous le header (HubScreenHost) : ils restent vivants
 // entre deux onglets et se fondent en 220 ms. Le header serialise
 // est adopte par TopBar (Q / E et gachettes pour changer d'onglet) ;
 // le solde de credits suit le portefeuille (MetaServices.Wallet).
+// Fond de menu : un aplat surface-base fixe (MenuBackdrop) passe
+// sous les ecrans Play, Build et du hub. Il s'affiche sans fondu,
+// seul le contenu des ecrans se fond : le hangar 3D ne transparait
+// plus entre deux onglets. Il disparait sur Home (hangar visible).
 // =========================================================
 
 public class MainMenuController : MonoBehaviour
@@ -54,6 +62,7 @@ public class MainMenuController : MonoBehaviour
     private HubScreenHost hubScreens;
     private TopBar topBar;
     private Blockforge.Meta.IWallet wallet;
+    private UnityEngine.UI.Image menuBackdrop;
 
     private void Awake()
     {
@@ -126,9 +135,29 @@ public class MainMenuController : MonoBehaviour
             return;
         topBar = TopBar.Adopt(nav);
         topBar.Selected += section => OnNavClicked(TopBar.KeyOf(section));
+        // Puce joueur : pseudo, avatar Steam et pastille d'etat (clic = reconnexion)
+        PlayerChip.Attach(nav.Find("Right/Player"));
         var canvas = nav.parent;
         hubScreens = HubScreenHost.Create(canvas, topBar, BlockforgeTheme.TopBar.Height);
+        CreateMenuBackdrop(canvas);
         UIKit.EnsureEventSystem();
+    }
+
+    // Aplat opaque sous tous les ecrans (premier enfant du canvas) : jamais fondu
+    private void CreateMenuBackdrop(Transform canvas)
+    {
+        var kit = UIKit.Dark;
+        menuBackdrop = kit.Image(canvas, "MenuBackdrop", kit.P.SurfaceBase);
+        UIKit.Stretch(menuBackdrop.rectTransform);
+        menuBackdrop.raycastTarget = true;
+        menuBackdrop.transform.SetAsFirstSibling();
+        menuBackdrop.gameObject.SetActive(false);
+    }
+
+    private void SetMenuBackdrop(bool visible)
+    {
+        if (menuBackdrop != null)
+            menuBackdrop.gameObject.SetActive(visible);
     }
 
     public void ShowHubScreen(HubSection section)
@@ -144,6 +173,7 @@ public class MainMenuController : MonoBehaviour
             playMenu.Close();
         if (buildMenu != null)
             buildMenu.Close();
+        SetMenuBackdrop(true);
         hubScreens.Show(section);
         SetActiveTab(TopBar.KeyOf(section));
     }
@@ -162,11 +192,9 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
-        // Pseudo du joueur connecte (session PocketBase), sinon invite
-        var user = PocketBaseClient.Instance?.User;
-        string pseudo = user != null && !string.IsNullOrEmpty(user.name) ? user.name : "Guest";
+        // Pseudo du joueur (Steam, compte standard ou invite) ; PlayerChip le tient a jour ensuite
         if (playerNameText != null)
-            playerNameText.text = pseudo;
+            playerNameText.text = SessionService.DisplayName;
         // Pas encore d'economie : solde a zero, deja au format du DS (readout, milliers groupes)
         wallet = Blockforge.Meta.MetaServices.Wallet;
         wallet.CreditsChanged += OnCreditsChanged;
@@ -175,7 +203,15 @@ public class MainMenuController : MonoBehaviour
 
         SetActiveTab(SectionHome);
 
-        // En attendant la reponse de PocketBase (RobotSlotManager.Refresh)
+        // Le cache local (RobotStore) peut avoir deja repondu dans cette frame :
+        // on affiche alors directement le robot selectionne au lieu du texte d'attente
+        if (slotManager != null && slotManager.SelectedIndex >= 0)
+        {
+            OnRobotSelected(slotManager.SelectedRobot, slotManager.SelectedIndex);
+            return;
+        }
+
+        // En attendant la reponse de RobotSlotManager.Refresh
         if (bayLabelText != null)
             bayLabelText.text = "Hangar";
         if (robotNameText != null)
@@ -216,6 +252,7 @@ public class MainMenuController : MonoBehaviour
             homeScreen.SetActive(false);
         if (buildMenu != null)
             buildMenu.Close();
+        SetMenuBackdrop(true);
         playMenu.Open();
         LeaveHubScreens(playMenu.gameObject);
         SetActiveTab(SectionPlay);
@@ -234,6 +271,7 @@ public class MainMenuController : MonoBehaviour
             homeScreen.SetActive(false);
         if (playMenu != null)
             playMenu.Close();
+        SetMenuBackdrop(true);
         buildMenu.Open();
         LeaveHubScreens(buildMenu.gameObject);
         SetActiveTab(SectionBuild);
@@ -245,6 +283,7 @@ public class MainMenuController : MonoBehaviour
             playMenu.Close();
         if (buildMenu != null)
             buildMenu.Close();
+        SetMenuBackdrop(false);
         if (homeScreen != null)
             homeScreen.SetActive(true);
         LeaveHubScreens(homeScreen);
