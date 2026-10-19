@@ -16,6 +16,9 @@ using UnityEngine.InputSystem;
 //            cout, etincelles a l'impact
 // - Plasma : boule lumineuse (WeaponProjectile) soumise a une
 //            gravite reduite, degats de zone a l'impact, cout moyen
+//            Cadence selon la rarete (N1 2,4 tirs/s -> N6 6 tirs/s),
+//            cout par tir ajuste pour garder la meme consommation
+//            d'energie par seconde
 // - Rail   : tir instantane lourd et lent, gros cout, long trait
 //            blanc, recul sur le robot
 // - Tesla  : corps a corps : tant qu'on tient le clic, arcs
@@ -93,12 +96,34 @@ public class WeaponFireController : MonoBehaviour
         if (key.Contains("laser"))
             s = new Stats { kind = Kind.Laser, rate = 7f, cost = 3f + 0.6f * tier, damage = 8f * tier, speed = 150f, gravity = 0f };
         else if (key.Contains("plasma"))
-            s = new Stats { kind = Kind.Plasma, rate = 2f, cost = 13f + 2f * tier, damage = 30f * tier, speed = 55f, gravity = 0.55f, splash = 2.5f + 0.4f * tier };
+            s = PlasmaStats(tier);
         else if (key.Contains("rail"))
             s = new Stats { kind = Kind.Rail, rate = 0.8f, cost = 28f + 3f * tier, damage = 90f * tier };
         else if (key.Contains("tesla"))
             s = new Stats { kind = Kind.Tesla, rate = 4f, cost = 7f, damage = 20f * tier, splash = 2.2f };
         return s;
+    }
+
+    // Plasma par rarete (N1..N6) : cadence +20 % par niveau. L'energie depensee par
+    // seconde reste celle de l'ancien reglage (2 tirs/s) : le cout par tir baisse quand
+    // la cadence monte. Les degats par tir baissent un peu aux hauts niveaux pour que
+    // les degats par seconde montent sans exploser (N1 72/s -> N6 ~760/s).
+    public static Stats PlasmaStats(int tier)
+    {
+        tier = Mathf.Clamp(tier, 1, 6);
+        float rate = 2.4f * Mathf.Pow(1.2f, tier - 1);
+        float energyPerSecond = (13f + 2f * tier) * 2f;
+        float damage = 30f * tier * Mathf.Lerp(1f, 0.7f, (tier - 1) / 5f);
+        return new Stats
+        {
+            kind = Kind.Plasma,
+            rate = rate,
+            cost = energyPerSecond / rate,
+            damage = damage,
+            speed = 58f + 4f * tier,
+            gravity = 0.55f,
+            splash = 2.5f + 0.4f * tier,
+        };
     }
 
     private void Awake()
