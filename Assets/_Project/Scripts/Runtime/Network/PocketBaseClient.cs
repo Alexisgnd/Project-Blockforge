@@ -5,7 +5,13 @@ using UnityEngine.Networking;
 
 // =========================================================
 // CLIENT POCKETBASE (REST via UnityWebRequest)
-// Auth email/mot de passe sur la collection "users".
+// Deux portes d'entree sur la collection "users" :
+// - email / mot de passe (auth-with-password, compte standard) ;
+// - ticket Steam verifie par le serveur (route custom
+//   /api/blockforge/steam-auth, voir Tools/PocketBase/pb_hooks).
+// Les deux renvoient le meme token : le reste du jeu ne fait
+// pas la difference. Les robots passent par RobotStore (cache
+// local + synchro), qui appelle les methodes ci-dessous.
 // =========================================================
 
 [Serializable]
@@ -18,6 +24,11 @@ public class PocketBaseUser
     public bool verified;
     public string created;
     public string updated;
+
+    // Champs ajoutes pour Steam (vides pour un compte standard)
+    public string steamId;
+    public string displayName;
+    public string avatarHash;
 }
 
 [Serializable]
@@ -36,11 +47,21 @@ public class RobotRecord
     public int slot;
     public RobotBlueprint data;
     public RobotStats stats;
+
+    // Identite stable du robot cote client (GUID) : permet de rapprocher un robot
+    // cree hors ligne de son record serveur. Les anciens records n'en ont pas.
+    public string clientId;
+    // Derniere modification posee par le client (ISO 8601 UTC, format "o") :
+    // c'est elle qui departage une synchro, pas `updated` du serveur.
+    public string editedAt;
 }
 
 public class PocketBaseException : Exception
 {
     public long StatusCode { get; }
+
+    // 0 = erreur reseau (serveur injoignable, DNS, TLS, delai) ; sinon code HTTP
+    public bool IsNetworkError => StatusCode == 0;
 
     public PocketBaseException(long statusCode, string message) : base(message)
     {
@@ -50,11 +71,12 @@ public class PocketBaseException : Exception
 
 public class PocketBaseClient
 {
-    // Session partagée entre les scènes (assignée par BootAuthController)
+    // Session partagee entre les scenes (assignee par BootAuthController)
     public static PocketBaseClient Instance { get; set; }
 
     private readonly string baseUrl;
 
+    public string BaseUrl => baseUrl;
     public string Token { get; private set; }
     public PocketBaseUser User { get; private set; }
     public bool IsAuthenticated => !string.IsNullOrEmpty(Token);
@@ -65,7 +87,7 @@ public class PocketBaseClient
     }
 
     // =========================================================
-    // AUTH
+    // AUTH — compte standard
     // =========================================================
 
     [Serializable]
@@ -92,9 +114,11 @@ public class PocketBaseClient
         public string password;
         public string passwordConfirm;
         // Les champs inconnus du schéma sont ignorés par PocketBase :
-        // on envoie les deux pour couvrir "username" (champ custom) et "name" (champ par défaut).
+        // on envoie les trois pour couvrir "username" (champ custom), "name" (champ
+        // par défaut) et "displayName" (pseudo affiche, commun aux comptes Steam).
         public string username;
         public string name;
+        public string displayName;
     }
 
     public async Awaitable<PocketBaseUser> RegisterAsync(string email, string username, string password, string passwordConfirm)
@@ -106,6 +130,7 @@ public class PocketBaseClient
             passwordConfirm = passwordConfirm,
             username = username,
             name = username,
+            displayName = username,
         });
 
         string json = await SendAsync("POST", "/api/collections/users/records", body, authorized: false);
@@ -122,6 +147,55 @@ public class PocketBaseClient
     {
         string body = JsonUtility.ToJson(new PasswordResetRequest { email = email });
         await SendAsync("POST", "/api/collections/users/request-password-reset", body, authorized: false);
+    }
+
+    // Renouvelle le token courant (reconnexion d'un compte standard apres une coupure)
+    public async Awaitable<PocketBaseAuthResponse> AuthRefreshAsync()
+    {
+        if (!IsAuthenticated)
+            throw new PocketBaseException(401, "No session to refresh.");
+        string json = await SendAsync("POST", "/api/collections/users/auth-refresh", null, authorized: true);
+        var auth = JsonUtility.FromJson<PocketBaseAuthResponse>(json);
+        SaveAuth(auth);
+        return auth;
+    }
+
+    // =========================================================
+    // AUTH — Steam (route custom, ticket verifie aupres de Valve)
+    // =========================================================
+
+    [Serializable]
+    private class SteamAuthRequest
+    {
+        public string ticket;      // ticket GetAuthTicketForWebApi en hexadecimal
+        public string displayName; // pseudo Steam (affichage)
+        public string avatarHash;  // empreinte de l'avatar (affichage)
+    }
+
+    public async Awaitable<PocketBaseAuthResponse> LoginWithSteamAsync(string ticketHex, string displayName, string avatarHash)
+    {
+        string body = JsonUtility.ToJson(new SteamAuthRequest
+        {
+            ticket = ticketHex,
+            displayName = displayName ?? "",
+            avatarHash = avatarHash ?? "",
+        });
+        string json = await SendAsync("POST", "/api/blockforge/steam-auth", body, authorized: false);
+
+        var auth = JsonUtility.FromJson<PocketBaseAuthResponse>(json);
+        SaveAuth(auth);
+        return auth;
+    }
+
+    // Rattache un SteamID au compte connecte (compte standard qui passe a Steam)
+    public async Awaitable<PocketBaseUser> LinkSteamAsync(string ticketHex)
+    {
+        string body = JsonUtility.ToJson(new SteamAuthRequest { ticket = ticketHex, displayName = "", avatarHash = "" });
+        string json = await SendAsync("POST", "/api/blockforge/steam-link", body, authorized: true);
+        var user = JsonUtility.FromJson<PocketBaseUser>(json);
+        if (user != null && !string.IsNullOrEmpty(user.id))
+            User = user;
+        return user;
     }
 
     public void Logout()
@@ -148,17 +222,19 @@ public class PocketBaseClient
         public int slot;
         public RobotBlueprint data;
         public RobotStats stats;
+        public string clientId;
+        public string editedAt;
     }
 
     public async Awaitable<RobotRecord[]> ListRobotsAsync()
     {
-        string json = await SendAsync("GET", "/api/collections/robots/records?perPage=30&sort=slot", null, authorized: true);
+        string json = await SendAsync("GET", "/api/collections/robots/records?perPage=50&sort=slot", null, authorized: true);
         return JsonUtility.FromJson<RobotListResponse>(json).items ?? Array.Empty<RobotRecord>();
     }
 
     // Cree le robot si recordId est vide, le met a jour sinon.
-    public async Awaitable<RobotRecord> SaveRobotAsync(string recordId, string name, int slot,
-                                                       RobotBlueprint blueprint, RobotStats stats)
+    public async Awaitable<RobotRecord> SaveRobotAsync(string recordId, string clientId, string name, int slot,
+                                                       RobotBlueprint blueprint, RobotStats stats, string editedAt)
     {
         string body = JsonUtility.ToJson(new RobotWriteRequest
         {
@@ -167,6 +243,8 @@ public class PocketBaseClient
             slot = slot,
             data = blueprint,
             stats = stats,
+            clientId = clientId ?? "",
+            editedAt = editedAt ?? "",
         });
 
         string json = string.IsNullOrEmpty(recordId)
@@ -181,7 +259,7 @@ public class PocketBaseClient
         await SendAsync("DELETE", $"/api/collections/robots/records/{recordId}", null, authorized: true);
     }
 
-    // Session en mémoire uniquement : le joueur se reconnecte à chaque lancement.
+    // Session en mémoire uniquement : le token n'est jamais ecrit sur le disque.
     private void SaveAuth(PocketBaseAuthResponse auth)
     {
         Token = auth.token;
