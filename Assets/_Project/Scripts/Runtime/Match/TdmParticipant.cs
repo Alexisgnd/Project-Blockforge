@@ -103,3 +103,37 @@ public sealed class TdmCombatant : MonoBehaviour
 
     public static TdmParticipant Of(GameObject go) => go != null ? Of(go.transform) : null;
 }
+
+// =========================================================
+// RELATION AU JOUEUR LOCAL (couleur des tirs)
+// Seul endroit qui decide si un robot est allie ou ennemi pour
+// l'affichage : JAMAIS une couleur fixee par l'equipe (Side). Le
+// joueur local et ses allies sont Ally (bleu), les autres Enemy
+// (rouge), cote client : un futur serveur dira seulement qui est
+// avec qui.
+// - Match (TdmMatch) : equipe du participant (TdmCombatant)
+//   comparee a celle du joueur local (TdmMatch.TeamOf)
+// - Hors match (Map_Test, CombatArena) ou robot sans participant :
+//   le robot pilote par le joueur (WeaponFireController.manual
+//   faux) est Ally, le reste Enemy
+// Couleurs : jetons du theme hud (BlockforgeTheme.Hud.TeamAlly /
+// TeamEnemy), les memes que le HUD.
+// =========================================================
+
+public static class TeamRelation
+{
+    public static Blockforge.Meta.Team Of(GameObject robot)
+    {
+        if (robot == null)
+            return Blockforge.Meta.Team.Enemy;
+        var match = TdmMatch.Instance;
+        var p = match != null ? TdmCombatant.Of(robot) : null;
+        if (p != null)
+            return match.TeamOf(p);
+        var fire = robot.GetComponentInParent<WeaponFireController>();
+        return fire != null && !fire.manual ? Blockforge.Meta.Team.Ally : Blockforge.Meta.Team.Enemy;
+    }
+
+    public static Color ShotColor(Blockforge.Meta.Team relation) =>
+        relation == Blockforge.Meta.Team.Ally ? BlockforgeTheme.Hud.TeamAlly : BlockforgeTheme.Hud.TeamEnemy;
+}

@@ -7,7 +7,9 @@ using UnityEngine;
 // plasma. Tout est dimensionne sur la zone de degats ('radius',
 // qui grandit avec le niveau de l'arme) et sur 'power' (0 = N1,
 // 1 = N6) qui regle la densite et la duree des effets :
-// - Eclair : coeur blanc + halo violet (bords de Fresnel) qui
+// Couleur : celle du tir ('color', couleur d'equipe relative au joueur
+// local, voir TeamRelation) ; arcs et teinte au sol en derivent.
+// - Eclair : coeur blanc + halo colore (bords de Fresnel) qui
 //   gonflent et s'eteignent en ~0,15 s
 // - Onde de choc : bulle hologramme qui gonfle jusqu'au rayon
 //   exact de la zone puis s'efface
@@ -40,8 +42,6 @@ public class PlasmaExplosion : MonoBehaviour
 
     private static Mesh ringMesh, sphereMesh, discMesh;
 
-    private static readonly Color ArcColor = new(0.62f, 0.7f, 1f);
-
     private class Arc
     {
         public LineRenderer line, fork;
@@ -55,7 +55,7 @@ public class PlasmaExplosion : MonoBehaviour
     private Transform core, glow, wave, ring, scorch, tint;
     private LineRenderer electricRing;
     private Material coreMat, glowMat, waveMat, ringMat, arcMat, scorchMat, tintMat;
-    private static readonly Color TintColor = new(0.32f, 0.08f, 0.62f);
+    private Color tintColor;   // teinte au sol : ton sombre et sature de la couleur du tir
     private readonly List<Arc> arcs = new();
     private float nextRefresh;
 
@@ -82,6 +82,11 @@ public class PlasmaExplosion : MonoBehaviour
         arcTime = Mathf.Lerp(0.45f, 0.8f, power);
 
         Color hot = Color.Lerp(color, Color.white, 0.6f);
+        // Derivees de la couleur du tir (equipe) : arcs plus clairs, teinte au sol sombre
+        // et saturee (meme rendu qu'avant pour le violet d'origine)
+        Color arcColor = Color.Lerp(color, Color.white, 0.3f);
+        Color.RGBToHSV(color, out float hue, out float sat, out _);
+        tintColor = Color.HSVToRGB(hue, Mathf.Max(sat, 0.85f), 0.62f);
         coreMat = Holo(holo, "PlasmaCore", Color.white, 8f, 2f);
         glowMat = Holo(holo, "PlasmaGlow", hot, 3.5f, 0f);
         glowMat.SetFloat("_FillAlpha", 0.35f);
@@ -94,7 +99,7 @@ public class PlasmaExplosion : MonoBehaviour
         waveMat.SetFloat("_LineDensity", 6f);
         waveMat.SetFloat("_LineStrength", 0.4f);
         ringMat = Holo(holo, "PlasmaRing", color, 2.4f, 2f);
-        arcMat = Holo(holo, "PlasmaArc", ArcColor, 6f, 2f);
+        arcMat = Holo(holo, "PlasmaArc", arcColor, 6f, 2f);
         arcMat.SetFloat("_Flicker", 0.35f);
 
         core = Part("Core", SphereMesh(), coreMat, Quaternion.identity);
@@ -274,7 +279,7 @@ public class PlasmaExplosion : MonoBehaviour
             float tintAlpha = Mathf.Clamp01(t / 0.05f) * (1f - Mathf.Clamp01((t - span * 0.6f) / (span * 0.4f)));
             tint.gameObject.SetActive(tintAlpha > 0.001f);
             tint.localScale = Vector3.one * (2.8f * Mathf.Max(waveRadius, radius * 0.35f));
-            tintMat.SetColor("_Tint", new Color(TintColor.r, TintColor.g, TintColor.b, 0.7f * tintAlpha));
+            tintMat.SetColor("_Tint", new Color(tintColor.r, tintColor.g, tintColor.b, 0.7f * tintAlpha));
         }
 
         // Eclairs : intensite commune qui retombe a la fin

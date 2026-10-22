@@ -758,12 +758,20 @@ public class BotBrain : MonoBehaviour
             if (!alive)
                 continue;
             var s = WeaponFireController.Resolve(slot.definition);
+            // Lames : ecart reel entre lames et blocs de la cible (TeslaGap), pas la distance
+            // entre centres des robots, qui depasse 10 m entre deux longs robots au contact
+            float bladeGap = s.kind == WeaponFireController.Kind.Tesla && target != null
+                ? WeaponFireController.TeslaGap(slot, target.Health) : float.PositiveInfinity;
+            // Lames : choisies des l'approche (12 m d'ecart, 16 m pour les garder) pour que
+            // l'arc ait le temps de s'ouvrir (WeaponFireController.TeslaOpenSeconds) avant
+            // le contact : un arc pas encore ouvert ne frappe pas
+            float teslaWindow = slot == loadout.Selected ? 16f : 12f;
             // Porte-t-elle ? (lames : contact seulement)
             bool inRange = s.kind switch
             {
                 WeaponFireController.Kind.Rail => dist <= 260f,
                 WeaponFireController.Kind.Plasma => dist <= 120f,
-                WeaponFireController.Kind.Tesla => dist <= 10f,
+                WeaponFireController.Kind.Tesla => bladeGap <= teslaWindow,
                 WeaponFireController.Kind.Laser => dist <= 170f,
                 _ => false,
             };
@@ -774,7 +782,7 @@ public class BotBrain : MonoBehaviour
             float score = (inRange ? 10f : 0f) + s.damage * Mathf.Max(1, slot.Count) / 100f;
             if (energy != null && !energy.CanSpend(s.cost))
                 score -= 6f;
-            if (s.kind == WeaponFireController.Kind.Tesla && dist < 10f)
+            if (s.kind == WeaponFireController.Kind.Tesla && bladeGap <= teslaWindow)
                 score += 5f;
             if (score > bestScore)
             {
@@ -1391,7 +1399,12 @@ public class BotBrain : MonoBehaviour
         if (can)
         {
             float dist = Vector3.Distance(transform.position, target.Position);
-            can = dist <= weaponRange;
+            // Lames : une lame a moins d'1 m de sa portee de frappe (TeslaGap), quelle que
+            // soit la taille des robots (avant : centres a moins de 6 m, jamais atteint par
+            // un long robot : ses lames au contact ne frappaient pas)
+            can = weaponKind == WeaponFireController.Kind.Tesla
+                ? WeaponFireController.TeslaGap(loadout.Selected, target.Health) <= 1f
+                : dist <= weaponRange;
         }
         // Ligne de tir : au moins une tourelle alignee dont la bouche voit le point vise
         if (can && weaponKind != WeaponFireController.Kind.Tesla)
