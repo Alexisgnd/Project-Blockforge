@@ -128,12 +128,15 @@ public static class RobotThumbnailRenderer
         // Image nette : la camera "saute" d'un robot a l'autre entre deux rendus,
         // HDRP y verrait un mouvement enorme (flou de mouvement) ; le bloom et la
         // profondeur de champ du hangar baveraient aussi sur une petite vignette.
+        // Pas de brouillard non plus : en match (killfeed), la vignette est rendue loin
+        // au-dessus de la carte, et le brouillard de Mars la noierait.
         hd.customRenderingSettings = true;
         foreach (var field in new[]
                  {
                      FrameSettingsField.MotionBlur, FrameSettingsField.MotionVectors, FrameSettingsField.ObjectMotionVectors,
                      FrameSettingsField.DepthOfField, FrameSettingsField.Bloom, FrameSettingsField.ChromaticAberration,
                      FrameSettingsField.FilmGrain, FrameSettingsField.LensDistortion, FrameSettingsField.Vignette,
+                     FrameSettingsField.AtmosphericScattering,
                  })
         {
             hd.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)field] = true;
@@ -148,7 +151,10 @@ public static class RobotThumbnailRenderer
         if (robot == null)
             return;
         robot.SetActive(false);
-        Object.Destroy(robot);
+        if (Application.isPlaying)
+            Object.Destroy(robot);
+        else
+            Object.DestroyImmediate(robot);   // rendus d'editeur (Blockforge > Debug > Bots > Render presets)
     }
 
     private static void SetLayer(Transform root, int layer)
