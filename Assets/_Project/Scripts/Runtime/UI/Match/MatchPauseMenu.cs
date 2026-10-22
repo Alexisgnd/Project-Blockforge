@@ -140,11 +140,7 @@ public class MatchPauseMenu : MonoBehaviour
 
     private void Build()
     {
-        if (EventSystem.current == null)
-        {
-            var es = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
-            es.transform.SetParent(transform, false);
-        }
+        UIKit.EnsureEventSystem();
         var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 900;

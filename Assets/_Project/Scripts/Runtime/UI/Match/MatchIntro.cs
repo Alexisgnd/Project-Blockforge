@@ -44,10 +44,12 @@ public class MatchIntroData
 {
     public string modeTitle = "Team Deathmatch";
     public string mapName = "Hex valley";
-    public string summary = "first to 25 · 10:00";
+    public string summary = "first to 15 · 10:00";
     public string allyTeamName = "Blue team";
     public string enemyTeamName = "Red team";
     public string tip = "A robot loses the blocks it is hit on. Put your weapons where the armour is.";
+    // Mode joue (regles du match : TdmMatch les relit dans la scene de la carte)
+    public GameModeDefinition mode;
     public readonly List<MatchParticipant> allies = new();
     public readonly List<MatchParticipant> enemies = new();
 
@@ -57,11 +59,8 @@ public class MatchIntroData
         "Vexa", "Orbit", "Kelvin", "Marrow", "Pyre", "Quill", "Sable",
     };
 
-    private static readonly string[] BotRobots =
-    {
-        "Hover tank", "Plasma walker", "Rail sniper", "Medic buggy", "Siege platform", "Flak car",
-        "Drone carrier", "Laser hover", "Tesla mech", "Rotor gunship", "Track crawler", "Nano skiff",
-    };
+    // Les robots des bots : ceux que TdmMatch assemble vraiment (BotRobotCatalog)
+    private static string[] BotRobots => BotRobotCatalog.Names;
 
     private static readonly string[] Tips =
     {
@@ -74,7 +73,7 @@ public class MatchIntroData
     // Match contre des bots : le joueur et teamSize - 1 bots en bleu, teamSize bots en rouge
     public static MatchIntroData Bots(GameModeDefinition mode, string playerName, RobotRecord robot)
     {
-        var data = new MatchIntroData();
+        var data = new MatchIntroData { mode = mode };
         if (mode != null)
         {
             data.modeTitle = mode.title;
@@ -119,6 +118,21 @@ public class MatchIntro : MonoBehaviour
 {
     public static bool IsRunning => instance != null;
     private static MatchIntro instance;
+
+    // Derniere composition affichee : la scene de la carte la relit (TdmMatch)
+    // pour poser les memes participants que l'ecran Versus.
+    public static MatchIntroData LastData { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetLastData() => LastData = null;
+
+    // Lue une fois par la scene du match (TdmMatch), puis oubliee
+    public static MatchIntroData TakeLastData()
+    {
+        var data = LastData;
+        LastData = null;
+        return data;
+    }
 
     // ---------- Geometrie (px de reference 1920 x 1080) ----------
     private const float W = 1920f, H = 1080f;
@@ -173,6 +187,7 @@ public class MatchIntro : MonoBehaviour
     {
         if (instance != null)
             return;
+        LastData = data;
         var go = new GameObject("[MatchIntro]");
         DontDestroyOnLoad(go);
         instance = go.AddComponent<MatchIntro>();

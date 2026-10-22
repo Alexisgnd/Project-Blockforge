@@ -410,13 +410,14 @@ public sealed class UIKit
         return canvas;
     }
 
-    // EventSystem (Input System) si la scene n'en a pas
+    // EventSystem (Input System) si la scene n'en a pas. Il appartient a la scene : il
+    // n'est plus garde au chargement suivant (fin de match -> hub), ou la scene a deja le
+    // sien (deux EventSystem : avertissement a chaque image et clics perdus).
     public static void EnsureEventSystem()
     {
-        if (EventSystem.current != null || Object.FindAnyObjectByType<EventSystem>() != null)
+        if (EventSystem.current != null || Object.FindAnyObjectByType<EventSystem>(FindObjectsInactive.Include) != null)
             return;
-        var go = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
-        Object.DontDestroyOnLoad(go);
+        new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
     }
 }
 

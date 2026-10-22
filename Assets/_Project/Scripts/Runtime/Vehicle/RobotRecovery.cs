@@ -15,6 +15,8 @@ using UnityEngine;
 // second anneau a l'atterrissage. Temps de recharge entre deux
 // redressements (cooldown) ; le HUD peut lire Running /
 // CooldownFraction.
+// BeginAt(point) : meme manoeuvre, mais le robot est repose plus
+// loin (sortie de blocage des bots).
 // =========================================================
 
 [RequireComponent(typeof(Rigidbody))]
@@ -59,7 +61,12 @@ public class RobotRecovery : MonoBehaviour
 
     // Lance le redressement si possible (false : deja en cours, en recharge, ou en
     // l'air : il faut etre au sol, meme retourne)
-    public bool Begin()
+    public bool Begin() => BeginAt(null);
+
+    // Variante des bots : souleve le robot et le repose plus loin (point du NavMesh),
+    // quand le redressement sur place ne suffit pas (chassis pose sur une crete,
+    // chenilles dans le vide : le retomber au meme endroit le rebloque)
+    public bool BeginAt(Vector3? moveTo)
     {
         if (Running || Time.time < ReadyAt)
             return false;
@@ -74,7 +81,7 @@ public class RobotRecovery : MonoBehaviour
             Toast.Warning("Self-righting only works on the ground.");
             return false;
         }
-        StartCoroutine(Run());
+        StartCoroutine(Run(moveTo));
         return true;
     }
 
@@ -96,7 +103,7 @@ public class RobotRecovery : MonoBehaviour
         return false;
     }
 
-    private IEnumerator Run()
+    private IEnumerator Run(Vector3? moveTo)
     {
         Running = true;
         if (loco != null)
@@ -108,8 +115,11 @@ public class RobotRecovery : MonoBehaviour
             loco.enabled = false;
         }
         var mode = body.collisionDetectionMode;
-        body.linearVelocity = Vector3.zero;
-        body.angularVelocity = Vector3.zero;
+        if (!body.isKinematic)   // deja fige (sequence d'apparition) : pas de vitesse a poser
+        {
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+        }
         body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
         body.isKinematic = true;
 
@@ -124,15 +134,29 @@ public class RobotRecovery : MonoBehaviour
         if (Physics.Raycast(startPos + Vector3.up * 2f, Vector3.down, out var hit, 30f, ~(1 << RobotTestSpawner.RobotLayer), QueryTriggerInteraction.Ignore))
             ground = hit.point.y;
         Vector3 endPos = new Vector3(startPos.x, Mathf.Max(startPos.y, ground) + liftHeight + robotHeight * 0.5f, startPos.z);
+        float time = duration;
+        float landGround = ground;
+        if (moveTo.HasValue)
+        {
+            // Deplacement : on monte d'abord au-dessus du relief, puis on glisse jusqu'au point
+            Vector3 to = moveTo.Value;
+            landGround = to.y;
+            if (Physics.Raycast(new Vector3(to.x, to.y + 6f, to.z), Vector3.down, out var th, 30f, ~(1 << RobotTestSpawner.RobotLayer), QueryTriggerInteraction.Ignore))
+                landGround = th.point.y;
+            endPos = new Vector3(to.x, landGround + liftHeight + robotHeight * 0.5f, to.z);
+            time = Mathf.Clamp(duration * (1f + Vector3.Distance(startPos, endPos) / 10f), duration, 2.6f);
+        }
+        float arc = moveTo.HasValue ? Mathf.Max(2f, robotHeight) : 0f;
 
         Pulse(new Vector3(startPos.x, ground + 0.1f, startPos.z), 46, 1f);
 
         float t = 0f;
         while (t < 1f)
         {
-            t = Mathf.Min(1f, t + Time.deltaTime / Mathf.Max(0.05f, duration));
+            t = Mathf.Min(1f, t + Time.deltaTime / Mathf.Max(0.05f, time));
             float k = Mathf.SmoothStep(0f, 1f, t);
-            transform.SetPositionAndRotation(Vector3.Lerp(startPos, endPos, k), Quaternion.Slerp(startRot, endRot, k));
+            Vector3 pos = Vector3.Lerp(startPos, endPos, k) + Vector3.up * (arc * Mathf.Sin(k * Mathf.PI));
+            transform.SetPositionAndRotation(pos, Quaternion.Slerp(startRot, endRot, k));
             Plume(transform.position, 3);
             yield return null;
         }
@@ -152,7 +176,7 @@ public class RobotRecovery : MonoBehaviour
             wait += Time.deltaTime;
             yield return null;
         }
-        Pulse(new Vector3(transform.position.x, ground + 0.1f, transform.position.z), 32, 0.7f);
+        Pulse(new Vector3(transform.position.x, landGround + 0.1f, transform.position.z), 32, 0.7f);
         Running = false;
     }
 

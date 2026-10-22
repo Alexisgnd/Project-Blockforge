@@ -16,7 +16,8 @@ using UnityEngine.SceneManagement;
 //    Echap ne fait rien ici : il n'y a pas de retour a l'arene.
 // La source des resultats est MetaServices.MatchResults (mock
 // pilote par le menu Debug tant que le serveur de match n'existe
-// pas) ; FireLocal() permet au gameplay de fournir un resultat.
+// pas) ; FireLocal() permet au gameplay de fournir un resultat
+// (TdmMatch), Show() l'ouvre directement avec une autre source.
 // =========================================================
 
 public sealed class MatchEndFlow : MonoBehaviour
@@ -74,6 +75,13 @@ public sealed class MatchEndFlow : MonoBehaviour
             mock.Fire(result);
     }
 
+    // Fin de match fournie directement (source de resultats autre que le mock)
+    public static void Show(MatchResult result)
+    {
+        if (instance != null)
+            instance.OnMatchEnded(result);
+    }
+
     private void OnMatchEnded(MatchResult result)
     {
         if (running)
@@ -113,7 +121,17 @@ public sealed class MatchEndFlow : MonoBehaviour
         yield return results.FadeOut(BlockforgeTheme.MotionScreen);
         Time.timeScale = 1f;
         RobotSession.ReturnSceneName = hubSceneName;
+        EnsureMenuSession();
         SceneLoader.Load(hubSceneName);
+    }
+
+    // Match lance directement (editeur, scene de test) : aucune session, et le garde
+    // du menu renverrait vers Boot. On ouvre une session hors ligne (identite en
+    // cache, sinon invite) pour que le retour se fasse bien sur le menu.
+    private static void EnsureMenuSession()
+    {
+        if (!SessionService.HasIdentity)
+            SessionService.ContinueOffline();
     }
 
     // Menu Debug : ouvre directement les resultats (sans overlay)
@@ -140,6 +158,7 @@ public sealed class MatchEndFlow : MonoBehaviour
         yield return results.FadeOut(BlockforgeTheme.MotionScreen);
         Time.timeScale = 1f;
         RobotSession.ReturnSceneName = hubSceneName;
+        EnsureMenuSession();
         SceneLoader.Load(hubSceneName);
     }
 }

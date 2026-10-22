@@ -13,17 +13,22 @@ MonoBehaviour:
   m_Name: Mode_TeamDeathmatch
   m_EditorClassIdentifier: Blockforge.Runtime::GameModeDefinition
   title: Team Deathmatch
-  summary: "5 vs 5 \xB7 first to 25 \xB7 about 10 min"
+  summary: "5 vs 5 \xB7 first to 15 \xB7 about 10 min"
   description: Two teams of five. Destroy enemy robots to score; the first team to
-    25 wins, or the one leading when the clock runs out. Bots fill any seat left
+    15 wins, or the one leading when the clock runs out. Bots fill any seat left
     open.
   iconName: skull
   playersLabel: 5 vs 5
-  targetLabel: 25 kills
+  targetLabel: 15 kills
   timeLabel: 10:00
   teamSize: 5
   mapName: Hex valley
-  versusSummary: "first to 25 \xB7 10:00"
+  versusSummary: "first to 15 \xB7 10:00"
+  scoreToWin: 15
+  matchSeconds: 600
+  countdownSeconds: 15
+  respawnSeconds: 10
+  autoRespawnSeconds: 5
   sceneName: Map_MARS
   icon: {fileID: 0}
   mapImage: {fileID: 0}

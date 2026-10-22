@@ -121,8 +121,11 @@ public class RobotSpawnSequence : MonoBehaviour
         Vector3 hoverPos = transform.position + Vector3.up * hoverHeight;
         if (body != null)
         {
-            body.linearVelocity = Vector3.zero;
-            body.angularVelocity = Vector3.zero;
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+            }
             // (un corps cinematique n'accepte que la detection speculative)
             bodyMode = body.collisionDetectionMode;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;

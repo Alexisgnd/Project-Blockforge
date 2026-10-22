@@ -15,7 +15,8 @@ using R = BlockforgeTheme.Results;
 // couleurs du gagnant. De haut en bas : l'en-tete (Match results,
 // trophee + VICTORY + le score — seule occurrence —, mode / carte /
 // temps / vs bots), le podium (2e · 1er · 3e, bas alignes, le 1er
-// plus large avec MVP et lisere accent qui suit les chanfreins),
+// plus large avec MVP ; liseres or / argent / bronze qui suivent les
+// chanfreins, lueur et reflets dans le fill : PodiumMedalFX),
 // le Scoreboard partage (1 400 px, trie par score, sans score dans
 // sa plaque ni ses en-tetes), puis la plaque Rewards (credits, tech
 // points, barre d'XP) avec « Back to the garage in 20 » et Continue.
@@ -160,8 +161,11 @@ public sealed class ResultsScreen : MonoBehaviour
         var teamColor = enemy ? P.TeamEnemy : P.TeamAlly;
         var plateColor = enemy ? P.PlateEnemy : P.PlateAlly;
 
+        // Lisere or / argent / bronze sur les trois cartes (PodiumMedalFX : degrade, lueur et reflets du fill)
+        var medal = PodiumMedalFX.ForRank(rank);
         var plate = ChamferedPlate.Build(kit, parent, "Rank" + rank, PlateCorners.Top, R.PodiumChamfer, null, plateColor, true,
-                                         isFirst, isFirst ? P.Accent : (Color?)null, R.PodiumFrame);
+                                         true, medal, R.PodiumFrame);
+        PodiumMedalFX.Attach(kit, plate, rank);
         float width = isFirst ? R.PodiumFirstWidth : R.PodiumWidth;
         UIKit.Fixed(plate.Rect, width, -1f);
         var group = kit.Group(plate.Rect);
@@ -175,7 +179,7 @@ public sealed class ResultsScreen : MonoBehaviour
         var column = kit.Column(plate.Rect, "Layout", R.PodiumItemGap, TextAnchor.UpperCenter,
                                 UIKit.Pad(R.PodiumPad, R.PodiumPad, isFirst ? R.PodiumFirstPadTop : R.PodiumPad, R.PodiumPadBottom), true, true, false);
 
-        var rankText = kit.Condensed(plate.Content, "Rank", R.RankSize, 700, 0f, isFirst ? P.Accent : P.InkMuted, rank.ToString());
+        var rankText = kit.Condensed(plate.Content, "Rank", R.RankSize, 700, 0f, medal, rank.ToString());
         UIKit.Place(rankText.rectTransform, UIKit.TopLeft, new Vector2(R.RankX, -R.RankY), new Vector2(R.RankSize, R.RankSize));
         UIKit.HudShadow(rankText);
         if (isFirst)
@@ -186,9 +190,9 @@ public sealed class ResultsScreen : MonoBehaviour
         }
 
         float avatarSize = isFirst ? R.AvatarFirst : R.Avatar;
-        kit.Avatar(column, "Avatar", avatarSize, isFirst ? P.Accent : teamColor, isFirst ? R.AvatarIconFirst : R.AvatarIcon);
+        kit.Avatar(column, "Avatar", avatarSize, isFirst ? medal : teamColor, isFirst ? R.AvatarIconFirst : R.AvatarIcon);
 
-        var name = kit.Text(column, "Name", BlockforgeTheme.Type.TitleLg.With(isFirst ? R.NameFirstSize : R.NameSize, 600), isFirst ? P.Accent : P.InkPrimary, p.DisplayName, TextAlignmentOptions.Center);
+        var name = kit.Text(column, "Name", BlockforgeTheme.Type.TitleLg.With(isFirst ? R.NameFirstSize : R.NameSize, 600), isFirst ? medal : P.InkPrimary, p.DisplayName, TextAlignmentOptions.Center);
         UIKit.Fixed(name, -1f, Mathf.Ceil((isFirst ? R.NameFirstSize : R.NameSize) * 1.35f));
         UIKit.HudShadow(name);
 

@@ -15,15 +15,15 @@ public class GameModeDefinition : ScriptableObject
 {
     [Header("Identite")]
     public string title = "Team Deathmatch";
-    [Tooltip("Ligne sous le titre dans la liste : « 5 vs 5 · first to 25 · about 10 min »")]
-    public string summary = "5 vs 5 · first to 25 · about 10 min";
+    [Tooltip("Ligne sous le titre dans la liste : « 5 vs 5 · first to 15 · about 10 min »")]
+    public string summary = "5 vs 5 · first to 15 · about 10 min";
     [TextArea(3, 6)] public string description = "Two teams of five. Destroy enemy robots to score.";
     [Tooltip("Pictogramme du DS (Resources/DesignSystem/Icons) : skull, objective, group…")]
     public string iconName = "skull";
 
     [Header("Chiffres de la fiche (readout)")]
     public string playersLabel = "5 vs 5";
-    public string targetLabel = "25 kills";
+    public string targetLabel = "15 kills";
     public string timeLabel = "10:00";
 
     [Header("Match")]
@@ -31,8 +31,23 @@ public class GameModeDefinition : ScriptableObject
     [Range(1, 8)] public int teamSize = 5;
     [Tooltip("Nom de la carte affiche dans la fiche et sur l'ecran Versus")]
     public string mapName = "Hex valley";
-    [Tooltip("Resume sous le titre de l'ecran Versus : « first to 25 · 10:00 »")]
-    public string versusSummary = "first to 25 · 10:00";
+    [Tooltip("Resume sous le titre de l'ecran Versus : « first to 15 · 10:00 »")]
+    public string versusSummary = "first to 15 · 10:00";
+
+    [Header("Regles (TdmMatch)")]
+    [Tooltip("Kills d'equipe pour gagner")]
+    [Min(1)] public int scoreToWin = 15;
+    [Tooltip("Duree du match (s) ; a la fin du temps, l'equipe en tete gagne, egalite = Draw")]
+    [Min(30)] public float matchSeconds = 600f;
+    [Tooltip("Compte a rebours avant le match (s) : robots poses, ni deplacement ni tir")]
+    [Min(0)] public float countdownSeconds = 15f;
+    [Tooltip("Delai avant de pouvoir reapparaitre (s)")]
+    [Min(1)] public float respawnSeconds = 10f;
+    [Tooltip("Reapparition automatique apres ce delai supplementaire (s)")]
+    [Min(0)] public float autoRespawnSeconds = 5f;
+    [Tooltip("Robots des bots : sol et air, sol seulement ou air seulement (BotRobotCatalog, 15 presets ; " +
+             "Blockforge > Debug > Bots force un pool pour les tests)")]
+    public BotRobotPool botPool = BotRobotPool.Mixed;
 
     [Header("Navigation")]
     [Tooltip("Scene chargee au lancement (doit etre dans la liste du build)")]

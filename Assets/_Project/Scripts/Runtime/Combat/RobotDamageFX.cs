@@ -263,7 +263,8 @@ public class RobotDamageFX : MonoBehaviour
         while (t < 0.45f && shard != null)
         {
             t += Time.deltaTime;
-            shard.transform.localScale = start * (1f - t / 0.45f);
+            // Jamais negatif : a la derniere image t depasse 0,45 et l'echelle passait sous zero
+            shard.transform.localScale = start * Mathf.Max(0.02f, 1f - t / 0.45f);
             yield return null;
         }
         if (shard != null)
@@ -324,7 +325,8 @@ public class RobotDamageFX : MonoBehaviour
         go.layer = 2;   // Ignore Raycast
         go.transform.SetParent(fxRoot, false);
         go.transform.SetPositionAndRotation(at, rotation);
-        go.transform.localScale = size;
+        // Un bloc en miroir a une echelle negative : un BoxCollider la refuse (avertissement)
+        go.transform.localScale = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
         var r = go.GetComponent<MeshRenderer>();
         r.sharedMaterial = pieceMaterial;
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
