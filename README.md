@@ -2,15 +2,16 @@
 
 Jeu de construction et de combat de robots par blocs, dans l'esprit de Robocraft.
 On assemble son robot dans un garage à partir d'un catalogue de pièces (châssis,
-roues, propulseurs, armes, boucliers…), puis on ira l'affronter sur des cartes
-comme Mars.
+roues, propulseurs, armes…), puis on l'emmène au combat sur Mars, en Team
+Deathmatch 5 v 5 contre des bots.
 
 Moteur : **Unity 6 (6000.5.6f1) + HDRP**. Backend : **PocketBase** (comptes et
 sauvegarde des robots), compte **Steam** optionnel via Steamworks.NET (App ID
 1926750). Sources 3D : **Blender**.
 
-> Projet en cours de prototypage. Le garage est jouable, le combat n'existe pas
-> encore. Voir [État du projet](#état-du-projet).
+> Projet en préparation de l'Early Access (gratuit sur Steam, décembre 2026) :
+> garage et combat contre les bots jouables, multijoueur en ligne pas encore
+> commencé. Voir [État du projet](#état-du-projet).
 
 ---
 
@@ -38,14 +39,23 @@ sauvegarde des robots), compte **Steam** optionnel via Steamworks.NET (App ID
 | Écran de démarrage : connexion Steam automatique (ticket vérifié par PocketBase) ou compte email / mot de passe, mode hors ligne (robots en cache local, synchro à la reconnexion) | fonctionnel (à valider avec la clé Web API) |
 | Menu principal (hangar, 3 slots de robots, choix du mode de jeu) | fonctionnel |
 | Garage : grille de pose (14×14 sur l'ancien vaisseau, 31×31×31 dans Garage_V2), pince, inventaire par catégorie et famille, recherche | fonctionnel |
+| Garage : part picker (Tab, UI Toolkit) sur le vrai catalogue | fonctionnel |
+| Garage : au plus 3 types d'armes et de modules par robot (le 4e demande lequel remplacer) | fonctionnel |
 | Garage : mode miroir (M, jumeau par le plan de la ligne centrale) | fonctionnel |
 | Garage : spray de peinture (deux palettes de 12 teintes) | fonctionnel, en cours d'affinage |
 | Garage V2 : vaisseau Mothership (GLB), baie 31 × 31 × 31 m, joueur sur `PlayerSpawn` | généré par script, à valider en jeu |
 | Sauvegarde des robots sur PocketBase | fonctionnel |
 | Scène de test (P depuis le garage) : canyon Red Canyon, robot assemblé depuis le blueprint, conduite ZQSD, caméra de poursuite | prototype |
 | Catalogue de blocs avec vrais modèles 3D | 82 blocs, tous modélisés (voir le catalogue) |
-| Carte Mars | scène et planète en place, gameplay à venir |
-| Combat, physique de roues, multijoueur | pas commencé |
+| Combat : dégâts par bloc, détachement des pièces, 4 armes qui tirent (laser, plasma, rail, Tesla) | fonctionnel |
+| Locomotion arcade sur Rigidbody (roues, chenilles, pattes, survol, rotors, propulseurs, ailerons) | fonctionnel |
+| Carte Mars : Team Deathmatch 5 v 5 contre des bots (score, respawn illimité, fin de match, résultats) | fonctionnel |
+| Bots : IA au sol et en vol, 15 robots prédéfinis | fonctionnel, en cours d'équilibrage |
+| Musique (menu, garage, matchmaking, carte de test) | fonctionnel |
+| Modules (disque de bouclier, radar, IEM) et arme healer (Nano Mender, Nano Constructor) | **verrouillés** dans cette version : pas encore d'effet en match |
+| Store, Workshop, Tech tree, portefeuille | écrans en place sur des données factices (`MockServices`) |
+| « Find a match » (matchmaking en ligne) | **désactivé** (cadenas) : pas de multijoueur pour l'Early Access |
+| Effets sonores, multijoueur en ligne, amis et party | pas commencé |
 
 ---
 
@@ -107,13 +117,14 @@ Project-Blockforge/
 │   │   │   ├── Materials/{Blocks,Garage,Map}/                       matériaux HDRP/Lit
 │   │   │   ├── Textures/{Blocks,Icons,Map}/                         textures et icônes 512 px
 │   │   │   └── Animations/, Garage/, Hangar/, Shaders/, VFX/
-│   │   ├── Audio/{Music,SFX,Mixers}/   (vide pour l'instant, voir Contribuer)
+│   │   ├── Audio/{Music,SFX,Mixers}/   musiques en place ; SFX et mixers vides (voir Contribuer)
 │   │   ├── Data/Blocks/                un asset BlockDefinition par bloc
 │   │   ├── Data/GameModes/             modes de jeu
-│   │   ├── Resources/                  matériau placeholder des blocs sans modèle
-│   │   ├── Scenes/                     Boot, MainMenu, Garage, Garage_V2, Map_MARS, Map_Test
+│   │   ├── Resources/                  matériau placeholder, MusicLibrary, Meta/MockMetaData (données factices du hub)
+│   │   ├── Scenes/                     Boot, MainMenu, Garage, Map_MARS (+ _Spectate), Map_Test, Matchmaking_Space, PartPickerPreview (Garage_V2 : généré par script)
 │   │   ├── Scripts/Runtime/            code du jeu   (asmdef Blockforge.Runtime)
 │   │   ├── Scripts/Editor/             outils éditeur (asmdef Blockforge.Editor)
+│   │   ├── Tests/PlayMode/             tests Play mode (asmdef Blockforge.Tests.PlayMode)
 │   │   └── UI/                         UXML/USS de l'écran d'auth, polices, sprites
 │   ├── Settings/                       HDRP, Input System (du template Unity)
 │   ├── TextMesh Pro/                   essentiels TMP (SDFFunctions.hlsl patché pour le ray tracing)
@@ -122,6 +133,7 @@ Project-Blockforge/
 ├── Tools/Blender/                      sources .blend de tous les modèles + scripts de pipeline
 ├── Tools/Maps/                         générateurs Python des cartes de test (arène, canyon) + aperçus
 ├── ARCHITECTURE.md                     découpage du code et principes
+├── DESIGN_SYSTEM.md                    direction UI, palette, composants
 └── README.md
 ```
 
@@ -187,7 +199,7 @@ chevauchent maintenant un voisin ; le garage le dit dans la console au chargemen
 | Armes | Lanceurs de plasma — Pulser → Goliathon | 6 | 1×2×2 → 3×3×4 | base |
 | Armes | Canons électriques (rail) — Piercer → Erazer | 4 | 2×2×4 → 2×3×6 | base |
 | Armes | Lames de Tesla — Slicer → Nova | 3 | 1×2×4 → 1×3×5 | base |
-| Défense | Distributeurs nano — Blinder → Constructor | 3 | 1×2×2 → 1×2×3 | base |
+| Défense | Distributeurs nano — Blinder (IEM, module), Mender et Constructor (arme healer) | 3 | 1×2×2 → 1×2×3 | base |
 | Défense | Électroplates (blindage électrodéposé) — T2 → T9 | 8 | 1×2×1 → 3×4×1 | arrière |
 | Spécial | Radar (panneaux repliables, animé) | 1 | 1×2×2 (replié) | base |
 | Spécial | Disque de bouclier | 1 | 2×2×2 | arrière |
@@ -195,6 +207,20 @@ chevauchent maintenant un voisin ; le garage le dit dans la console au chargemen
 Toutes les familles ont un modèle 3D. Les empreintes sont mesurées au repos : le
 radar déplié et les lames de Tesla en action déborderont de leur boîte, c'est
 accepté.
+
+**Armes et modules.** Un robot embarque au plus 3 types d'armes et de modules
+confondus (`RobotLoadout.MaxTypes`), toutes quantités confondues ; en match, les
+touches 1, 2 et 3 choisissent le type. Sont des **armes** : lasers, plasma, rail,
+Tesla et l'arme healer (Nano Mender, Nano Constructor). Sont des **modules** : le
+disque de bouclier, le radar et l'IEM (Nano Blinder). Les électroplates restent du
+blindage.
+
+**Verrouillage de l'Early Access.** Les modules et l'arme healer n'ont pas encore
+d'effet : `RobotLoadout.IsLocked` les laisse visibles dans l'inventaire et le
+part picker avec un cadenas, mais non sélectionnables ; il refuse leur pose et ne leur donne ni place dans la limite ni slot en match. Un
+robot sauvegardé qui en porte les garde, inertes, et le garage le signale au
+chargement. Pour les rouvrir : `LockModules`, `LockedFamilies` et
+`LockedBlockIds` dans `Scripts/Runtime/Data/RobotLoadout.cs`.
 
 Un bloc dont le champ `art` est vide dans `GarageInventorySetup` s'affiche en
 cube gris (placeholder) : il n'en reste plus aucun, toutes les familles sont
@@ -320,8 +346,10 @@ Règles communes :
   `Library/` + entrée de menu **Blockforge > Setup …** pour le relancer.
 - Style : C# idiomatique Unity, commentaires en français, un en-tête de bloc
   `// ====` qui explique le rôle du script (voir les scripts existants).
-- Pas de test automatisé pour l'instant ; vérifiez en Play mode dans `Boot.unity`
-  et décrivez dans la PR ce que vous avez testé.
+- Quelques tests Play mode (`Assets/_Project/Tests/PlayMode` : logique méta, fin de
+  match, Forge Loader, part picker, à lancer depuis le Test Runner) ; pour le reste,
+  vérifiez en Play mode dans `Boot.unity` et décrivez dans la PR ce que vous avez
+  testé.
 
 ### 3D (modélisation)
 
@@ -345,16 +373,17 @@ Si vous ne voulez pas toucher à Git/Unity, une issue avec un lien vers vos fich
 
 ### Musique et son
 
-Il n'y a **aucun audio** dans le jeu pour l'instant : tout est à créer. Ambiance
-visée : science-fiction mécanique, garage/hangar industriel, surface de Mars.
+Quatre musiques sont en place (menu principal, garage, matchmaking, carte de test,
+`Resources/MusicLibrary`) ; il n'y a **aucun effet sonore**. Ambiance visée :
+science-fiction mécanique, garage/hangar industriel, surface de Mars.
 
 Ce dont on a besoin, par ordre de priorité :
 
-1. Boucle musicale du menu principal et du garage.
+1. SFX du combat : tirs des 4 armes, impacts, destruction et détachement de blocs.
 2. SFX du garage : pose et retrait de bloc, rotation, sélection dans l'inventaire,
    spray de peinture, sauvegarde, erreur de placement.
 3. UI : survol / clic / confirmation / retour.
-4. Plus tard : moteurs, roues, propulseurs, armes, impacts, ambiance Mars.
+4. Moteurs, roues, propulseurs, ambiance Mars.
 
 Conventions :
 
@@ -373,12 +402,14 @@ Conventions :
 
 - **Game design** : stats des blocs (`Data/Blocks`), équilibrage des tiers, modes de
   jeu (`Data/GameModes`). Proposez via une issue avec vos tableaux.
-- **UI / UX** : le garage et le menu sont en uGUI + TextMesh Pro, l'écran d'auth en
-  UI Toolkit. Maquettes bienvenues avant implémentation.
+- **UI / UX** : le garage et le menu sont en uGUI + TextMesh Pro, l'écran d'auth et
+  le part picker en UI Toolkit ; tout suit le design system BlockForge
+  (`DESIGN_SYSTEM.md`). Maquettes bienvenues avant implémentation.
 - **Tests** : jouer, casser, rapporter. Une issue de bug = étapes pour reproduire,
   résultat attendu / obtenu, capture ou vidéo, version de Unity.
-- **Docs / traduction** : ce README, `ARCHITECTURE.md`, textes du jeu (français
-  pour l'instant).
+- **Docs / traduction** : ce README, `ARCHITECTURE.md`, textes du jeu (en anglais,
+  comme le demande le design system ; langues déclarées sur Steam : anglais et
+  français).
 
 ### Workflow Git et commits
 
