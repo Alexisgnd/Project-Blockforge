@@ -26,6 +26,10 @@ using UnityEngine;
 //   spawner fait reapparaitre le robot)
 // Expose l'etat au HUD (heatmap des blocs : ratio par bloc,
 // Damaged, LastDamageTime) et aux IA (IsDead).
+// Match (TdmMatch) : le tireur est passe a Damage (attacker) ;
+// DamagedBy donne les PV reellement retires a chaque impact
+// (kills, assists, degats du scoreboard) et le filtre statique
+// CanBeDamagedBy coupe le tir allie (null = tout passe).
 // =========================================================
 
 public class RobotHealth : MonoBehaviour
@@ -38,8 +42,10 @@ public class RobotHealth : MonoBehaviour
     public float regenPerSecond = 0.12f;
     [Tooltip("Degats minimaux par impact pour qu'un bloc soit atteint")]
     public float minDamage = 1f;
-    [Tooltip("PV d'un bloc = resistanceHp du catalogue x ce facteur (un cube de 1000 -> 100 : ~12 bolts de laser N1, 3 plasmas N1, 1 rail N1)")]
-    public float hpScale = 0.1f;
+    [Tooltip("PV d'un bloc = resistanceHp du catalogue x ce facteur (un cube de 1000 -> 80, puis x chassisHpScale)")]
+    public float hpScale = 0.08f;
+    [Tooltip("Facteur en plus pour les blocs de chassis (cubes, pentes, coins, tiges) : un cube de 1000 -> 56 PV")]
+    public float chassisHpScale = 0.7f;
     [Tooltip("Couleur d'un bloc a 0 PV : la carrosserie s'assombrit avec les degats")]
     public Color damagedTint = new(0.22f, 0.2f, 0.19f, 1f);
 
@@ -70,6 +76,19 @@ public class RobotHealth : MonoBehaviour
     public event System.Action HealthChanged;
     public event System.Action<Vector3, float> Hit;   // impact subi (position du tireur ou point d'impact, degats) : HUD
     public event System.Action Destroyed;
+    // Impact attribue : tireur (peut etre null) et PV reellement retires
+    public event System.Action<GameObject, float> DamagedBy;
+    // Bloc d'arme a l'origine de l'impact en cours (null : inconnu). Renseigne
+    // avant DamagedBy : l'arme du kill est celle qui a frappe, pas celle que le
+    // tireur a selectionnee ensuite (projectile encore en vol)
+    public BlockDefinition LastHitWeapon { get; private set; }
+
+    // Regle du match (tir allie) : faux = l'attaquant ne peut pas blesser ce robot.
+    // Null hors match (terrain d'essai) : tout passe.
+    public static System.Func<GameObject, RobotHealth, bool> CanBeDamagedBy;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => CanBeDamagedBy = null;
 
     private RobotLocomotion loco;
     private ParticleSystem debris;
@@ -82,7 +101,8 @@ public class RobotHealth : MonoBehaviour
         loco = GetComponent<RobotLocomotion>();
         foreach (var view in GetComponentsInChildren<PlacedBlockView>())
         {
-            float max = Mathf.Max(1f, (view.definition != null ? view.definition.resistanceHp : 1000f) * hpScale);
+            float scale = hpScale * (view.definition != null && view.definition.category == BlockCategory.Chassis ? chassisHpScale : 1f);
+            float max = Mathf.Max(1f, (view.definition != null ? view.definition.resistanceHp : 1000f) * scale);
             var b = new Block
             {
                 view = view,
@@ -148,10 +168,14 @@ public class RobotHealth : MonoBehaviour
 
     // Impact en 'point' ; radius > 0 : zone (degats decroissants jusqu'au bord)
     // from : position du tireur (direction affichee par le HUD), sinon le point d'impact
-    public void Damage(Vector3 point, float amount, float radius = 0f, Vector3? from = null)
+    // weapon : bloc d'arme qui a tire (arme du kill, killfeed)
+    public void Damage(Vector3 point, float amount, float radius = 0f, Vector3? from = null, GameObject attacker = null, BlockDefinition weapon = null)
     {
         if (IsDead || amount < minDamage)
             return;
+        if (attacker != null && CanBeDamagedBy != null && !CanBeDamagedBy(attacker, this))
+            return;
+        float hpBefore = Hp;
         bool any = false, broke = false;
         if (radius <= 0f)
         {
@@ -164,27 +188,63 @@ public class RobotHealth : MonoBehaviour
         }
         else
         {
+            // Zone : amount est le TOTAL encaisse, reparti entre les blocs de la zone au
+            // prorata de leur proximite du point d'impact (le plus proche prend le plus).
+            // Avant, chaque bloc prenait amount entier : un tir de plasma N1 (30) faisait
+            // 200 a 500 de degats sur un robot compact, dix fois le laser N1.
+            float total = 0f;
             foreach (var b in blocks)
             {
                 if (b.Destroyed)
                     continue;
                 float d = Vector3.Distance(transform.TransformPoint(b.localCenter), point);
-                if (d > radius)
-                    continue;
-                broke |= Apply(b, amount * Mathf.Lerp(1f, 0.25f, d / radius));
-                any = true;
+                if (d <= radius)
+                    total += Mathf.Lerp(1f, 0.25f, d / radius);
+            }
+            if (total > 0f)
+            {
+                foreach (var b in blocks)
+                {
+                    if (b.Destroyed)
+                        continue;
+                    float d = Vector3.Distance(transform.TransformPoint(b.localCenter), point);
+                    if (d > radius)
+                        continue;
+                    broke |= Apply(b, amount * Mathf.Lerp(1f, 0.25f, d / radius) / total);
+                    any = true;
+                }
             }
         }
         if (!any)
             return;
-        if (broke)
-            DropDetached();
+        int detached = broke ? DropDetached() : 0;
         LastDamageTime = Time.time;
         Hit?.Invoke(from ?? point, amount);
         Regenerating = false;
         Recompute();
+        float dealt = Mathf.Max(0f, hpBefore - Hp);
+        if (dealt > 0f)
+        {
+            LastHitWeapon = weapon;
+            DamagedBy?.Invoke(attacker, dealt);
+        }
         if (Hp <= MaxHp * destroyFraction)
             Die();
+        // Retour visuel du tireur (hitmarker, chiffres de degats : CombatFeedbackHUD).
+        // Apres Die : isKill dit si cet impact a detruit le robot.
+        if (dealt > 0f)
+        {
+            CombatEvents.RaiseHit(new RobotHitEvent
+            {
+                target = this,
+                attacker = attacker,
+                weapon = weapon,
+                point = point,
+                damage = dealt,
+                detachedBlocks = detached,
+                isKill = IsDead,
+            });
+        }
     }
 
     private Block Nearest(Vector3 point, float maxDistance)
@@ -220,10 +280,11 @@ public class RobotHealth : MonoBehaviour
     // Un robot coupe en deux n'a plus qu'un corps : seul le plus gros morceau
     // (somme des PV) reste ; les blocs des autres morceaux, plus attaches a
     // rien, sont detruits avec leurs debris.
+    // Retourne le nombre de blocs tombes (0 : le robot tient d'un seul morceau).
     private readonly List<Block> island = new();
     private readonly HashSet<Block> visited = new();
 
-    private void DropDetached()
+    private int DropDetached()
     {
         visited.Clear();
         List<Block> best = null;
@@ -258,7 +319,8 @@ public class RobotHealth : MonoBehaviour
             }
         }
         if (islands.Count <= 1)
-            return;
+            return 0;
+        int dropped = 0;
         foreach (var part in islands)
         {
             if (part == best)
@@ -269,8 +331,10 @@ public class RobotHealth : MonoBehaviour
                 SetDestroyed(b, true);
                 Tint(b);
                 BlockChanged?.Invoke(b);
+                dropped++;
             }
         }
+        return dropped;
     }
 
     // Un bloc detruit ne repousse que contre un bloc vivant
@@ -367,8 +431,11 @@ public class RobotHealth : MonoBehaviour
         var body = GetComponent<Rigidbody>();
         if (body != null)
         {
-            body.linearVelocity = Vector3.zero;
-            body.angularVelocity = Vector3.zero;
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+            }
             body.isKinematic = true;
         }
         Destroyed?.Invoke();
@@ -486,8 +553,11 @@ public class RobotHealth : MonoBehaviour
             transform.position += Vector3.up * lift;
         body.position = transform.position;
         body.rotation = transform.rotation;
-        body.linearVelocity = Vector3.zero;
-        body.angularVelocity = Vector3.zero;
+        if (!body.isKinematic)
+        {
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+        }
     }
 
     // ---------- Debris ----------

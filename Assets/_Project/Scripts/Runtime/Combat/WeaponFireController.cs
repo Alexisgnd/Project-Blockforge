@@ -21,14 +21,15 @@ using UnityEngine.InputSystem;
 //            exact de la zone, arcs electriques ramifies, brulure au
 //            sol, gerbe, braises, etincelles, fumee, secousse camera) ;
 //            degats de zone degressifs et souffle sur les corps rigides.
-//            Selon le niveau (N1..N6) : cadence 2,4 -> 6 tirs/s, boule
+//            Selon le niveau (N1..N6) : cadence 3,3 -> 8,2 tirs/s, boule
 //            plus grosse, zone de 2,2 -> 6 m, effets plus denses.
-//            Cout par tir ajuste pour garder la meme consommation
-//            d'energie par seconde
+//            Cout par tir ajuste pour garder une consommation
+//            d'energie par seconde fixe a chaque niveau
 // - Rail   : tir instantane lourd et lent, gros cout, long trait
 //            blanc, recul sur le robot
 // - Tesla  : corps a corps : tant qu'on tient le clic, arcs
-//            autour des lames et degats a tout ce qui les touche,
+//            autour des lames et degats a tout ce qui les touche
+//            (un coup par robot et par lame a chaque tick),
 //            consommation continue
 // Chaque tir part de la bouche de la tourelle (WeaponAimController)
 // vers le point vise si le canon y est presque aligne, sinon dans
@@ -37,6 +38,9 @@ using UnityEngine.InputSystem;
 // des PV sur le bloc atteint (zone pour le plasma). Le robot
 // tireur ignore ses propres colliders. manual = true : un robot
 // IA tient FireHeld au lieu du clic.
+// Match (TdmMatch) : chaque impact porte le tireur (attribution des
+// kills, tir allie coupe par RobotHealth.CanBeDamagedBy) ; rien ne
+// tire tant que MatchGate.Frozen (compte a rebours, fin de match).
 // Effets : traits = LineRenderer (shader Blockforge/Hologram,
 // mode aretes = couleur pleine additive), etincelles = particules
 // additives (Blockforge/DustParticle), tout en espace monde.
@@ -57,6 +61,7 @@ public class WeaponFireController : MonoBehaviour
         public float gravity;       // part de la gravite subie par le projectile
         public float splash;        // rayon de zone (m)
         public int tier;            // niveau de l'arme (N1..N6)
+        public BlockDefinition source;  // bloc d'arme qui a tire : suit le tir jusqu'a l'impact (arme du kill)
     }
 
     [Header("Portee")]
@@ -103,27 +108,35 @@ public class WeaponFireController : MonoBehaviour
         string key = ((def.family ?? "") + " " + def.name).ToLowerInvariant();
         var m = TierPattern.Match(def.name ?? "");
         int tier = m.Success ? int.Parse(m.Groups[1].Value) : 1;
+        // Reglage "parties nerveuses" : laser 9,5 tirs/s (cout x0,7), rail 1,15 tir/s
+        // (cout 24 + 2,5 x niveau), Tesla 5,5 coups/s a 6 d'energie par seconde et par lame
         if (key.Contains("laser"))
-            s = new Stats { kind = Kind.Laser, rate = 7f, cost = 3f + 0.6f * tier, damage = 8f * tier, speed = 150f, gravity = 0f };
+            s = new Stats { kind = Kind.Laser, rate = 9.5f, cost = 2.1f + 0.42f * tier, damage = 10f * tier, speed = 150f, gravity = 0f };
         else if (key.Contains("plasma"))
             s = PlasmaStats(tier);
         else if (key.Contains("rail"))
-            s = new Stats { kind = Kind.Rail, rate = 0.8f, cost = 28f + 3f * tier, damage = 90f * tier };
+            s = new Stats { kind = Kind.Rail, rate = 1.15f, cost = 24f + 2.5f * tier, damage = 180f * tier };   // tir de sniper : gros degats
         else if (key.Contains("tesla"))
-            s = new Stats { kind = Kind.Tesla, rate = 4f, cost = 7f, damage = 20f * tier, splash = 2.2f };
+            s = new Stats { kind = Kind.Tesla, rate = 5.5f, cost = 6f, damage = 26f * tier, splash = 2.2f };
+        s.source = def;
         return s;
     }
 
-    // Plasma par rarete (N1..N6) : cadence +20 % par niveau. L'energie depensee par
-    // seconde reste celle de l'ancien reglage (2 tirs/s) : le cout par tir baisse quand
-    // la cadence monte. Les degats par tir baissent un peu aux hauts niveaux pour que
-    // les degats par seconde montent sans exploser (N1 72/s -> N6 ~760/s).
+    // Plasma par rarete (N1..N6) : cadence 3,3 tirs/s au N1, +20 % par niveau (8,2 au N6).
+    // L'energie depensee par seconde est fixee par niveau ((13 + 2 x niveau) x 1,7, soit
+    // 25,5/s au N1 -> 42,5/s au N6) : le cout par tir baisse quand la cadence monte.
+    // Les degats d'un tir sont le total encaisse par le robot touche, reparti entre les
+    // blocs de la zone (RobotHealth.Damage) ; ils montent moins vite que le niveau, car la
+    // zone grandit avec lui et touche plus souvent plusieurs robots : N1 60 x 3,3/s ~200/s,
+    // N3 ~750/s, N6 252 x 8,2/s ~2070/s (laser : 95/s par niveau, sur un seul bloc ;
+    // rail ~207/s par niveau ; Tesla 143/s par niveau au contact).
+    // Vitesse et gravite de la boule inchangees : meme portee, meme anticipation des bots.
     public static Stats PlasmaStats(int tier)
     {
         tier = Mathf.Clamp(tier, 1, 6);
-        float rate = 2.4f * Mathf.Pow(1.2f, tier - 1);
-        float energyPerSecond = (13f + 2f * tier) * 2f;
-        float damage = 30f * tier * Mathf.Lerp(1f, 0.7f, (tier - 1) / 5f);
+        float rate = 3.3f * Mathf.Pow(1.2f, tier - 1);
+        float energyPerSecond = (13f + 2f * tier) * 1.7f;
+        float damage = 60f * tier * Mathf.Lerp(1f, 0.7f, (tier - 1) / 5f);
         return new Stats
         {
             kind = Kind.Plasma,
@@ -170,6 +183,9 @@ public class WeaponFireController : MonoBehaviour
             health = GetComponent<RobotHealth>();
         if (health != null && health.IsDead)
             return;
+        // Compte a rebours ou fin de match (TdmMatch) : aucune arme ne tire
+        if (MatchGate.Frozen)
+            return;
         bool firing;
         if (manual)
         {
@@ -209,7 +225,7 @@ public class WeaponFireController : MonoBehaviour
             return;
         if (!energy.TrySpend(stats.cost))
         {
-            nextShot = Time.time + 0.15f;   // pas de rafale de refus
+            nextShot = Time.time + 0.1f;   // pas de rafale de refus
             return;
         }
         nextShot = Time.time + 1f / Mathf.Max(0.1f, stats.rate);
@@ -311,15 +327,39 @@ public class WeaponFireController : MonoBehaviour
                 continue;
             var visual = BlockColliders.Visual(view.transform);
             Vector3 center = visual != null && TryBounds(visual, out var b) ? b.center : view.transform.position;
-            foreach (var col in Physics.OverlapSphere(center, stats.splash, ~0, QueryTriggerInteraction.Collide))
+            // Un seul coup par robot (et par cible d'essai) et par lame : le collider le
+            // plus proche de la lame. Avant, chaque collider du robot dans la sphere
+            // prenait un coup entier : les degats etaient multiplies par le nombre de
+            // blocs proches. Le decor (sol, murs) garde ses etincelles comme avant.
+            teslaBest.Clear();
+            int n = Physics.OverlapSphereNonAlloc(center, stats.splash, teslaOverlap, ~0, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < n; i++)
             {
-                if (col.attachedRigidbody == body)
+                var col = teslaOverlap[i];
+                if (col == null || col.attachedRigidbody == body)
                     continue;
                 Vector3 point = col.bounds.ClosestPoint(center);
-                ApplyHit(col, point, (center - point).normalized, stats, TeslaColor, 8);
+                Component owner = col.GetComponentInParent<RobotHealth>();
+                if (owner == null)
+                    owner = col.GetComponentInParent<ShootableTarget>();
+                if (owner == null)
+                {
+                    ApplyHit(col, point, (center - point).normalized, stats, TeslaColor, 8);
+                    continue;
+                }
+                float dist = (point - center).sqrMagnitude;
+                if (!teslaBest.TryGetValue(owner, out var best) || dist < best.dist)
+                    teslaBest[owner] = (col, point, dist);
             }
+            foreach (var hit in teslaBest.Values)
+                ApplyHit(hit.col, hit.point, (center - hit.point).normalized, stats, TeslaColor, 8);
         }
+        teslaBest.Clear();
     }
+
+    // Tampons de la Tesla (sans allocation a chaque coup)
+    private static readonly Collider[] teslaOverlap = new Collider[128];
+    private readonly Dictionary<Component, (Collider col, Vector3 point, float dist)> teslaBest = new();
 
     private void Recoil(Vector3 dir, Vector3 at, float strength)
     {
@@ -340,7 +380,7 @@ public class WeaponFireController : MonoBehaviour
                 directTarget.Hit(stats.damage);
             directRobot = collider.GetComponentInParent<RobotHealth>();
             if (directRobot != null && directRobot.gameObject != gameObject)
-                directRobot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position);
+                directRobot.Damage(point, stats.damage, stats.kind == Kind.Plasma ? stats.splash : 0f, transform.position, gameObject, stats.source);
         }
         if (stats.splash > 0f && stats.kind == Kind.Plasma)
             PlasmaBlast(collider, point, normal, stats, directTarget, directRobot);
@@ -348,7 +388,7 @@ public class WeaponFireController : MonoBehaviour
             Burst(sparks, point, normal, sparkCount, color, 0.06f, 0.14f, 3f, 8f, 0.2f);
     }
 
-    // Zone du plasma : degats degressifs (60 % au centre -> 15 % au bord) a ce qui n'a
+    // Zone du plasma : degats degressifs (45 % au centre -> 11 % au bord) a ce qui n'a
     // pas pris le coup direct, souffle sur les corps rigides, effets d'explosion
     private void PlasmaBlast(Collider hitCollider, Vector3 point, Vector3 normal, Stats stats, ShootableTarget directTarget, RobotHealth directRobot)
     {
@@ -367,7 +407,7 @@ public class WeaponFireController : MonoBehaviour
             if (target != null && hitTargets.Add(target))
             {
                 if (target != directTarget)
-                    target.Hit(stats.damage * 0.6f * falloff);
+                    target.Hit(stats.damage * 0.45f * falloff);
                 arcTargets.Add(closest);
             }
 
@@ -375,7 +415,7 @@ public class WeaponFireController : MonoBehaviour
             if (robot != null && robot.gameObject != gameObject && hitRobots.Add(robot))
             {
                 if (robot != directRobot)
-                    robot.Damage(point, stats.damage * 0.6f, radius, transform.position);
+                    robot.Damage(point, stats.damage * 0.45f * falloff, radius, transform.position, gameObject, stats.source);
                 arcTargets.Add(closest);
             }
 
@@ -383,10 +423,16 @@ public class WeaponFireController : MonoBehaviour
             var rb = col.attachedRigidbody;
             if (rb != null && rb != body && !rb.isKinematic && pushed.Add(rb))
             {
-                // Un robot encaisse une petite poussee (sinon il serait jongle a 6 tirs/s),
-                // un debris ou une caisse est projete
-                bool isRobot = rb.GetComponent<RobotHealth>() != null;
-                float kick = isRobot ? 0.45f + 0.04f * stats.damage / 30f : 3f;
+                // Un robot encaisse une petite poussee (sinon il serait jongle a 8 tirs/s),
+                // un debris ou une caisse est projete. Poussee par tir reduite avec la
+                // hausse de cadence et de degats : la poussee par seconde reste proche de
+                // l'ancien reglage (~1,2/s au N1, ~4,5/s au N6)
+                var pushedHealth = rb.GetComponent<RobotHealth>();
+                bool isRobot = pushedHealth != null;
+                // Pas de tir allie en match : un allie n'est pas souffle non plus
+                if (isRobot && RobotHealth.CanBeDamagedBy != null && !RobotHealth.CanBeDamagedBy(gameObject, pushedHealth))
+                    continue;
+                float kick = isRobot ? 0.32f + 0.04f * stats.damage / 45f : 3f;
                 rb.AddExplosionForce(rb.mass * kick, point, radius * 1.3f, 0.3f, ForceMode.Impulse);
             }
         }
@@ -441,10 +487,12 @@ public class WeaponFireController : MonoBehaviour
         dustShader = dust;
         if (dust != null)
         {
-            sparks = BuildParticles(dust, "Sparks", 400, stretch: true, new Color(0.8f, 0.95f, 1f));
+            // Plafonds releves avec la cadence (plasma N6 ~8 explosions/s, Tesla 5,5 coups/s) :
+            // au-dela, Emit ignore les particules en trop (braises et fumee coupees)
+            sparks = BuildParticles(dust, "Sparks", 520, stretch: true, new Color(0.8f, 0.95f, 1f));
             plasmaBurst = BuildParticles(dust, "PlasmaBurst", 300, stretch: false, PlasmaColor);
-            plasmaEmbers = BuildParticles(dust, "PlasmaEmbers", 400, stretch: true, new Color(1f, 0.75f, 1f));
-            plasmaSmoke = BuildParticles(dust, "PlasmaSmoke", 160, stretch: false, new Color(0.28f, 0.22f, 0.34f, 0.45f), additive: false);
+            plasmaEmbers = BuildParticles(dust, "PlasmaEmbers", 560, stretch: true, new Color(1f, 0.75f, 1f));
+            plasmaSmoke = BuildParticles(dust, "PlasmaSmoke", 260, stretch: false, new Color(0.28f, 0.22f, 0.34f, 0.45f), additive: false);
             teslaArcs = BuildParticles(dust, "TeslaArcs", 300, stretch: true, TeslaColor);
             muzzleFlash = BuildParticles(dust, "MuzzleFlash", 80, stretch: false, new Color(1f, 0.93f, 0.8f));
             muzzleSmoke = BuildParticles(dust, "MuzzleSmoke", 120, stretch: false, new Color(0.5f, 0.5f, 0.52f, 0.3f), additive: false);

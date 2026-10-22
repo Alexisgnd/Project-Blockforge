@@ -31,6 +31,11 @@ using UnityEngine.UI;
 // Regles du HUD : plaques translucides surface-hud sans bord ni
 // ombre, coin exterieur coupe (hud-chamfer), texte avec
 // shadow-hud, rien d'autre que le reticule au centre.
+// Match contre les bots (TdmMatch) : Bind(..., showMiniMap: false) laisse
+// le coin haut droit au roster ennemi ; SetReticleAlly colore le
+// reticule au-dessus d'un allie (team-ally + disque allie).
+// Hitmarker et chiffres de degats du joueur : CombatFeedbackHUD,
+// pose par Bind sur le meme objet.
 // La sante vient de RobotHealth (HealthChanged -> SetHealth) ; les impacts
 // (Hit) allument une vignette rouge en forme d'oeil sur les bords de l'ecran
 // et un arc autour du reticule qui pointe vers la source (et suit la camera).
@@ -98,7 +103,7 @@ public class RobotTestHUD : MonoBehaviour
     private readonly List<(Image tile, Image icon, bool tinted, HudLabel count, HudLabel key)> slotViews = new();
     private HudLabel slotName;
 
-    public void Bind(RobotLocomotion locomotion, string robotName, int maxHp, int weightKg)
+    public void Bind(RobotLocomotion locomotion, string robotName, int maxHp, int weightKg, bool showMiniMap = true)
     {
         loco = locomotion;
         health = locomotion != null ? locomotion.GetComponent<RobotHealth>() : null;
@@ -122,9 +127,29 @@ public class RobotTestHUD : MonoBehaviour
             health.Hit += OnHit;
         }
         SetHeatVisible(false, true);
-        var map = gameObject.AddComponent<MiniMap>();
-        map.Build(root, locomotion != null ? locomotion.transform : null);
+        // Match contre les bots : le coin haut droit est au roster ennemi (MatchHud du DS)
+        if (showMiniMap)
+        {
+            var map = gameObject.AddComponent<MiniMap>();
+            map.Build(root, locomotion != null ? locomotion.transform : null);
+        }
+        // Retours de combat du joueur (hitmarker, chiffres de degats) : son propre canvas
+        CombatFeedbackHUD.Attach(gameObject, locomotion != null ? locomotion.gameObject : null);
         SetHealth(health_hp);
+    }
+
+    // Reticule au-dessus d'un allie (TdmHud) : team-ally et disque allie au centre
+    private Image reticleRing, reticleAlly;
+    private bool reticleOnAlly;
+
+    public void SetReticleAlly(bool onAlly)
+    {
+        if (reticleRing == null || onAlly == reticleOnAlly)
+            return;
+        reticleOnAlly = onAlly;
+        reticleRing.color = onAlly ? BlockforgeTheme.Hud.TeamAlly : BlockforgeTheme.Hud.InkPrimary;
+        if (reticleAlly != null)
+            reticleAlly.enabled = onAlly;
     }
 
     public void SetHealth(int value)
@@ -165,6 +190,11 @@ public class RobotTestHUD : MonoBehaviour
         Place(shadow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -1f), new Vector2(64f, 64f));
         var ring = NewImage(root, "Reticle", HudShapes.Reticle(), BlockforgeTheme.Hud.InkPrimary);
         Place(ring.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(64f, 64f));
+        reticleRing = ring;
+        // Au-dessus d'un allie : le point central devient le disque allie (DS : jamais la couleur seule)
+        reticleAlly = NewImage(root, "ReticleAlly", HudShapes.Disc(), BlockforgeTheme.Hud.TeamAlly);
+        Place(reticleAlly.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(8f, 8f));
+        reticleAlly.enabled = false;
         BuildEnergy();
     }
 
