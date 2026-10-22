@@ -8,7 +8,9 @@
         "Unity.RenderPipelines.HighDefinition.Editor",
         "Unity.InputSystem",
         "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "glTFast",
+        "glTFast.Export"
     ],
     "includePlatforms": [
         "Editor"
