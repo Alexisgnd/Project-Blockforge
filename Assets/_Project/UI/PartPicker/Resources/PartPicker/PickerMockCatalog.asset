@@ -1,0 +1,1156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9553a9ef36628fe4b8d25d778c60b571, type: 3}
+  m_Name: PickerMockCatalog
+  m_EditorClassIdentifier: Blockforge.Runtime::PickerMockCatalog
+  owned:
+  - part:
+      id: mock_cube
+      name: Cube
+      category: 0
+      family: Cubes
+      description: The basic block. Solid, light and easy to build on.
+      thumbnail: {fileID: 21300000, guid: c6b5f42d02671434fae102fd2b0a1eee, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: b86785e68f42b86459d9c1a56378931d, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.8
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 6
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_01_Cube
+  - part:
+      id: mock_slope
+      name: Slope
+      category: 0
+      family: Slopes
+      description: An angled face that deflects incoming fire.
+      thumbnail: {fileID: 21300000, guid: 019b8ccb9616f234cb224946bb6b8aba, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 8369a0b5eaa35e54d9b108a2a1f64872, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.5
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 4
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_02_Pente
+  - part:
+      id: mock_round_slope
+      name: Round slope
+      category: 0
+      family: Slopes
+      description: A slope with a curved profile for smooth bodywork.
+      thumbnail: {fileID: 21300000, guid: 50310ee656b85764c8cec8adc12b9b06, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 6467cfbc38ad7dc4d85e2f4980d2c592, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.5
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 4
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_Chassis_PenteArrondie
+  - part:
+      id: mock_pyramid
+      name: Pyramid
+      category: 0
+      family: Slopes
+      description: A four-sided tip for spikes and deflectors.
+      thumbnail: {fileID: 21300000, guid: 371de02d1b4cd0545856185ef57fc3e9, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: f20904985381b164f801ce0abaabaa14, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.1
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 1
+        format: 0
+        unit: face
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_Chassis_Pyramide
+  - part:
+      id: mock_cone
+      name: Cone
+      category: 0
+      family: Slopes
+      description: A conical tip for noses and bumpers.
+      thumbnail: {fileID: 21300000, guid: 2229f441c3ac3d443a207a334e2f6ebe, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: bd9cc9b89bcdd8e4db4f370f64901f84, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 1
+        format: 0
+        unit: face
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_Chassis_Cone
+  - part:
+      id: mock_corner
+      name: Corner
+      category: 0
+      family: Corners
+      description: A finishing angle for bodywork.
+      thumbnail: {fileID: 21300000, guid: 4049d76c62b4a1f4295503e93eba7f9a, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 1597f24d733f1f148ad0bc72edace6e2, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.2
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 3
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_03_Coin
+  - part:
+      id: mock_inner_corner
+      name: Inner corner
+      category: 0
+      family: Corners
+      description: A recessed angle that joins two slopes.
+      thumbnail: {fileID: 21300000, guid: c4a8bb476cda77441bc06adcb0631d14, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 91197441ba700cf4ba84f94ee787fdee, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.7
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 5
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_04_Interieur
+  - part:
+      id: mock_short_rod
+      name: Short rod
+      category: 0
+      family: Rods
+      description: A short bar that links two close points.
+      thumbnail: {fileID: 21300000, guid: ec679d5b076eb60498037706029ca79d, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 32eff4d118dc23144ac86fd0fa2bd37f, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 1
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 0.6
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 2
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 0
+    sourceBlockId: Block_Rod_Court
+  - part:
+      id: mock_long_rod
+      name: Long rod
+      category: 0
+      family: Rods
+      description: A long bar for arms and outrigger booms.
+      thumbnail: {fileID: 21300000, guid: c390dcb0e287ff54daafbd29bd3907d0, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 4518e67df3e8a3e49989e2f7095efa2d, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 2
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 1.1
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 2
+        format: 0
+        unit: faces
+        ratio: -1
+      cpuCost: 2
+      cpuPool: 0
+    sourceBlockId: Block_Rod_Long
+  - part:
+      id: mock_armour_plate
+      name: Armour plate
+      category: 0
+      family: Armour
+      description: A bevelled plate that soaks up angled fire.
+      thumbnail: {fileID: 21300000, guid: fc730cdcb61f6544d9ba3276d8690c28, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: c670794505f72874d9224834f6d1f2b3, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 4
+        format: 0
+        unit: per cube
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 6
+        format: 0.0
+        unit: kg
+        ratio: -1
+      - id: connections
+        label: Connections
+        value: 1
+        format: 0
+        unit: face
+        ratio: -1
+      cpuCost: 4
+      cpuPool: 0
+    sourceBlockId: Block_Electroplate_T5
+  - part:
+      id: mock_scout_wheel
+      name: Scout wheel
+      category: 1
+      family: Wheels
+      description: A light wheel. Top speed, minimal grip.
+      thumbnail: {fileID: 21300000, guid: 503d67a3d92764d48a752b468803bfad, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: c9f38d3845c9d434d8c11858ee6895ee, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 4
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 9
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 4
+      cpuPool: 0
+    sourceBlockId: Block_Wheel_N1_Scout
+  - part:
+      id: mock_discover_wheel
+      name: Discover wheel
+      category: 1
+      family: Wheels
+      description: A versatile wheel. A good balance of speed and grip.
+      thumbnail: {fileID: 21300000, guid: 647218ea50b46b143bebf280f4b6fbf5, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 7edf301bc1ff4f34f976e11d53e98679, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 6
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 12
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 6
+      cpuPool: 0
+    sourceBlockId: Block_Wheel_N2_Discover
+  - part:
+      id: mock_monster_wheel
+      name: Monster wheel
+      category: 1
+      family: Wheels
+      description: A giant wheel. Crushes obstacles but weighs the chassis down.
+      thumbnail: {fileID: 21300000, guid: 7a9b422aaa893204a935f1b35af5778c, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: b04cdcb5ffcb9f34a96e7f6e39f74dd4, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 18
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 42
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 18
+      cpuPool: 0
+    sourceBlockId: Block_Wheel_N6_Monster
+  - part:
+      id: mock_walker_leg
+      name: Walker leg
+      category: 1
+      family: Legs
+      description: A light jointed leg. Climbs smoothly and quietly.
+      thumbnail: {fileID: 21300000, guid: 3a4425cddda7d3545b5816566f8b9bd4, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 4715e2be6eff0804293050cd7f435bdd, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 10
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 19
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 10
+      cpuPool: 0
+    sourceBlockId: Block_InsectLeg_N1_Walker
+  - part:
+      id: mock_bison_track
+      name: Bison track
+      category: 1
+      family: Tracks
+      description: A compact three-wheel track. Reliable traction on any terrain.
+      thumbnail: {fileID: 21300000, guid: eadbf41e9d433e84d9d1f72ea4ccc338, type: 3}
+      previewPrefab: {fileID: 1013886819993563765, guid: 3852c578d0f95004cbbf0028106f6198, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 10
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 40
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 10
+      cpuPool: 0
+    sourceBlockId: Block_TankTrack_N1_Bison
+  - part:
+      id: mock_squall_hover
+      name: Squall hover blade
+      category: 1
+      family: Hover
+      description: Low-altitude lift. Fast, twitchy gliding.
+      thumbnail: {fileID: 21300000, guid: 3b7f5b86c3f8eaa41b15af8d6ee6e0a1, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: bebb7f871f82f3c4896a4cb62ee1e04f, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 8
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 13
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 8
+      cpuPool: 0
+    sourceBlockId: Block_HoverBlade_N1_Squall
+  - part:
+      id: mock_lynx_thruster
+      name: Lynx thruster
+      category: 1
+      family: Thrusters
+      description: A booster thruster. Short thrust, low consumption.
+      thumbnail: {fileID: 21300000, guid: b3add77438074284e9f612465fc3189d, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: f1635533d8eaae74d8c5a9d87c063b01, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 9
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 15
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 9
+      cpuPool: 0
+    sourceBlockId: Block_Thruster_N1_Lynx
+  - part:
+      id: mock_recon_rotor
+      name: Recon rotor
+      category: 1
+      family: Rotors
+      description: A light two-blade rotor. Agile, quiet hovering.
+      thumbnail: {fileID: 21300000, guid: 6903816adb2fe0d478da27694809c8f6, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: eafd09a19d0c8e04d92b5f7777542018, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 10
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 12
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 10
+      cpuPool: 0
+    sourceBlockId: Block_RotorBlade_Recon
+  - part:
+      id: mock_hawk_rudder
+      name: Hawk rudder
+      category: 1
+      family: Rudders
+      description: A light rudder. Sharp turns at low speed.
+      thumbnail: {fileID: 21300000, guid: db9d0df5c1ae2cf4f9f5f8542352d287, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 4b7e6ad58e3f00447be3557106040ba0, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 6
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 6
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 6
+      cpuPool: 0
+    sourceBlockId: Block_Rudder_N1_Hawk
+  - part:
+      id: mock_wasp_turret
+      name: Wasp laser turret
+      category: 2
+      family: Lasers
+      description: A light laser turret with a high fire rate.
+      thumbnail: {fileID: 21300000, guid: d6b9dec96acec8141845ceb11d25dbd1, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 4a473472f55cc5743ba320ed9700bf36, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 42
+        format: 0
+        unit: per shot
+        ratio: 0.11666667
+      - id: fireRate
+        label: Fire rate
+        value: 7
+        format: 0.0
+        unit: /s
+        ratio: 1
+      - id: range
+        label: Range
+        value: 320
+        format: 0
+        unit: m
+        ratio: 0.53333336
+      - id: cpu
+        label: Weapon CPU
+        value: 40
+        format: 0
+        unit: CPU
+        ratio: 0.24242425
+      - id: mass
+        label: Mass
+        value: 12
+        format: 0.#
+        unit: kg
+        ratio: 0.3
+      cpuCost: 40
+      cpuPool: 1
+    sourceBlockId: Block_Laser_N1_Wasp
+  - part:
+      id: mock_hornet_laser
+      name: Hornet laser
+      category: 2
+      family: Lasers
+      description: A twin-capacitor laser. A good damage-to-weight balance.
+      thumbnail: {fileID: 21300000, guid: 8354d27a5c871a9418cdfc6dd7eb09b5, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: c0fb72e9e3423f34d930ebff9307339c, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 64
+        format: 0
+        unit: per shot
+        ratio: 0.17777778
+      - id: fireRate
+        label: Fire rate
+        value: 6
+        format: 0.0
+        unit: /s
+        ratio: 0.85714287
+      - id: range
+        label: Range
+        value: 340
+        format: 0
+        unit: m
+        ratio: 0.56666666
+      - id: cpu
+        label: Weapon CPU
+        value: 55
+        format: 0
+        unit: CPU
+        ratio: 0.33333334
+      - id: mass
+        label: Mass
+        value: 16
+        format: 0.#
+        unit: kg
+        ratio: 0.4
+      cpuCost: 55
+      cpuPool: 1
+    sourceBlockId: Block_Laser_N2_Hornet
+  - part:
+      id: mock_pulser_turret
+      name: Pulser plasma turret
+      category: 2
+      family: Plasma
+      description: A compact plasma launcher. Fast short-range bursts.
+      thumbnail: {fileID: 21300000, guid: 7aebecb7812278c45bd67c4499ef57cb, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: fcd9d7f7c9093ff4d9b05331375ef23e, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 96
+        format: 0
+        unit: per shot
+        ratio: 0.26666668
+      - id: fireRate
+        label: Fire rate
+        value: 2.4
+        format: 0.0
+        unit: /s
+        ratio: 0.34285715
+      - id: range
+        label: Range
+        value: 180
+        format: 0
+        unit: m
+        ratio: 0.3
+      - id: cpu
+        label: Weapon CPU
+        value: 70
+        format: 0
+        unit: CPU
+        ratio: 0.42424244
+      - id: mass
+        label: Mass
+        value: 22
+        format: 0.#
+        unit: kg
+        ratio: 0.55
+      cpuCost: 70
+      cpuPool: 1
+    sourceBlockId: Block_Plasma_N1_Pulser
+  - part:
+      id: mock_bombarder
+      name: Bombarder plasma
+      category: 2
+      family: Plasma
+      description: Lobbed shots with a wide blast area. Ideal against groups.
+      thumbnail: {fileID: 21300000, guid: 2473b50a885b9434590e332b356a3d3b, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: a0774beefd6f24f4ea12b8dc1e4dc35f, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 210
+        format: 0
+        unit: per shot
+        ratio: 0.5833333
+      - id: fireRate
+        label: Fire rate
+        value: 1.7
+        format: 0.0
+        unit: /s
+        ratio: 0.24285714
+      - id: range
+        label: Range
+        value: 220
+        format: 0
+        unit: m
+        ratio: 0.36666667
+      - id: cpu
+        label: Weapon CPU
+        value: 165
+        format: 0
+        unit: CPU
+        ratio: 1
+      - id: mass
+        label: Mass
+        value: 34
+        format: 0.#
+        unit: kg
+        ratio: 0.85
+      cpuCost: 165
+      cpuPool: 1
+    sourceBlockId: Block_Plasma_N3_Bombarder
+  - part:
+      id: mock_piercer_rail
+      name: Piercer rail
+      category: 2
+      family: Rail
+      description: A light rail cannon. Punches through thin blocks in one shot.
+      thumbnail: {fileID: 21300000, guid: 82e45d2b217c404459513e1870c0787c, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: ff0b08029d8362943b89e827d7d9101d, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 360
+        format: 0
+        unit: per shot
+        ratio: 1
+      - id: fireRate
+        label: Fire rate
+        value: 0.8
+        format: 0.0
+        unit: /s
+        ratio: 0.114285715
+      - id: range
+        label: Range
+        value: 600
+        format: 0
+        unit: m
+        ratio: 1
+      - id: cpu
+        label: Weapon CPU
+        value: 120
+        format: 0
+        unit: CPU
+        ratio: 0.72727275
+      - id: mass
+        label: Mass
+        value: 40
+        format: 0.#
+        unit: kg
+        ratio: 1
+      cpuCost: 120
+      cpuPool: 1
+    sourceBlockId: Block_Rail_N1_Piercer
+  - part:
+      id: mock_flak_turret
+      name: Flak turret
+      category: 2
+      family: Flak
+      description: Bursting shells that shred rotors and hover blades.
+      thumbnail: {fileID: 21300000, guid: 465ae3969de07504c87c20ee4363740f, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: a4e1b63a1d650414dbe49ac9e60437b6, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 48
+        format: 0
+        unit: per shot
+        ratio: 0.13333334
+      - id: fireRate
+        label: Fire rate
+        value: 5
+        format: 0.0
+        unit: /s
+        ratio: 0.71428573
+      - id: range
+        label: Range
+        value: 260
+        format: 0
+        unit: m
+        ratio: 0.43333334
+      - id: cpu
+        label: Weapon CPU
+        value: 65
+        format: 0
+        unit: CPU
+        ratio: 0.3939394
+      - id: mass
+        label: Mass
+        value: 20
+        format: 0.#
+        unit: kg
+        ratio: 0.5
+      cpuCost: 65
+      cpuPool: 1
+    sourceBlockId: Block_Plasma_N2_Disruptor
+  - part:
+      id: mock_arc_turret
+      name: Arc tesla turret
+      category: 2
+      family: Tesla
+      description: A star-discharge emitter. Hits every adjacent block.
+      thumbnail: {fileID: 21300000, guid: 1a652a6c1947ebe4faaa4560cdebe9ad, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: b0b51932f1cc8524e8293af4ec65d2af, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 130
+        format: 0
+        unit: per shot
+        ratio: 0.3611111
+      - id: fireRate
+        label: Fire rate
+        value: 4
+        format: 0.0
+        unit: /s
+        ratio: 0.5714286
+      - id: range
+        label: Range
+        value: 12
+        format: 0
+        unit: m
+        ratio: 0.02
+      - id: cpu
+        label: Weapon CPU
+        value: 90
+        format: 0
+        unit: CPU
+        ratio: 0.54545456
+      - id: mass
+        label: Mass
+        value: 18
+        format: 0.#
+        unit: kg
+        ratio: 0.45
+      cpuCost: 90
+      cpuPool: 1
+    sourceBlockId: Block_Tesla_N3_Nova
+  - part:
+      id: mock_slicer_blade
+      name: Slicer blade
+      category: 2
+      family: Tesla
+      description: A short electrified blade. Cuts on contact.
+      thumbnail: {fileID: 21300000, guid: 539320d5c2e497f40847c56e5d5fae93, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: ef6056813e238754a94e68bb91bb4e9d, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 78
+        format: 0
+        unit: per shot
+        ratio: 0.21666667
+      - id: fireRate
+        label: Fire rate
+        value: 4
+        format: 0.0
+        unit: /s
+        ratio: 0.5714286
+      - id: range
+        label: Range
+        value: 8
+        format: 0
+        unit: m
+        ratio: 0.013333334
+      - id: cpu
+        label: Weapon CPU
+        value: 45
+        format: 0
+        unit: CPU
+        ratio: 0.27272728
+      - id: mass
+        label: Mass
+        value: 10
+        format: 0.#
+        unit: kg
+        ratio: 0.25
+      cpuCost: 45
+      cpuPool: 1
+    sourceBlockId: Block_Tesla_N1_Slicer
+  - part:
+      id: mock_mender_beam
+      name: Mender beam
+      category: 2
+      family: Support
+      description: Repairs the blocks of an ally robot in its beam.
+      thumbnail: {fileID: 21300000, guid: 0ebd26efd3556f546b05d4881bfae88c, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 451bd0e79d796d04a9323d54549d24ee, type: 3}
+      stats:
+      - id: damage
+        label: Damage
+        value: 0
+        format: 0
+        unit: per shot
+        ratio: 0
+      - id: fireRate
+        label: Fire rate
+        value: 1
+        format: 0.0
+        unit: /s
+        ratio: 0.14285715
+      - id: range
+        label: Range
+        value: 60
+        format: 0
+        unit: m
+        ratio: 0.1
+      - id: cpu
+        label: Weapon CPU
+        value: 60
+        format: 0
+        unit: CPU
+        ratio: 0.36363637
+      - id: mass
+        label: Mass
+        value: 14
+        format: 0.#
+        unit: kg
+        ratio: 0.35
+      cpuCost: 60
+      cpuPool: 1
+    sourceBlockId: Block_Nano_N2_Mender
+  - part:
+      id: mock_radar
+      name: Radar sensor
+      category: 3
+      family: Sensors
+      description: Shows nearby enemies on the minimap.
+      thumbnail: {fileID: 21300000, guid: e75326ec858ccb9408461ac2e651b157, type: 3}
+      previewPrefab: {fileID: 9023660251136016482, guid: 1d3457085aa2ea841ac6857153f29d8a, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 18
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 7
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 18
+      cpuPool: 0
+    sourceBlockId: Block_19_Radar
+  - part:
+      id: mock_proximity
+      name: Proximity sensor
+      category: 3
+      family: Sensors
+      description: Warns you when an enemy closes in from behind.
+      thumbnail: {fileID: 21300000, guid: e75326ec858ccb9408461ac2e651b157, type: 3}
+      previewPrefab: {fileID: 9023660251136016482, guid: 1d3457085aa2ea841ac6857153f29d8a, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 6
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 2
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 6
+      cpuPool: 0
+    sourceBlockId: Block_19_Radar
+  - part:
+      id: mock_shield_disk
+      name: Shield disk
+      category: 3
+      family: Shields
+      description: Projects a directional energy barrier.
+      thumbnail: {fileID: 21300000, guid: 5d475ba8e0979e3438f04664bb352b09, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: a7a3f1a7837c24045bf156ad7775dfc1, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 26
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 14
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 26
+      cpuPool: 0
+    sourceBlockId: Block_20_DisqueBouclier
+  - part:
+      id: mock_stabiliser
+      name: Turret stabiliser
+      category: 3
+      family: Modules
+      description: Steadies your weapons while you drive over rough ground.
+      thumbnail: {fileID: 21300000, guid: e05f6ca943362a54991eeba0ca7a5216, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 8214d067d065d2e4e8741630eca0cb11, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 12
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 5
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 12
+      cpuPool: 0
+    sourceBlockId: Block_Nano_N3_Constructor
+  - part:
+      id: mock_blinder
+      name: Nano blinder
+      category: 3
+      family: Modules
+      description: A blinding nanite cloud. Scrambles enemy sensors.
+      thumbnail: {fileID: 21300000, guid: 3fb9177785d52974897ef2e42d290b39, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: bca827a6290f6f94181f286a0fbad15c, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 14
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 9
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 14
+      cpuPool: 0
+    sourceBlockId: Block_Nano_N1_Blinder
+  - part:
+      id: mock_energy_cell
+      name: Energy cell
+      category: 3
+      family: Modules
+      description: Stores extra energy for your weapons.
+      thumbnail: {fileID: 21300000, guid: 1982e3a53f9ec6c4387cd906ae92a12e, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 43de41d1da97c8c40b6892a7289a25b2, type: 3}
+      stats:
+      - id: cpu
+        label: Base CPU
+        value: 10
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 6
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 10
+      cpuPool: 0
+    sourceBlockId: Block_Electroplate_T2
+  - part:
+      id: mock_turret_flag
+      name: Turret flag
+      category: 4
+      family: Props
+      description: A pennant that flies from the top of your turret.
+      thumbnail: {fileID: 21300000, guid: 9403c31d9f009be44aeee6680f0135fd, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: fc70a122932beeb4988c5b27525c4e7d, type: 3}
+      stats:
+      - id: cpu
+        label: Cosmetic CPU
+        value: 2
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 0.4
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 2
+      cpuPool: 2
+    sourceBlockId: Block_Rod_Diag3D
+  - part:
+      id: mock_antenna
+      name: Antenna whip
+      category: 4
+      family: Props
+      description: A long whip antenna that sways as you drive.
+      thumbnail: {fileID: 21300000, guid: 7234e4179138ad94db21c84528bcb446, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 9eb5e382ea24fd042ba8a1340dae14cc, type: 3}
+      stats:
+      - id: cpu
+        label: Cosmetic CPU
+        value: 1
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 0.2
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 2
+    sourceBlockId: Block_Rod_Arc
+  - part:
+      id: mock_hazard
+      name: Hazard stripes
+      category: 4
+      family: Decals
+      description: Yellow and black stripes for bumpers and edges.
+      thumbnail: {fileID: 21300000, guid: 8bb6a7dd8696d3d4c832956096195d90, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: 2c8447261d1471545bf49dfe24704bf0, type: 3}
+      stats:
+      - id: cpu
+        label: Cosmetic CPU
+        value: 1
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 0
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 1
+      cpuPool: 2
+    sourceBlockId: Block_Electroplate_T3
+  - part:
+      id: mock_headlight
+      name: Headlight
+      category: 4
+      family: Lights
+      description: A forward lamp for night arenas.
+      thumbnail: {fileID: 21300000, guid: 2229f441c3ac3d443a207a334e2f6ebe, type: 3}
+      previewPrefab: {fileID: 919132149155446097, guid: bd9cc9b89bcdd8e4db4f370f64901f84, type: 3}
+      stats:
+      - id: cpu
+        label: Cosmetic CPU
+        value: 2
+        format: 0
+        unit: CPU
+        ratio: -1
+      - id: mass
+        label: Mass
+        value: 0.5
+        format: 0.#
+        unit: kg
+        ratio: -1
+      cpuCost: 2
+      cpuPool: 2
+    sourceBlockId: Block_Chassis_Cone
+  notOwnedCount: 42
+  baseUsed: 785
+  baseMax: 820
+  weaponUsed: 120
+  weaponMax: 120
+  cosmeticUsed: 12
+  cosmeticMax: 40

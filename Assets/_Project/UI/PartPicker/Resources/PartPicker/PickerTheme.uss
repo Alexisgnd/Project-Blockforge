@@ -1,0 +1,275 @@
+/* =========================================================
+   PART PICKER — THEME (seul fichier avec des couleurs et des px)
+   - :root / .pp-theme : variables lues par la mise en page
+     (PartPicker.uss, en var(--pp-…)) ;
+   - valeurs sans unite (--pp-grid-columns, ombre, pointilles) :
+     proprietes custom lues en C# par la grille et les formes
+     dessinees ;
+   - polices et pictogrammes du design system.
+   Reference 1920 x 1080, mise a l'echelle sur la hauteur
+   (PickerPanelSettings). Fenetre 1 440 x 790 : a 1080p elle tombe
+   a left 240 / top 170 (centree, decalee de 25 px vers le bas).
+   ========================================================= */
+
+:root, .pp-theme {
+    /* ---------- Couleurs ---------- */
+    --pp-dim: rgba(11, 14, 20, 0.45);
+    --pp-window-fill: #242B36;
+    --pp-border: #303948;
+    --pp-border-strong: #74829A;
+    --pp-tab-fill: #1F2531;
+    --pp-tab-hover: #2C3441;
+    --pp-surface-hover: #2C3441;
+    --pp-surface-selected: #16394B;
+    --pp-inset: #11151C;
+    --pp-accent: #39B8E8;
+    --pp-accent-hover: #63CDF5;
+    --pp-accent-press: #1F97C6;
+    --pp-accent-soft: #16394B;
+    --pp-ink-white: #F2F5F7;
+    --pp-ink-secondary: #B3BDCB;
+    --pp-ink-muted: #959FB0;
+    --pp-ink-on-accent: #04121A;
+    --pp-thumb-top: #2A3140;
+    --pp-thumb-bottom: #1A2130;
+    --pp-tile-hover: #74829A;
+    --pp-tile-selected: #39B8E8;
+    --pp-scroll-track: #11151C;
+    --pp-scroll-thumb: #74829A;
+    --pp-focus: #7FDCFF;
+    --pp-warning: #F0A93F;
+    --pp-warning-soft: #3A2A10;
+    --pp-transparent: rgba(0, 0, 0, 0);
+
+    /* ---------- Fenetre ---------- */
+    --pp-window-width: 1440px;
+    --pp-window-height: 790px;
+    --pp-window-offset-y: 25px;
+    --pp-window-radius: 6px;
+    --pp-window-border: 1px;
+    --pp-window-pad-top: 28px;
+    --pp-window-pad-side: 32px;
+    --pp-window-pad-bottom: 32px;
+    --pp-column-gap: 32px;
+    --pp-detail-width: 400px;
+    --pp-detail-pad-left: 32px;
+    --pp-divider: 1px;
+    --pp-zero: 0;
+
+    /* ---------- Onglets de categorie ---------- */
+    --pp-tab-width: 64px;
+    --pp-tab-height: 56px;
+    --pp-tab-gap: 4px;
+    --pp-tab-radius: 4px;
+    --pp-tab-border: 1px;
+    --pp-tab-icon: 22px;
+    --pp-tab-key-size: 10px;
+    --pp-tab-key-left: 6px;
+    --pp-tab-key-top: 4px;
+    --pp-tab-underline: 2px;
+    /* L'onglet actif descend sur le bord de la fenetre et le recouvre */
+    --pp-tab-active-height: 57px;
+    --pp-tab-active-drop: -1px;
+
+    /* ---------- Fermeture (au-dessus du coin haut droit) ---------- */
+    --pp-close-size: 36px;
+    --pp-close-lift: 10px;
+    --pp-close-icon: 20px;
+    --pp-close-gap: 8px;
+    --pp-close-radius: 3px;
+    --pp-keycap-height: 22px;
+    --pp-keycap-min-width: 22px;
+    --pp-keycap-pad: 6px;
+    --pp-keycap-radius: 2px;
+    --pp-keycap-size: 12px;
+
+    /* ---------- Colonne de navigation ---------- */
+    --pp-title-size: 34px;
+    --pp-title-height: 34px;
+    --pp-title-tracking: 0.68px;
+    --pp-header-height: 36px;
+    --pp-row-gap: 20px;
+    --pp-search-width: 360px;
+    --pp-search-height: 36px;
+    --pp-search-pad: 12px;
+    --pp-search-icon: 16px;
+    --pp-search-icon-gap: 8px;
+    --pp-search-text-left: 36px;
+    --pp-field-radius: 3px;
+    --pp-field-border: 1px;
+    --pp-body-size: 13px;
+    --pp-count-size: 13px;
+    --pp-control-height: 36px;
+    --pp-segment-pad: 12px;
+    --pp-segment-gap: 4px;
+    --pp-segment-radius: 3px;
+    --pp-segment-border: 1px;
+    --pp-segment-count-gap: 6px;
+    --pp-label-size: 11px;
+    --pp-label-tracking: 0.99px;
+    --pp-select-width: 160px;
+    --pp-select-gap: 12px;
+    --pp-select-pad: 12px;
+    --pp-select-chevron: 16px;
+    --pp-popup-pad: 4px;
+    --pp-popup-offset: 4px;
+    --pp-popup-radius: 6px;
+    --pp-option-height: 36px;
+
+    /* ---------- Grille ---------- */
+    --pp-grid-gutter: 8px;
+    --pp-scrollbar-width: 4px;
+    --pp-scrollbar-radius: 2px;
+    --pp-tile-radius: 4px;
+    --pp-tile-border: 2px;
+    --pp-tile-image-pad: 12px;
+    --pp-tile-name-gap: 8px;
+    --pp-tile-name-size: 11px;
+    --pp-tile-name-tracking: 0.66px;
+    --pp-drag-ghost-size: 96px;
+    --pp-drag-ghost-opacity: 0.85;
+
+    /* ---------- Anneau de focus (clavier, manette) ---------- */
+    --pp-ring-width: 2px;
+    --pp-ring-outset: -4px;
+    --pp-ring-radius: 6px;
+    --pp-ring-radius-control: 5px;
+
+    /* ---------- Pied de colonne ---------- */
+    --pp-footer-gap: 16px;
+    --pp-footer-height: 20px;
+    --pp-link-size: 13px;
+
+    /* ---------- Recherche sans resultat ---------- */
+    --pp-empty-tile: 56px;
+    --pp-empty-icon: 24px;
+    --pp-empty-gap: 16px;
+    --pp-empty-body-gap: 8px;
+    --pp-empty-text-width: 520px;
+    --pp-empty-title-size: 20px;
+    --pp-empty-actions-gap: 8px;
+
+    /* ---------- Colonne detail ---------- */
+    --pp-detail-gap: 16px;
+    --pp-preview-height: 300px;
+    --pp-preview-radius: 4px;
+    --pp-preview-image-pad: 32px;
+    --pp-badge-inset: 12px;
+    --pp-badge-height: 24px;
+    --pp-badge-pad: 10px;
+    --pp-badge-radius: 999px;
+    --pp-badge-border: 1px;
+    --pp-name-size: 20px;
+    --pp-desc-size: 13px;
+    --pp-stats-gap: 8px;
+    --pp-stat-label-size: 12px;
+    --pp-stat-value-size: 15px;
+    --pp-stat-unit-size: 12px;
+    --pp-stat-unit-gap: 4px;
+    --pp-stat-bar-height: 4px;
+    --pp-stat-bar-gap: 4px;
+    --pp-stat-bar-radius: 2px;
+    --pp-notice-pad: 12px;
+    --pp-notice-gap: 12px;
+    --pp-notice-icon: 16px;
+    --pp-notice-radius: 6px;
+    --pp-notice-border: 1px;
+    --pp-notice-title-gap: 4px;
+    --pp-button-height: 44px;
+    --pp-button-small-height: 36px;
+    --pp-button-pad: 24px;
+    --pp-button-small-pad: 16px;
+    --pp-button-radius: 3px;
+    --pp-button-border: 1px;
+    --pp-button-gap: 8px;
+    --pp-button-icon: 18px;
+    --pp-button-icon-gap: 8px;
+    --pp-button-size: 14px;
+    --pp-button-tracking: 0.56px;
+    --pp-disabled-opacity: 0.38;
+    --pp-detail-empty-icon: 48px;
+    --pp-detail-empty-gap: 12px;
+    --pp-detail-empty-width: 260px;
+
+}
+
+/* ---------- Degrade des vignettes et de l'apercu (ForgeGradient) ---------- */
+
+.pp-thumb-gradient {
+    --gradient-start: #2A3140;
+    --gradient-end: #1A2130;
+}
+
+/* ---------- Proprietes lues en C# (sans unite, posees sur l'element lui-meme) ---------- */
+
+/* Grille : 7 colonnes egales, 12 px entre colonnes, 16 px entre rangees ; noms sur 2 lignes au plus */
+.pp-grid {
+    --pp-grid-columns: 7;
+    --pp-grid-gap-x: 12;
+    --pp-grid-gap-y: 16;
+    --pp-tile-name-lines: 2;
+}
+
+/* Glisser une tuile : seuil avant de quitter la grille */
+.pp-root {
+    --pp-drag-threshold: 6;
+}
+
+/* Ombre de la fenetre : 0 16px 44px rgba(0,0,0,.62) */
+.pp-shadow {
+    --shadow-color: rgba(0, 0, 0, 0.62);
+    --shadow-offset-y: 16;
+    --shadow-blur: 44;
+}
+
+/* Recherche vide : cadre en pointilles 1 px */
+.pp-empty__outline {
+    --dash-color: #303948;
+    --dash-width: 1;
+    --dash-length: 6;
+    --dash-gap: 4;
+}
+
+/* Fond de l'apercu 3D quand le tampon couleur HDRP n'a pas d'alpha (le degrade ne peut pas transparaitre) */
+.pp-preview {
+    --pp-preview-backdrop: #222938;
+}
+
+/* ---------- Polices ---------- */
+
+.pp-font-sans {
+    -unity-font-definition: url("../../../Fonts/Barlow-Regular.ttf");
+}
+
+.pp-font-semibold {
+    -unity-font-definition: url("../../../Fonts/Barlow-SemiBold.ttf");
+}
+
+.pp-font-condensed {
+    -unity-font-definition: url("../../../Fonts/BarlowCondensed-Bold.ttf");
+}
+
+.pp-font-mono {
+    -unity-font-definition: url("../../../Fonts/JetBrainsMono-SemiBold.ttf");
+}
+
+.pp-font-mono-medium {
+    -unity-font-definition: url("../../../Fonts/JetBrainsMono-Medium.ttf");
+}
+
+/* ---------- Pictogrammes du design system (blancs, teintes ici) ---------- */
+
+.pp-icon--grid { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/grid.png"); }
+.pp-icon--cube { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/cube.png"); }
+.pp-icon--mobility { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/mobility.png"); }
+.pp-icon--weapon { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/weapon.png"); }
+.pp-icon--electronics { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/electronics.png"); }
+.pp-icon--cosmetic { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/cosmetic.png"); }
+.pp-icon--search { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/search.png"); }
+.pp-icon--close { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/close.png"); }
+.pp-icon--add { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/add.png"); }
+/* Le design system n'a pas de punaise : pictogramme du picker, meme gabarit (96 px, blanc) */
+.pp-icon--pin { background-image: url("../../Icons/pin.png"); }
+.pp-icon--info { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/info.png"); }
+.pp-icon--warning { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/warning.png"); }
+.pp-icon--chevron-down { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/chevron-down.png"); }

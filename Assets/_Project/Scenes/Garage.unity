@@ -1943,6 +1943,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182589095}
   m_CullTransparentMesh: 1
+--- !u!1 &183568327
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 183568329}
+  - component: {fileID: 183568328}
+  m_Layer: 0
+  m_Name: PartPicker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &183568328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 183568327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54c2a0e7922fb36488baac59210d6232, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Blockforge.Runtime::GaragePartPicker
+  inventory: {fileID: 1748811173}
+  build: {fileID: 2068669233}
+  statsHud: {fileID: 457381722}
+  builderHud: {fileID: 1247525328}
+  inventoryTile: {fileID: 0}
+  openKey: 3
+  weaponRangeMeters: 320
+--- !u!4 &183568329
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 183568327}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &191217513
 GameObject:
   m_ObjectHideFlags: 0
@@ -5639,6 +5690,7 @@ MonoBehaviour:
   healthMax: 12000
   speedKmh: 92
   speedMax: 150
+  showPower: 0
   power: 120
   powerMax: 200
   weightT: 8.5
@@ -16078,6 +16130,7 @@ GameObject:
   - component: {fileID: 1247525324}
   - component: {fileID: 1247525323}
   - component: {fileID: 1247525327}
+  - component: {fileID: 1247525328}
   m_Layer: 0
   m_Name: GarageCanvas
   m_TagString: Untagged
@@ -16211,6 +16264,18 @@ MonoBehaviour:
   - {fileID: 524210708}
   mainMenuSceneName: MainMenu
   testSceneName: Map_Test
+--- !u!225 &1247525328
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1247525322}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1254581790
 GameObject:
   m_ObjectHideFlags: 0
@@ -30150,3 +30215,4 @@ SceneRoots:
   - {fileID: 124506446}
   - {fileID: 1733538404}
   - {fileID: 1417403594}
+  - {fileID: 183568329}

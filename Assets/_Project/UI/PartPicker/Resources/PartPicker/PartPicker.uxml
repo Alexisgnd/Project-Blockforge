@@ -1,0 +1,129 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <!-- PART PICKER : fenetre d'inventaire du garage
+         Voile plein ecran sur le viewport, fenetre 1 440 x 790 centree,
+         onglets accroches au bord haut gauche, fermeture au-dessus du coin
+         haut droit. Colonne de navigation (titre, recherche, filtres, grille
+         7 colonnes, pied) et colonne detail 400 px. Onglets, filtres, tuiles
+         et stats sont construits par PartPickerController. -->
+    <Style src="PickerTheme.uss" />
+    <Style src="PartPicker.uss" />
+    <ui:VisualElement name="picker" class="pp-theme pp-root" picking-mode="Ignore">
+        <ui:VisualElement name="dim" class="pp-dim" />
+        <ui:VisualElement name="frame" class="pp-frame" picking-mode="Ignore">
+            <PickerShadow name="shadow" class="pp-shadow" />
+            <ui:VisualElement name="window" class="pp-window">
+                <ui:VisualElement name="browse" class="pp-browse">
+                    <ui:VisualElement class="pp-header">
+                        <ui:Label name="title" text="ALL PARTS" class="pp-title pp-font-condensed" />
+                        <ui:VisualElement name="search" class="pp-search">
+                            <ui:VisualElement class="pp-icon pp-icon--search pp-search__icon" picking-mode="Ignore" />
+                            <ui:TextField name="search-field" class="pp-search__field pp-font-sans" />
+                            <ui:Label name="search-placeholder" text="Search parts · /" class="pp-search__placeholder pp-font-sans" picking-mode="Ignore" />
+                            <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="filter-row" class="pp-filter-row">
+                        <ui:VisualElement name="segments" class="pp-segments" />
+                        <ui:VisualElement name="sort" class="pp-select pp-focusable">
+                            <ui:Label name="sort-value" text="By CPU" class="pp-select__value pp-font-sans" picking-mode="Ignore" />
+                            <ui:VisualElement class="pp-icon pp-icon--chevron-down pp-select__chevron" picking-mode="Ignore" />
+                            <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="pp-flex" picking-mode="Ignore" />
+                        <ui:VisualElement name="count" class="pp-count" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="grid-area" class="pp-grid-area">
+                        <ui:ScrollView name="grid" mode="Vertical" horizontal-scroller-visibility="Hidden" class="pp-grid" />
+                        <ui:VisualElement name="empty" class="pp-empty">
+                            <DashedOutline class="pp-empty__outline" />
+                            <ui:VisualElement class="pp-empty__tile" picking-mode="Ignore">
+                                <ForgeGradient class="pp-thumb-gradient pp-fill" />
+                                <ui:VisualElement class="pp-icon pp-icon--search pp-empty__icon" />
+                            </ui:VisualElement>
+                            <ui:Label name="empty-title" text="No part matches" class="pp-empty__title pp-font-semibold" />
+                            <ui:VisualElement class="pp-empty__text">
+                                <ui:VisualElement name="empty-suggest" class="pp-empty__suggest">
+                                    <ui:Label name="empty-suggest-before" text="Did you mean " class="pp-empty__line pp-font-sans" />
+                                    <ui:VisualElement name="empty-suggest-link" class="pp-link pp-focusable">
+                                        <ui:Label name="empty-suggest-word" text="" class="pp-link__label pp-empty__word pp-font-sans" picking-mode="Ignore" />
+                                        <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="empty-suggest-after" text="?" class="pp-empty__line pp-font-sans" />
+                                </ui:VisualElement>
+                                <ui:Label name="empty-body" text="" class="pp-empty__body pp-font-sans" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="pp-empty__actions">
+                                <ui:VisualElement name="empty-clear" class="pp-button pp-button--small pp-button--secondary pp-focusable">
+                                    <ui:Label name="empty-clear-label" text="CLEAR SEARCH" class="pp-button__label pp-font-semibold" picking-mode="Ignore" />
+                                    <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="empty-store" class="pp-button pp-button--small pp-button--ghost pp-focusable">
+                                    <ui:Label name="empty-store-label" text="SEARCH THE STORE" class="pp-button__label pp-font-semibold" picking-mode="Ignore" />
+                                    <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="pp-footer">
+                        <ui:VisualElement name="footer-link" class="pp-link pp-focusable">
+                            <ui:Label name="footer-label" text="" class="pp-link__label pp-font-sans" picking-mode="Ignore" />
+                            <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="detail" class="pp-detail">
+                    <ui:VisualElement name="detail-content" class="pp-detail__content">
+                        <ui:VisualElement name="preview" class="pp-preview">
+                            <ForgeGradient class="pp-thumb-gradient pp-fill" />
+                            <ui:Image name="preview-image" class="pp-fill" picking-mode="Ignore" />
+                            <ui:VisualElement class="pp-badge" picking-mode="Ignore">
+                                <ui:Label name="badge" text="BLOCK" class="pp-badge__label pp-font-semibold" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:Label name="detail-name" text="" class="pp-detail__name pp-font-semibold" />
+                        <ui:Label name="detail-desc" text="" class="pp-detail__desc pp-font-sans" />
+                        <ui:VisualElement name="stats" class="pp-stats" />
+                        <ui:VisualElement class="pp-flex" picking-mode="Ignore" />
+                        <ui:VisualElement name="notice" class="pp-notice pp-notice--info">
+                            <ui:VisualElement name="notice-icon" class="pp-icon pp-icon--info pp-notice__icon" />
+                            <ui:VisualElement class="pp-notice__text">
+                                <ui:Label name="notice-title" text="" class="pp-notice__title pp-font-semibold" />
+                                <ui:Label name="notice-body" text="" class="pp-notice__body pp-font-sans" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="pp-actions">
+                            <ui:VisualElement name="place" class="pp-button pp-button--primary pp-place pp-focusable">
+                                <ui:VisualElement class="pp-icon pp-icon--add pp-button__icon" picking-mode="Ignore" />
+                                <ui:Label name="place-label" text="PLACE" class="pp-button__label pp-font-semibold" picking-mode="Ignore" />
+                                <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="pin" class="pp-button pp-button--secondary pp-button--square pp-focusable">
+                                <ui:VisualElement class="pp-icon pp-icon--pin pp-button__icon" picking-mode="Ignore" />
+                                <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="detail-empty" class="pp-detail__empty">
+                        <ui:VisualElement class="pp-icon pp-icon--cube pp-detail__empty-icon" />
+                        <ui:Label name="detail-empty-text" text="" class="pp-detail__empty-text pp-font-sans" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="tabs" class="pp-tabs" />
+            <ui:VisualElement class="pp-close-cluster">
+                <ui:VisualElement class="pp-keycap" picking-mode="Ignore">
+                    <ui:Label name="esc-key" text="Esc" class="pp-keycap__label pp-font-mono" />
+                </ui:VisualElement>
+                <ui:VisualElement name="close" class="pp-close pp-focusable">
+                    <ui:VisualElement class="pp-icon pp-icon--close pp-close__icon" picking-mode="Ignore" />
+                    <ui:VisualElement class="pp-ring" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="popup" class="pp-popup" />
+        </ui:VisualElement>
+        <ui:VisualElement name="drag-ghost" class="pp-drag-ghost" picking-mode="Ignore">
+            <ForgeGradient class="pp-thumb-gradient pp-fill" />
+            <ui:VisualElement name="drag-ghost-image" class="pp-tile__image" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

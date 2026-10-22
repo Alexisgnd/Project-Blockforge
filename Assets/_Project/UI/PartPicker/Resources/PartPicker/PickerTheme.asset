@@ -1,0 +1,175 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 352703e703e129940bbbf57a98690aa2, type: 3}
+  m_Name: PickerTheme
+  m_EditorClassIdentifier: Blockforge.Runtime::PickerTheme
+  panelSettings: {fileID: 11400000, guid: dfc78178b822867488eb5956a18021e3, type: 2}
+  referenceResolution: {x: 1920, y: 1080}
+  sortingOrder: 900
+  tabs:
+  - title: All parts
+    key: A
+    iconClass: pp-icon--grid
+    category: 0
+    nounPlural: parts
+    nounSingular: part
+    badge: 
+    families: []
+    sortByDamage: 0
+  - title: Blocks
+    key: B
+    iconClass: pp-icon--cube
+    category: 0
+    nounPlural: blocks
+    nounSingular: block
+    badge: Block
+    families:
+    - label: Cubes
+      badge: Block
+    - label: Slopes
+      badge: Block
+    - label: Corners
+      badge: Block
+    - label: Rods
+      badge: Rod
+    - label: Armour
+      badge: Armour
+    sortByDamage: 0
+  - title: Movement
+    key: M
+    iconClass: pp-icon--mobility
+    category: 1
+    nounPlural: movement parts
+    nounSingular: movement part
+    badge: Movement
+    families:
+    - label: Wheels
+      badge: Wheel
+    - label: Legs
+      badge: Leg
+    - label: Tracks
+      badge: Track
+    - label: Hover
+      badge: Hover
+    - label: Thrusters
+      badge: Thruster
+    - label: Rotors
+      badge: Rotor
+    - label: Rudders
+      badge: Rudder
+    sortByDamage: 0
+  - title: Weapons
+    key: W
+    iconClass: pp-icon--weapon
+    category: 2
+    nounPlural: weapons
+    nounSingular: weapon
+    badge: Weapon
+    families:
+    - label: Lasers
+      badge: Laser
+    - label: Plasma
+      badge: Plasma
+    - label: Rail
+      badge: Rail
+    - label: Flak
+      badge: Flak
+    - label: Tesla
+      badge: Tesla
+    - label: Support
+      badge: Support
+    sortByDamage: 1
+  - title: Electronics
+    key: E
+    iconClass: pp-icon--electronics
+    category: 3
+    nounPlural: electronics
+    nounSingular: electronic
+    badge: Electronics
+    families:
+    - label: Sensors
+      badge: Sensor
+    - label: Shields
+      badge: Shield
+    - label: Modules
+      badge: Module
+    sortByDamage: 0
+  - title: Cosmetics
+    key: C
+    iconClass: pp-icon--cosmetic
+    category: 4
+    nounPlural: cosmetics
+    nounSingular: cosmetic
+    badge: Cosmetic
+    families:
+    - label: Decals
+      badge: Decal
+    - label: Props
+      badge: Prop
+    - label: Lights
+      badge: Light
+    sortByDamage: 0
+  familyAllLabel: All
+  allPartsSorts:
+  - sort: 0
+    label: Recent
+  - sort: 1
+    label: "A \u2013 Z"
+  - sort: 2
+    label: By CPU
+  categorySorts:
+  - sort: 2
+    label: By CPU
+  - sort: 1
+    label: "A \u2013 Z"
+  - sort: 3
+    label: By damage
+  scopeAllLabel: All categories
+  searchPlaceholder: "Search parts \xB7 /"
+  searchTitleFormat: Results for "{0}"
+  ownedCountFormat: '{0} {1} owned'
+  matchCountFormat: '{0} of {1} parts match'
+  storeLinkFormat: '{0} more parts in the Store once researched'
+  clearSearchLink: "Clear search \xB7 Esc"
+  emptyTitleFormat: No part matches "{0}"
+  emptySuggestionFormat: Did you mean {0}?
+  emptyExplanation: "Only parts you own are searched \u2014 the rest is in the Store
+    once researched."
+  clearSearchButton: Clear search
+  searchStoreButton: Search the Store
+  detailEmpty: Select a part to see its stats and place it.
+  placeLabel: Place
+  pinLabel: Pin to hotbar
+  closeLabel: Close
+  escKey: Esc
+  fitsFormat: "Fits your budget: {0} \u2192 {1} of {2} {3}."
+  fullTitleFormat: '{0} is full'
+  fullBodyFormat: Placing this needs {0} {1}; you have {2} of {3} left. Remove a
+    {4} first.
+  pools:
+  - pool: 0
+    title: CPU
+    unit: CPU
+    removeNoun: part
+  - pool: 1
+    title: Weapon CPU
+    unit: weapon CPU
+    removeNoun: weapon
+  - pool: 2
+    title: Cosmetic CPU
+    unit: cosmetic CPU
+    removeNoun: cosmetic
+  fadeSeconds: 0.14
+  detailSeconds: 0.14
+  searchDebounceSeconds: 0.12
+  previewDegreesPerSecond: 28
+  suggestionTolerance: 0.34
