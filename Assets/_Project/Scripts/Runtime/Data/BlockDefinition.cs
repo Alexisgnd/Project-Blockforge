@@ -67,6 +67,15 @@ public class BlockDefinition : ScriptableObject
              "Blockforge > Resync Block Definitions. Taille nulle = mesure a l'instanciation via les renderers, " +
              "qui surestime les pieces tournees.")]
     public Bounds modelBounds;
+    [Tooltip("Pied de montage (resync) : decalage en cases, sur les axes horizontaux perpendiculaires a l'ancrage, " +
+             "entre le centre des bounds et le centre du pied. Le modele est pose pied sur la case visee (un canon " +
+             "dont le socle est a l'arriere n'est plus a cheval sur la case d'en face) et ses cases reservees " +
+             "suivent le modele.")]
+    public Vector3 modelFootShift;
+    [Tooltip("Distance (m, repere du prefab) entre le point du modele le plus avance vers le support et le plan " +
+             "d'appui de son pied : le modele s'enfonce d'autant dans le support (pointes de lame sous la semelle, " +
+             "ferrure arriere d'une plaque).")]
+    public float modelAnchorInset;
 
     public string CategoryLabel => CategoryLabels[(int)category];
 

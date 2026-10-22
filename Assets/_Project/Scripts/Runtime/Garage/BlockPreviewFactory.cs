@@ -72,7 +72,9 @@ public static class BlockPreviewFactory
     // - echelle uniforme maximale pour tenir dans la boite (moins la marge fill),
     //   ou echelle native 1 m = 1 case pour les tiges ;
     // - la face d'ancrage du modele est plaquee sur la face correspondante de
-    //   la boite, le modele est centre sur les autres axes.
+    //   la boite (plan d'appui du pied : le reste s'enfonce dans le support),
+    //   le modele est centre sur les autres axes, ou pose par son pied sur la
+    //   case visee quand le resync a mesure un pied decale.
     private static GameObject CreatePrefabVisual(BlockDefinition def, float cellSize, float fill,
                                                  bool centerOnPivot, out float bottomDistance)
     {
@@ -114,9 +116,7 @@ public static class BlockPreviewFactory
             return wrapper;
         }
 
-        float scale = Mathf.Min(innerSize.x / Mathf.Max(bounds.size.x, 1e-4f),
-                                innerSize.y / Mathf.Max(bounds.size.y, 1e-4f),
-                                innerSize.z / Mathf.Max(bounds.size.z, 1e-4f));
+        float scale = FitScale(bounds, innerSize);
 
         Vector3 scaledSize = bounds.size * scale;
         Vector3 targetMin = innerMin + (innerSize - scaledSize) * 0.5f; // centre par defaut
@@ -128,6 +128,24 @@ public static class BlockPreviewFactory
             case BlockAnchor.Back:   targetMin.z = innerMin.z; break;
             case BlockAnchor.Center: break;
         }
+
+        // Pied de montage (mesure par le resync) :
+        // - sur les axes horizontaux perpendiculaires a l'ancrage, le centre du
+        //   pied est pose sur le centre de la case visee (origine du conteneur)
+        //   au lieu de centrer les bounds : un canon dont le socle est a
+        //   l'arriere n'est plus a cheval sur la case d'en face ;
+        // - le long de l'ancrage, le modele s'enfonce de l'inset dans le
+        //   support : c'est le plan d'appui du pied qui affleure, pas les
+        //   pointes de lame ni la ferrure d'une plaque.
+        int anchorAxis = BlockFootprint.AnchorAxis(def.anchor);
+        for (int k = 0; k < 3; k++)
+        {
+            if (k == anchorAxis || k == 1 || Mathf.Abs(def.modelFootShift[k]) < 1e-4f)
+                continue;
+            targetMin[k] = -scaledSize[k] * 0.5f + def.modelFootShift[k] * cellSize;
+        }
+        if (def.modelAnchorInset > 0f && anchorAxis >= 0)
+            targetMin += BlockFootprint.AnchorNormal(def.anchor) * (def.modelAnchorInset * scale);
 
         // Les bounds ont ete mesures avec l'instance a l'identite : apres mise a
         // l'echelle autour de son origine, son coin min vaut bounds.min * scale.
@@ -147,6 +165,24 @@ public static class BlockPreviewFactory
                                                            boxCenter.z - modelCenter.z * scale * RotorOverscale);
         }
         return wrapper;
+    }
+
+    // Echelle uniforme maximale pour loger des bounds dans une boite
+    public static float FitScale(Bounds bounds, Vector3 innerSize)
+    {
+        return Mathf.Min(innerSize.x / Mathf.Max(bounds.size.x, 1e-4f),
+                         innerSize.y / Mathf.Max(bounds.size.y, 1e-4f),
+                         innerSize.z / Mathf.Max(bounds.size.z, 1e-4f));
+    }
+
+    // Echelle d'un bloc a modele pour une case de cellSize (meme calcul que
+    // CreatePrefabVisual ; 0 pour un bloc sans bounds ou a echelle native)
+    public static float ModelScale(BlockDefinition def, float cellSize, float fill = DefaultFill)
+    {
+        if (def.nativeScale || def.modelBounds.size.sqrMagnitude < 1e-8f)
+            return def.nativeScale ? cellSize * fill : 0f;
+        Vector3 innerSize = (Vector3)BlockFootprint.Size(def) * cellSize - Vector3.one * (cellSize * (1f - fill));
+        return FitScale(def.modelBounds, innerSize);
     }
 
     // Union des bounds monde des renderers d'une hierarchie (false si aucun)

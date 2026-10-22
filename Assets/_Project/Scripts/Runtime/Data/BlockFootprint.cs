@@ -11,7 +11,10 @@ using UnityEngine;
 //   elle est centree sur cette case (une taille paire y est
 //   arrondie au nombre impair superieur, OccupancySize).
 // - Boite du modele (LocalBox) : taille declaree, affleurant la
-//   face d'ancrage et centree sur la case visee.
+//   face d'ancrage et centree sur la case visee ; un modele pose
+//   par son pied (BlockDefinition.modelFootShift : canon dont le
+//   socle est a l'arriere) est decale d'autant, et ses cases
+//   reservees sont celles que sa boite recouvre.
 // - Orientation (PlacedBlock.rotation = face * 4 + spin) :
 //   face 0 = orientation naturelle du modele (chassis, anciens
 //   blueprints), faces 1..6 = face d'ancrage plaquee contre la
@@ -69,11 +72,29 @@ public static class BlockFootprint
         int axis = AnchorAxis(def.anchor);
         for (int i = 0; i < 3; i++)
         {
-            if (i != axis && size[i] % 2 == 0)
+            if (i == axis)
+                continue;
+            if (HasFootShift(def, i))
+                size[i] = ShiftedCellMax(def, i) - ShiftedCellMin(def, i) + 1;
+            else if (size[i] % 2 == 0)
                 size[i] += 1;
         }
         return size;
     }
+
+    // Axe sur lequel le modele est pose par son pied (decalage mesure par le
+    // resync) : la boite du modele n'est plus centree sur la case visee, les
+    // cases reservees sont celles qu'elle recouvre (au moins ShiftCellReach).
+    private const float ShiftCellReach = 0.1f;
+
+    private static bool HasFootShift(BlockDefinition def, int axis) =>
+        axis != 1 && Mathf.Abs(def.modelFootShift[axis]) > 1e-4f;
+
+    private static int ShiftedCellMin(BlockDefinition def, int axis) =>
+        Mathf.FloorToInt(-Size(def)[axis] * 0.5f + def.modelFootShift[axis] + 0.5f + ShiftCellReach);
+
+    private static int ShiftedCellMax(BlockDefinition def, int axis) =>
+        Mathf.CeilToInt(Size(def)[axis] * 0.5f + def.modelFootShift[axis] - 0.5f - ShiftCellReach);
 
     // Decalage (en cases) de la case "min" des cases reservees par rapport a la
     // case visee, avant rotation. Exemples : aileron 1x2x1 pose (Bottom) ->
@@ -82,6 +103,7 @@ public static class BlockFootprint
     public static Vector3Int MinOffset(BlockDefinition def)
     {
         var size = OccupancySize(def);
+        int axis = AnchorAxis(def.anchor);
         var min = new Vector3Int(Centered(size.x), Centered(size.y), Centered(size.z));
         switch (def.anchor)
         {
@@ -90,6 +112,12 @@ public static class BlockFootprint
             case BlockAnchor.Left:   min.x = 0; break;          // fixation sur -X : croit vers +X
             case BlockAnchor.Back:   min.z = 0; break;          // fixation a l'arriere : croit vers l'avant
             case BlockAnchor.Center: break;
+        }
+        // Pied decale (canon dont le socle est a l'arriere) : les cases suivent le modele
+        for (int i = 0; i < 3; i++)
+        {
+            if (i != axis && HasFootShift(def, i))
+                min[i] = ShiftedCellMin(def, i);
         }
         return min;
     }
@@ -112,7 +140,7 @@ public static class BlockFootprint
             size[i] = visual[i];
             // Une case (i) couvre [i-0.5, i+0.5] : la boite des cases reservees
             // commence donc une demi-case avant leur case min.
-            min[i] = i == axis ? occupancyMin[i] - 0.5f : -visual[i] * 0.5f;
+            min[i] = i == axis ? occupancyMin[i] - 0.5f : -visual[i] * 0.5f + (HasFootShift(def, i) ? def.modelFootShift[i] : 0f);
         }
         return new Bounds(min + size * 0.5f, size);
     }

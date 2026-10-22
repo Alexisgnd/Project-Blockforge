@@ -171,6 +171,19 @@ public static class BlockFootprintSetup
                 float faceGap = 0f, bottom = 0f;
                 Bounds vb0 = default;
                 var issues = new StringBuilder();
+
+                // Pied mesure par le resync : le modele s'enfonce de l'inset dans
+                // le support (seul jeu tolere hors des cases ; un modele pose par
+                // son pied reste dans ses cases, qui le suivent).
+                float scale = BlockPreviewFactory.ModelScale(def, 1f);
+                int anchorAxis = BlockFootprint.AnchorAxis(def.anchor);
+                var slack = Vector3.zero;
+                if (!def.nativeScale && anchorAxis >= 0)
+                    slack[anchorAxis] = def.modelAnchorInset * scale;
+                string foot = def.modelAnchorInset > 0f || def.modelFootShift != Vector3.zero
+                    ? $" pied : enfonce {def.modelAnchorInset * scale:0.00} case, decale ({def.modelFootShift.x:0.00},{def.modelFootShift.z:0.00}) case, cases {BlockFootprint.OccupancySize(def)} des {BlockFootprint.MinOffset(def)}"
+                    : "";
+
                 foreach (int r in CheckedRotations)
                 {
                     var visual = BlockPreviewFactory.CreateVisual(def, 1f, out float b);
@@ -178,6 +191,9 @@ public static class BlockFootprintSetup
                     visual.transform.rotation = BlockFootprint.Rotation(def, r);
                     GarageInventorySetup.TryGetExactBounds(visual, out var vb);
                     UnityEngine.Object.DestroyImmediate(visual);
+                    // Jeu tolere dans le repere monde de cette orientation
+                    var rotSlack = BlockFootprint.Rotation(def, r) * slack;
+                    rotSlack = new Vector3(Mathf.Abs(rotSlack.x), Mathf.Abs(rotSlack.y), Mathf.Abs(rotSlack.z));
 
                     BlockFootprint.GetCells(def, Vector3Int.zero, r, cells);
                     Vector3Int cmin = cells[0], cmax = cells[0];
@@ -193,9 +209,9 @@ public static class BlockFootprintSetup
                     {
                         bottom = b;
                         vb0 = vb;
-                        faceGap = FaceGap(def, vb, box);
+                        faceGap = FaceGap(def, vb, box) + (anchorAxis >= 0 ? slack[anchorAxis] : 0f);
                     }
-                    if (!Contains(box, vb, 1e-3f))
+                    if (!Contains(box, vb, rotSlack + Vector3.one * 1e-3f))
                     {
                         inside = false;
                         issues.Append($" rot{r}: visuel [{F(vb.min)}..{F(vb.max)}] hors cases [{F(box.min)}..{F(box.max)}]");
@@ -210,7 +226,7 @@ public static class BlockFootprintSetup
 
                 sb.AppendLine($"{status,-6} {def.name,-36} {def.SizeLabel,-6} {def.anchor,-6} " +
                               $"brut min{F(rawBounds.min)} max{F(rawBounds.max)} | " +
-                              $"visuel [{F(vb0.min)}..{F(vb0.max)}] ecart face {faceGap:0.000} bas {bottom:0.00}{issues}");
+                              $"visuel [{F(vb0.min)}..{F(vb0.max)}] ecart face {faceGap:0.000} bas {bottom:0.00}{foot}{issues}");
                 if (landmarks.Length > 0)
                     sb.AppendLine($"       reperes :{landmarks}");
             }
@@ -226,10 +242,10 @@ public static class BlockFootprintSetup
         else Debug.Log(summary);
     }
 
-    private static bool Contains(Bounds outer, Bounds inner, float eps)
+    private static bool Contains(Bounds outer, Bounds inner, Vector3 eps)
     {
-        return inner.min.x >= outer.min.x - eps && inner.min.y >= outer.min.y - eps && inner.min.z >= outer.min.z - eps
-            && inner.max.x <= outer.max.x + eps && inner.max.y <= outer.max.y + eps && inner.max.z <= outer.max.z + eps;
+        return inner.min.x >= outer.min.x - eps.x && inner.min.y >= outer.min.y - eps.y && inner.min.z >= outer.min.z - eps.z
+            && inner.max.x <= outer.max.x + eps.x && inner.max.y <= outer.max.y + eps.y && inner.max.z <= outer.max.z + eps.z;
     }
 
     // Distance entre la face d'ancrage du visuel et la face correspondante de la boite

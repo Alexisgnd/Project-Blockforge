@@ -28,3 +28,5 @@ MonoBehaviour:
   modelBounds:
     m_Center: {x: 0, y: 0.5554572, z: -0.0017231703}
     m_Extent: {x: 0.6230001, y: 0.5605425, z: 1.2983607}
+  modelFootShift: {x: 0, y: 0, z: 0}
+  modelAnchorInset: 0

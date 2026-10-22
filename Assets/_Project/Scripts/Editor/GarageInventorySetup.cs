@@ -790,6 +790,7 @@ public static class GarageInventorySetup
                 asset.modelBounds = asset.previewPrefab != null
                     ? ComputeModelBounds(asset.previewPrefab)
                     : default;
+                ComputeModelFoot(asset);
             }
 
             if (isNew)
@@ -837,6 +838,158 @@ public static class GarageInventorySetup
         {
             EditorSceneManager.ClosePreviewScene(preview);
         }
+    }
+
+    // =====================================================
+    // PIED DE MONTAGE (BlockDefinition.modelFootShift / modelAnchorInset,
+    // lus par BlockPreviewFactory et BlockFootprint)
+    // Les FBX nomment leurs pieces : le pied est l'ensemble des meshes dont
+    // le nom contient mount / foot / sole / shoe / socket / attach, limite au
+    // quart du modele cote support (un "rear_power_socket" sur le dos d'un
+    // canon n'est pas un pied). Sans piece nommee, rien ne change (bounds
+    // centres, extremite affleurante, comme avant).
+    // - plan d'appui = point du pied le plus avance vers le support ; ce qui
+    //   depasse (pointes de lame sous la semelle d'une Tesla) s'enfonce dans
+    //   le support (modelAnchorInset) ;
+    // - centre du pied sur les axes horizontaux perpendiculaires : le modele
+    //   est pose pied sur la case visee (modelFootShift, en cases), ses
+    //   cases reservees suivent (BlockFootprint). Un canon dont le socle est
+    //   une case derriere le milieu n'est plus a cheval sur le vide
+    //   (constate sur les presets des bots le 22/10).
+    // Electroplates : la ferrure arriere n'est PAS un plan d'appui (la plaque
+    // pendait a 48 cm de son support par ce pied) : le plan d'appui est le
+    // dos de la plaque, soit la piece la plus en arriere parmi celles qui
+    // couvrent au moins la moitie de la plaque (ferrure, trappe et nervures
+    // du dos exclues), qui s'enfonce dans le support.
+    // =====================================================
+    private static readonly string[] FootNames = { "mount", "foot", "sole", "shoe", "socket", "attach" };
+    private const float FootDepthFraction = 0.25f;  // part du modele (cote support) ou chercher le pied
+    private const float MaxInsetCells = 0.6f;       // au-dela : mesure douteuse, ignoree
+    private const int MaxShiftCells = 2;
+    private const float MinShiftCells = 0.2f;       // en deca : pied considere centre
+
+    private static bool IsFootPart(string name)
+    {
+        foreach (var key in FootNames)
+        {
+            if (name.IndexOf(key, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+        }
+        return false;
+    }
+
+    public static bool IsPlate(BlockDefinition def) =>
+        def != null && (def.family ?? "").IndexOf("electroplate", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+    private static void ComputeModelFoot(BlockDefinition def)
+    {
+        def.modelFootShift = Vector3.zero;
+        def.modelAnchorInset = 0f;
+        if (def.previewPrefab == null || def.nativeScale || def.anchor == BlockAnchor.Center
+            || def.modelBounds.size.sqrMagnitude < 1e-8f)
+            return;
+        float scale = BlockPreviewFactory.ModelScale(def, 1f);
+        if (scale <= 0f)
+            return;
+
+        Vector3 a = BlockFootprint.AnchorNormal(def.anchor);
+        int axis = BlockFootprint.AnchorAxis(def.anchor);
+        var bounds = def.modelBounds;
+        float extremeD = a[axis] > 0f ? bounds.max[axis] : -bounds.min[axis];   // dot(v, a) maximal
+        float depthLimit = extremeD - bounds.size[axis] * FootDepthFraction;
+        bool plate = IsPlate(def);
+
+        float footPlaneD = float.MinValue, bodyPlaneD = float.MinValue;
+        Vector3 footSum = Vector3.zero;
+        int footCount = 0;
+
+        var preview = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(def.previewPrefab, preview);
+            instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+            foreach (var mf in instance.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null || mf.GetComponent<Renderer>() == null)
+                    continue;
+                bool foot = IsFootPart(mf.gameObject.name);
+                var toWorld = mf.transform.localToWorldMatrix;
+                mf.sharedMesh.GetVertices(vertexScratch);
+                if (plate)
+                {
+                    // Dos de la plaque : piece la plus en arriere parmi celles qui
+                    // couvrent au moins la moitie de la plaque sur les deux axes
+                    if (foot || vertexScratch.Count == 0)
+                        continue;
+                    var pmin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                    var pmax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+                    float partD = float.MinValue;
+                    foreach (var v in vertexScratch)
+                    {
+                        var w = toWorld.MultiplyPoint3x4(v);
+                        pmin = Vector3.Min(pmin, w);
+                        pmax = Vector3.Max(pmax, w);
+                        partD = Mathf.Max(partD, Vector3.Dot(w, a));
+                    }
+                    bool wide = true;
+                    for (int k = 0; k < 3; k++)
+                        if (k != axis && pmax[k] - pmin[k] < bounds.size[k] * 0.5f)
+                            wide = false;
+                    if (wide)
+                        bodyPlaneD = Mathf.Max(bodyPlaneD, partD);
+                    continue;
+                }
+                if (!foot)
+                    continue;
+                foreach (var v in vertexScratch)
+                {
+                    var w = toWorld.MultiplyPoint3x4(v);
+                    float d = Vector3.Dot(w, a);
+                    if (d < depthLimit)
+                        continue;
+                    footPlaneD = Mathf.Max(footPlaneD, d);
+                    footSum += w;
+                    footCount++;
+                }
+            }
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(preview);
+        }
+
+        float inset = 0f;
+        if (plate)
+        {
+            if (bodyPlaneD > float.MinValue)
+                inset = extremeD - bodyPlaneD;
+        }
+        else if (footCount > 0)
+        {
+            inset = extremeD - footPlaneD;
+            Vector3 centroid = footSum / footCount;
+            for (int k = 0; k < 3; k++)
+            {
+                if (k == axis || k == 1)
+                    continue;
+                float shift = (bounds.center[k] - centroid[k]) * scale;   // en cases : amene le pied au centre
+                if (Mathf.Abs(shift) > MaxShiftCells)
+                {
+                    Debug.LogWarning($"[GarageInventorySetup] {def.name} : pied a {shift:0.00} case(s) du centre sur l'axe {k}, ignore.");
+                    continue;
+                }
+                if (Mathf.Abs(shift) < MinShiftCells)
+                    continue;   // pied quasi centre : on garde le centrage des bounds
+                def.modelFootShift[k] = shift;
+            }
+        }
+        if (inset * scale > MaxInsetCells)
+        {
+            Debug.LogWarning($"[GarageInventorySetup] {def.name} : plan d'appui a {inset * scale:0.00} case de l'extremite, ignore.");
+            inset = 0f;
+        }
+        def.modelAnchorInset = inset * scale >= 0.01f ? inset : 0f;
     }
 
     // Bounds exacts (monde) d'une hierarchie instanciee : sommets des MeshFilter
