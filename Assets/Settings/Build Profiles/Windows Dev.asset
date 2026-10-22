@@ -40,6 +40,9 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/_Project/Scenes/Matchmaking_Space.unity
     m_guid: 2cf3431940a3b7047bcfdb01c3314032
+  - m_enabled: 1
+    m_path: Assets/_Project/Scenes/Map_MARS_Spectate.unity
+    m_guid: e84df3464097164488930f2561ac5a48
   m_HasScriptingDefines: 0
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:
