@@ -18,6 +18,8 @@ MonoBehaviour:
     Holding more objectives than the enemy drains their tickets; the first team to
     drain the other's tickets wins. Bots fill any seat left open.
   iconName: objective
+  available: 0
+  unavailableReason: Coming in a future update.
   playersLabel: 5 vs 5
   targetLabel: 3 objectives
   timeLabel: 15:00

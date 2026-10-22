@@ -598,6 +598,9 @@ public static class GameModesUISetup
                 m.playersLabel = "5 vs 5"; m.targetLabel = "3 objectives"; m.timeLabel = "15:00";
                 m.teamSize = 5; m.mapName = "Hex valley"; m.versusSummary = "hold three objectives · 15:00";
                 m.sceneName = "Map_MARS";
+                // Early Access : affiche mais indisponible (cadenas, raison au survol)
+                m.available = false;
+                m.unavailableReason = "Coming in a future update.";
             }),
         };
 

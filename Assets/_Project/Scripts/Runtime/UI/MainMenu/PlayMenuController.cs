@@ -27,6 +27,16 @@ using UnityEngine.UI;
 // ecran Versus 5 v 5) et charge la scene du mode.
 // Sans robot, les deux actions sont indisponibles (cadenas du
 // DS absent, raison au survol).
+// Early Access : pas encore de multijoueur (OnlineMatchesAvailable
+// = false). « Find a match » est desactive avec le cadenas du DS
+// et sa raison au survol ; Entree et l'indication de touche
+// passent sur « Play with bots ».
+// Modes indisponibles (GameModeDefinition.available = false,
+// Battle Arena en Early Access) : la ligne reste affichee avec
+// l'opacite disabled, le cadenas et la raison au survol
+// (GameModeCard) ; elle ne peut etre ni selectionnee ni lancee
+// et la selection par defaut tombe sur le premier mode
+// disponible.
 // =========================================================
 
 public class PlayMenuController : MonoBehaviour
@@ -65,6 +75,10 @@ public class PlayMenuController : MonoBehaviour
     [Tooltip("Raison affichee au survol d'une action indisponible")]
     public TMP_Text reasonText;
 
+    // Multijoueur en ligne : false tant qu'il n'existe pas (Early Access contre les bots)
+    public static readonly bool OnlineMatchesAvailable = false;
+    public const string OnlineLockedReason = "Online matches arrive in a future update. Play with bots for now.";
+
     // Choix du joueur au lancement, lu par la scene de jeu
     public static bool PlayWithBots { get; private set; } = true;
 
@@ -90,10 +104,20 @@ public class PlayMenuController : MonoBehaviour
         if (findMatchButton != null)
         {
             findMatchButton.onClick.AddListener(FindMatch);
-            // Plus de cadenas « bientot disponible » (scene generee avant le deverrouillage)
+            // Cadenas du DS tant que le multijoueur n'existe pas
             var lockIcon = findMatchButton.transform.Find("LockIcon");
             if (lockIcon != null)
-                lockIcon.gameObject.SetActive(false);
+                lockIcon.gameObject.SetActive(!OnlineMatchesAvailable);
+            if (!OnlineMatchesAvailable)
+            {
+                findMatchButton.interactable = false;
+                // Indication de touche : Entree lance « Play with bots »
+                var hintCaption = findMatchButton.transform.parent != null
+                    ? findMatchButton.transform.parent.Find("KeyHint/Caption")?.GetComponent<TMP_Text>()
+                    : null;
+                if (hintCaption != null)
+                    hintCaption.text = "Play with bots";
+            }
         }
         if (reasonText != null)
             reasonText.text = "";
@@ -118,8 +142,8 @@ public class PlayMenuController : MonoBehaviour
             if (cards[i] != null && definitions[i] != null)
                 cards[i].Bind(definitions[i], SelectCard);
         }
-        if (Current == null && cards.Length > 0 && cards[0] != null && cards[0].Definition != null)
-            SelectCard(cards[0]);
+        if (Current == null)
+            SelectFirstAvailable();
     }
 
     private void Update()
@@ -128,12 +152,19 @@ public class PlayMenuController : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null || MatchIntro.IsRunning || MatchmakingService.IsActive || SceneFade.IsRunning)
             return;
-        if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && findMatchButton != null && findMatchButton.interactable)
+        // Sans multijoueur, Entree lance « Play with bots »
+        var primary = OnlineMatchesAvailable ? findMatchButton : playButton;
+        if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && primary != null && primary.interactable)
         {
             // Pas quand un champ de saisie a le focus
             var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             if (selected == null || selected.GetComponent<TMP_InputField>() == null)
-                FindMatch();
+            {
+                if (OnlineMatchesAvailable)
+                    FindMatch();
+                else
+                    LaunchCurrentMode();
+            }
         }
     }
 
@@ -143,8 +174,8 @@ public class PlayMenuController : MonoBehaviour
     {
         gameObject.SetActive(true);
         RefreshRobot(slotManager != null ? slotManager.SelectedRobot : null, slotManager != null ? slotManager.SelectedIndex : -1);
-        if (Current == null && cards != null && cards.Length > 0 && cards[0] != null && cards[0].Definition != null)
-            SelectCard(cards[0]);
+        if (Current == null || !Current.available)
+            SelectFirstAvailable();
     }
 
     public void Close()
@@ -156,7 +187,8 @@ public class PlayMenuController : MonoBehaviour
 
     public void SelectCard(GameModeCard card)
     {
-        if (card == null || card.Definition == null)
+        // Mode indisponible : ni selection ni lancement
+        if (card == null || card.Definition == null || !card.Available)
             return;
         Current = card.Definition;
         foreach (var c in cards)
@@ -165,6 +197,21 @@ public class PlayMenuController : MonoBehaviour
                 c.Selected = c == card;
         }
         FillDetails(Current);
+    }
+
+    // Selection par defaut : le premier mode disponible de la liste
+    private void SelectFirstAvailable()
+    {
+        if (cards == null)
+            return;
+        foreach (var c in cards)
+        {
+            if (c != null && c.Definition != null && c.Available)
+            {
+                SelectCard(c);
+                return;
+            }
+        }
     }
 
     private void FillDetails(GameModeDefinition def)
@@ -226,8 +273,11 @@ public class PlayMenuController : MonoBehaviour
         {
             if (button == null)
                 continue;
-            button.interactable = has;
-            HoverReason.Attach(button.gameObject, this, blockedReason);
+            bool online = button == findMatchButton;
+            bool available = has && (!online || OnlineMatchesAvailable);
+            button.interactable = available;
+            string reason = online && !OnlineMatchesAvailable ? OnlineLockedReason : blockedReason;
+            HoverReason.Attach(button.gameObject, this, reason);
         }
     }
 
@@ -266,6 +316,12 @@ public class PlayMenuController : MonoBehaviour
     {
         if (mode == null || record == null || MatchIntro.IsRunning)
             return;
+        // Garde-fou : un mode indisponible ne se lance pas (Entree, matchmaking)
+        if (!mode.available)
+        {
+            Toast.Info(string.IsNullOrEmpty(mode.unavailableReason) ? "Coming in a future update." : mode.unavailableReason);
+            return;
+        }
 
         PlayWithBots = true;
 
@@ -289,6 +345,11 @@ public class PlayMenuController : MonoBehaviour
 
     private void FindMatch()
     {
+        if (!OnlineMatchesAvailable)
+        {
+            Toast.Info(OnlineLockedReason);
+            return;
+        }
         if (Current == null || MatchIntro.IsRunning || MatchmakingService.IsActive || SceneFade.IsRunning)
             return;
         if (robot == null)

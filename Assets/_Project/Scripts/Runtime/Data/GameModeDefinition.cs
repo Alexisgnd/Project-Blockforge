@@ -21,6 +21,13 @@ public class GameModeDefinition : ScriptableObject
     [Tooltip("Pictogramme du DS (Resources/DesignSystem/Icons) : skull, objective, group…")]
     public string iconName = "skull";
 
+    [Header("Disponibilite")]
+    [Tooltip("Faux : le mode reste affiche dans la liste de l'ecran Play (opacite disabled, cadenas, " +
+             "raison au survol) mais ne peut etre ni selectionne ni lance")]
+    public bool available = true;
+    [Tooltip("Raison affichee au survol d'un mode indisponible")]
+    public string unavailableReason = "Coming in a future update.";
+
     [Header("Chiffres de la fiche (readout)")]
     public string playersLabel = "5 vs 5";
     public string targetLabel = "15 kills";

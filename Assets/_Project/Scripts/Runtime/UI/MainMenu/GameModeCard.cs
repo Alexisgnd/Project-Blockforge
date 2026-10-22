@@ -11,6 +11,11 @@ using UnityEngine.UI;
 // La selection (surface-selected + border-accent, pictogramme
 // en accent) est portee par DSElement : la carte ne touche pas
 // aux couleurs.
+// Mode indisponible (GameModeDefinition.available = false) :
+// regle du DS pour un controle desactive. Le bouton passe non
+// interactif (DSElement applique opacity-disabled et coupe le
+// survol), DisabledReason pose le cadenas et la raison au
+// survol ; la carte ne peut pas etre selectionnee.
 // =========================================================
 
 public class GameModeCard : MonoBehaviour
@@ -25,6 +30,9 @@ public class GameModeCard : MonoBehaviour
     public Image chevron;
 
     public GameModeDefinition Definition { get; private set; }
+
+    // Faux : carte affichee mais ni selectionnable ni lancable
+    public bool Available { get; private set; } = true;
 
     private Action<GameModeCard> onSelect;
 
@@ -47,6 +55,29 @@ public class GameModeCard : MonoBehaviour
             button.onClick.RemoveListener(Select);
             button.onClick.AddListener(Select);
         }
+
+        // Etat lu sur la donnee au runtime : pas besoin de relancer le setup
+        SetAvailable(def.available, def.unavailableReason);
+    }
+
+    // Disponibilite du mode : opacite disabled + cadenas + raison au survol si indisponible
+    public void SetAvailable(bool value, string reason)
+    {
+        Available = value;
+        if (button != null)
+            button.interactable = value;
+        var why = GetComponent<DisabledReason>();
+        if (!value)
+        {
+            if (why == null)
+                why = gameObject.AddComponent<DisabledReason>();
+            why.Set(string.IsNullOrEmpty(reason) ? "Coming in a future update." : reason);
+            Selected = false;
+        }
+        else if (why != null)
+        {
+            why.Clear();
+        }
     }
 
     public bool Selected
@@ -66,7 +97,7 @@ public class GameModeCard : MonoBehaviour
 
     private void Select()
     {
-        if (Definition != null)
+        if (Definition != null && Available)
             onSelect?.Invoke(this);
     }
 }

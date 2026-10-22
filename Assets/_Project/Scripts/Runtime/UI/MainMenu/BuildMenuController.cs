@@ -164,7 +164,8 @@ public class BuildMenuController : MonoBehaviour
 
         if (string.IsNullOrEmpty(record.data.name))
             record.data.name = record.name;
-        previews[index] = RobotThumbnailRenderer.Render(record.data, showcase.Catalog, showcase.transform.position,
+        // Studio photo isole (loin du hangar : ni ses lumieres ni son exposition)
+        previews[index] = RobotThumbnailRenderer.Render(record.data, showcase.Catalog, RobotThumbnailRenderer.DefaultStage,
                                                         Mathf.RoundToInt(size.x), Mathf.RoundToInt(size.y), previews[index]);
         return previews[index];
     }
