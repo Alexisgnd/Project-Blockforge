@@ -127,6 +127,12 @@
     --pp-tile-name-size: 11px;
     --pp-tile-name-tracking: 0.66px;
     --pp-drag-ghost-size: 96px;
+    /* Piece verrouillee : pastille du cadenas centree sur la vignette */
+    --pp-tile-lock-size: 36px;
+    --pp-tile-lock-icon: 18px;
+    --pp-tile-lock-border: 1px;
+    --pp-tile-lock-radius: 999px;
+    --pp-tile-lock-fill: rgba(17, 21, 28, 0.85);
     --pp-drag-ghost-opacity: 0.85;
 
     /* ---------- Anneau de focus (clavier, manette) ---------- */
@@ -272,4 +278,5 @@
 .pp-icon--pin { background-image: url("../../Icons/pin.png"); }
 .pp-icon--info { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/info.png"); }
 .pp-icon--warning { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/warning.png"); }
+.pp-icon--lock { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/lock.png"); }
 .pp-icon--chevron-down { background-image: url("../../../DesignSystem/Resources/DesignSystem/Icons/chevron-down.png"); }

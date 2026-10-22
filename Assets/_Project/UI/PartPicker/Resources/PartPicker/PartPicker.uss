@@ -614,6 +614,39 @@
     color: var(--pp-ink-white);
 }
 
+/* Piece verrouillee : vignette et nom a l'opacite disabled, cadenas net par-dessus */
+.pp-tile--locked .pp-tile__clip,
+.pp-tile--locked .pp-tile__name {
+    opacity: var(--pp-disabled-opacity);
+}
+
+.pp-tile__lock {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.pp-tile__lock-chip {
+    width: var(--pp-tile-lock-size);
+    height: var(--pp-tile-lock-size);
+    align-items: center;
+    justify-content: center;
+    background-color: var(--pp-tile-lock-fill);
+    border-width: var(--pp-tile-lock-border);
+    border-color: var(--pp-border-strong);
+    border-radius: var(--pp-tile-lock-radius);
+}
+
+.pp-tile__lock-icon {
+    width: var(--pp-tile-lock-icon);
+    height: var(--pp-tile-lock-icon);
+    -unity-background-image-tint-color: var(--pp-ink-white);
+}
+
 .pp-drag-ghost {
     position: absolute;
     width: var(--pp-drag-ghost-size);

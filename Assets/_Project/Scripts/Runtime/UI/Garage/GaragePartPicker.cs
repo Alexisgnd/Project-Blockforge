@@ -13,6 +13,8 @@ using UnityEngine.UI;
 // - catalogue : les BlockDefinition de l'inventaire (toutes
 //   possedees : pas encore de progression) converties en
 //   PartDefinition (categorie, famille du PickerTheme, stats) ;
+//   les blocs verrouilles (RobotLoadout.IsLocked) y sont, marques
+//   locked : visibles avec un cadenas, jamais pris par la pince ;
 // - budget : le CPU du robot en cours (GarageStatsHUD, une seule
 //   reserve dans le jeu : toutes les pieces y puisent) ;
 // - choisir une tuile = GarageInventoryController.SelectBlock :
@@ -138,7 +140,7 @@ public class GaragePartPicker : MonoBehaviour
     {
         if (picker == null || picker.IsOpen)
             return;
-        if (inventory.CurrentBlock != null)
+        if (inventory.CurrentBlock != null && !RobotLoadout.IsLocked(inventory.CurrentBlock))
             picker.SetCurrent(inventory.CurrentBlock.name);
         picker.Open();
     }
@@ -146,7 +148,8 @@ public class GaragePartPicker : MonoBehaviour
     private void OnSelected(PartDefinition part)
     {
         var def = catalog.Lookup(part.id);
-        if (def != null && def != inventory.CurrentBlock)
+        // Bloc verrouille : jamais dans la pince (le picker ne le selectionne deja pas)
+        if (def != null && !RobotLoadout.IsLocked(def) && def != inventory.CurrentBlock)
             inventory.SelectBlock(def);
     }
 
@@ -225,7 +228,7 @@ public class GaragePartPicker : MonoBehaviour
     // ADAPTATEURS
     // =========================================================
 
-    // Catalogue du garage -> pieces du picker (toutes possedees)
+    // Catalogue du garage -> pieces du picker (toutes possedees ; verrouillees = locked)
     private sealed class BlockInventoryAdapter : IInventory
     {
         private readonly List<PartDefinition> parts = new();
@@ -233,6 +236,7 @@ public class GaragePartPicker : MonoBehaviour
 
         public BlockInventoryAdapter(IEnumerable<BlockDefinition> blocks, PickerTheme theme, float weaponRange)
         {
+            // Modules et arme healer verrouilles dans cette version : affiches avec un cadenas (Convert)
             var defs = (blocks ?? Enumerable.Empty<BlockDefinition>()).Where(b => b != null).ToList();
             foreach (var def in defs)
             {
@@ -265,6 +269,8 @@ public class GaragePartPicker : MonoBehaviour
                 previewPrefab = def.previewPrefab,
                 cpuCost = def.costCpu,
                 cpuPool = CpuPool.Base, // une seule reserve CPU dans le jeu
+                locked = RobotLoadout.IsLocked(def),
+                lockedReason = RobotLoadout.LockedReason,
             };
 
             switch (category)
@@ -299,8 +305,13 @@ public class GaragePartPicker : MonoBehaviour
                 case BlockCategory.Armes: return PartCategory.Weapons;
                 case BlockCategory.Special: return PartCategory.Electronics;
                 case BlockCategory.Defense:
-                    // Distributeurs nano = modules ; electroplates = blindage
-                    return RobotLoadout.Kind(def) == LoadoutKind.Module ? PartCategory.Electronics : PartCategory.Blocks;
+                    // Nano : Blinder (IEM) = module, Mender / Constructor = arme healer ; electroplates = blindage
+                    switch (RobotLoadout.Kind(def))
+                    {
+                        case LoadoutKind.Module: return PartCategory.Electronics;
+                        case LoadoutKind.Weapon: return PartCategory.Weapons;
+                        default: return PartCategory.Blocks;
+                    }
                 default: return PartCategory.Blocks;
             }
         }

@@ -24,6 +24,10 @@ using UnityEngine.UIElements;
 //   piece et ferment (Maj : reste ouvert). Rien n'est pose au-dela
 //   du budget CPU de la reserve de la piece.
 // - Selection et defilement memorises par onglet (session).
+// - Piece verrouillee (PartDefinition.locked) : tuile atenuee +
+//   cadenas ; clic, double clic, Entree, glisser et Place sans
+//   effet, jamais selectionnee (Selected). Survol ou focus clavier :
+//   la fiche detail la montre avec la raison du verrou.
 // - Reduce motion : ni fondu ni rotation de l'apercu.
 // Donnees : Bind(IInventory, IRobotBudget). Couleurs et mesures :
 // PickerTheme.uss ; textes et durees : PickerTheme.
@@ -103,6 +107,8 @@ public class PartPickerController : MonoBehaviour
     private int activeTab;
     private string query = "";
     private PartDefinition selected;
+    // Piece verrouillee survolee (ou au focus) : montree dans la fiche sans etre selectionnee
+    private PartDefinition inspected;
     private bool popupOpen;
     private bool searchFocused;
     private IVisualElementScheduledItem debounce;
@@ -242,7 +248,7 @@ public class PartPickerController : MonoBehaviour
         if (root == null || string.IsNullOrEmpty(partId))
             return false;
         var tile = visibleTiles.FirstOrDefault(t => t.part.id == partId);
-        if (tile == null)
+        if (tile == null || tile.part.locked)
             return false;
         SetSelection(tile.part, true);
         return true;
@@ -287,6 +293,11 @@ public class PartPickerController : MonoBehaviour
         ClosePopup();
         CancelDrag();
         SaveScroll();
+        if (inspected != null)
+        {
+            inspected = null;
+            ShowDetail(selected);
+        }
         root?.focusController?.focusedElement?.Blur();
         if (dim != null)
             dim.pickingMode = PickingMode.Ignore;
@@ -442,8 +453,9 @@ public class PartPickerController : MonoBehaviour
 
         preview.RegisterCallback<GeometryChangedEvent>(_ =>
         {
-            if (selected != null && selected.previewPrefab != null)
-                ShowPreview(selected);
+            var shown = Shown;
+            if (shown != null && shown.previewPrefab != null)
+                ShowPreview(shown);
         });
         preview.RegisterCallback<CustomStyleResolvedEvent>(e =>
         {
@@ -588,6 +600,7 @@ public class PartPickerController : MonoBehaviour
         t.root = new VisualElement { focusable = true, tabIndex = 0 };
         t.root.AddToClassList("pp-tile");
         t.root.tooltip = part.name;
+        t.root.EnableInClassList("pp-tile--locked", part.locked);
 
         t.frame = new VisualElement { pickingMode = PickingMode.Ignore };
         t.frame.AddToClassList("pp-tile__frame");
@@ -603,6 +616,21 @@ public class PartPickerController : MonoBehaviour
             t.image.style.backgroundImage = new StyleBackground(part.thumbnail);
         clip.Add(t.image);
         t.frame.Add(clip);
+        if (part.locked)
+        {
+            // Cadenas net par-dessus la vignette atenuee (opacite disabled : PartPicker.uss)
+            var lockLayer = new VisualElement { pickingMode = PickingMode.Ignore };
+            lockLayer.AddToClassList("pp-tile__lock");
+            var lockChip = new VisualElement { pickingMode = PickingMode.Ignore };
+            lockChip.AddToClassList("pp-tile__lock-chip");
+            var lockIcon = new VisualElement { pickingMode = PickingMode.Ignore };
+            lockIcon.AddToClassList("pp-icon");
+            lockIcon.AddToClassList("pp-icon--lock");
+            lockIcon.AddToClassList("pp-tile__lock-icon");
+            lockChip.Add(lockIcon);
+            lockLayer.Add(lockChip);
+            t.frame.Add(lockLayer);
+        }
         t.frame.Add(Ring());
         t.root.Add(t.frame);
 
@@ -617,11 +645,22 @@ public class PartPickerController : MonoBehaviour
         t.root.RegisterCallback<PointerCaptureOutEvent>(_ => { if (pressedTile == t) CancelDrag(); });
         t.root.RegisterCallback<NavigationSubmitEvent>(e =>
         {
-            if (selected == t.part) RequestPlace(t.part);
-            else SetSelection(t.part, true);
+            // Piece verrouillee : Entree sans effet
+            if (!t.part.locked)
+            {
+                if (selected == t.part) RequestPlace(t.part);
+                else SetSelection(t.part, true);
+            }
             e.StopPropagation();
         });
-        t.root.RegisterCallback<FocusInEvent>(_ => grid.ScrollTo(t.root));
+        t.root.RegisterCallback<FocusInEvent>(_ =>
+        {
+            grid.ScrollTo(t.root);
+            Inspect(t.part);
+        });
+        t.root.RegisterCallback<FocusOutEvent>(_ => Uninspect(t.part));
+        t.root.RegisterCallback<PointerEnterEvent>(_ => Inspect(t.part));
+        t.root.RegisterCallback<PointerLeaveEvent>(_ => Uninspect(t.part));
         return t;
     }
 
@@ -821,6 +860,11 @@ public class PartPickerController : MonoBehaviour
         }
         layoutDirty = true;
 
+        // Piece verrouillee survolee : gardee dans la fiche tant que sa tuile reste affichee
+        bool lostInspect = inspected != null && !list.Contains(inspected);
+        if (lostInspect)
+            inspected = null;
+
         // Pied
         if (searching)
         {
@@ -838,11 +882,13 @@ public class PartPickerController : MonoBehaviour
         string want = searching ? Memory.searchSelectedId : Memory.selectedId;
         if (want == null && selected != null && !emptySearch)
             want = selected.id;
-        var target = want != null ? list.FirstOrDefault(p => p.id == want) : null;
+        var target = want != null ? list.FirstOrDefault(p => p.id == want && !p.locked) : null;
         if (target != null)
             SetSelection(target, target != selected);
         else
             SetSelection(null, false);
+        if (lostInspect)
+            ShowDetail(selected);
 
         // Defilement memorise
         pendingScroll = Memory.hasScroll ? (searching ? Memory.searchScroll : Memory.scroll) : 0f;
@@ -1162,6 +1208,9 @@ public class PartPickerController : MonoBehaviour
 
     private void SetSelection(PartDefinition part, bool notify)
     {
+        // Une piece verrouillee ne devient jamais l'outil de pose
+        if (part != null && part.locked)
+            return;
         bool changed = part != selected;
         selected = part;
         foreach (var t in tiles.Values)
@@ -1174,9 +1223,29 @@ public class PartPickerController : MonoBehaviour
         }
 
         if (changed || notify)
-            ShowDetail(part);
+            ShowDetail(inspected ?? part);
         if (notify && part != null)
             Selected?.Invoke(part);
+    }
+
+    // Piece montree par la fiche detail : la verrouillee survolee, sinon la selection
+    private PartDefinition Shown => inspected ?? selected;
+
+    private void Inspect(PartDefinition part)
+    {
+        if (part == null || !part.locked || part == inspected || root == null || !IsOpen)
+            return;
+        inspected = part;
+        ShowDetail(part);
+    }
+
+    private void Uninspect(PartDefinition part)
+    {
+        if (inspected == null || inspected != part)
+            return;
+        inspected = null;
+        if (root != null)
+            ShowDetail(selected);
     }
 
     private void ShowDetail(PartDefinition part)
@@ -1254,9 +1323,26 @@ public class PartPickerController : MonoBehaviour
 
     private void RefreshNotice()
     {
-        if (selected == null || notice == null)
+        var part = Shown;
+        if (part == null || notice == null)
             return;
-        var part = selected;
+
+        // Piece verrouillee : la raison du verrou, ni Place ni Pin
+        noticeIcon.EnableInClassList("pp-icon--lock", part.locked);
+        pin.SetEnabled(!part.locked);
+        if (part.locked)
+        {
+            notice.EnableInClassList("pp-notice--info", false);
+            notice.EnableInClassList("pp-notice--warning", true);
+            noticeIcon.EnableInClassList("pp-icon--info", false);
+            noticeIcon.EnableInClassList("pp-icon--warning", false);
+            noticeTitle.style.display = DisplayStyle.Flex;
+            noticeTitle.text = theme.lockedTitle;
+            noticeBody.text = string.IsNullOrEmpty(part.lockedReason) ? theme.lockedBody : part.lockedReason;
+            place.SetEnabled(false);
+            return;
+        }
+
         var pool = theme.Pool(part.cpuPool);
         bool fits = PartPickerLogic.Fits(part, budget, out int used, out int max);
 
@@ -1316,7 +1402,7 @@ public class PartPickerController : MonoBehaviour
     // POSE
     // =========================================================
 
-    private bool CanPlace(PartDefinition part) => part != null && PartPickerLogic.Fits(part, budget, out _, out _);
+    private bool CanPlace(PartDefinition part) => part != null && !part.locked && PartPickerLogic.Fits(part, budget, out _, out _);
 
     private void RequestPlace(PartDefinition part)
     {
@@ -1346,6 +1432,12 @@ public class PartPickerController : MonoBehaviour
     {
         if (e.button != 0)
             return;
+        if (t.part.locked)
+        {
+            // Ni selection, ni pose au double clic, ni glisser
+            e.StopPropagation();
+            return;
+        }
         SetSelection(t.part, true);
         if (e.clickCount >= 2)
         {
@@ -1438,7 +1530,7 @@ public class PartPickerController : MonoBehaviour
         if (selected != null)
             tiles.TryGetValue(selected.id, out target);
         if (target == null || !visibleTiles.Contains(target))
-            target = visibleTiles.Count > 0 ? visibleTiles[0] : null;
+            target = visibleTiles.FirstOrDefault(t => !t.part.locked) ?? (visibleTiles.Count > 0 ? visibleTiles[0] : null);
         if (target != null)
             target.root.Focus();
         else

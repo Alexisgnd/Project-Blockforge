@@ -8,10 +8,19 @@ using UnityEngine;
 // 1 arme + 2 modules, 3 armes...), toutes quantites confondues
 // (8 Laser Wasp = un seul type). Un type = un bloc du catalogue
 // (blockId) : Laser Wasp et Laser Hornet sont deux types.
-// - Arme  : categorie Armes (lasers, plasma, rail, Tesla)
-// - Module: categorie Special (radar, disque de bouclier) et
-//           famille "Nano dispenser" (soins, reconstruction,
-//           brouillage) ; les electroplates restent du blindage
+// - Arme  : categorie Armes (lasers, plasma, rail, Tesla) et
+//           arme healer (famille "Nano dispenser" : Mender, soins,
+//           et Constructor, reconstruction)
+// - Module: categorie Special (disque de bouclier, radar) et IEM
+//           (Nano Blinder, brouillage) ; les electroplates restent
+//           du blindage
+// Verrouillage de l'Early Access (IsLocked) : les modules et
+// l'arme healer n'ont pas encore d'effet en match. Ils restent
+// visibles dans le garage (inventaire, part picker) avec un
+// cadenas mais ne se selectionnent pas, ne se posent plus et ne comptent pas dans la limite ni dans les
+// slots du match (robot anterieur qui en porte : blocs inertes).
+// Pour les rouvrir : vider LockedFamilies / LockedBlockIds et
+// passer LockModules a false.
 // L'ordre des types est celui de leur premiere apparition dans
 // le blueprint : il donne les slots 1, 2, 3 du HUD de match.
 // Partage par le garage (GarageBuildController, popup de
@@ -23,20 +32,56 @@ public enum LoadoutKind { None, Weapon, Module }
 public static class RobotLoadout
 {
     public const int MaxTypes = 3;
-    public const string ModuleFamily = "Nano dispenser";
+    // Arme healer (soins, reconstruction) ; le Blinder de la meme famille est l'IEM
+    public const string HealerFamily = "Nano dispenser";
+    // IEM : bloc de la famille Nano classe en module (id = nom de l'asset)
+    public const string EmpBlockId = "Block_Nano_N1_Blinder";
+
+    // ---------- Verrouillage Early Access ----------
+    // Tous les modules (disque de bouclier, radar, IEM) sont verrouilles
+    public static readonly bool LockModules = true;
+    // Familles d'armes verrouillees (arme healer)
+    private static readonly string[] LockedFamilies = { HealerFamily };
+    // Blocs verrouilles un par un (en plus des regles ci-dessus)
+    private static readonly string[] LockedBlockIds = { };
+
+    public const string LockedReason = "Locked in this version: not available yet.";
+
+    public static bool IsEmp(BlockDefinition def) => def != null && def.name == EmpBlockId;
 
     public static LoadoutKind Kind(BlockDefinition def)
     {
         if (def == null)
             return LoadoutKind.None;
-        if (def.category == BlockCategory.Armes)
-            return LoadoutKind.Weapon;
-        if (def.category == BlockCategory.Special || def.family == ModuleFamily)
+        if (def.category == BlockCategory.Special || IsEmp(def))
             return LoadoutKind.Module;
+        if (def.category == BlockCategory.Armes || def.family == HealerFamily)
+            return LoadoutKind.Weapon;
         return LoadoutKind.None;
     }
 
-    public static bool Counts(BlockDefinition def) => Kind(def) != LoadoutKind.None;
+    // Bloc indisponible dans cette version (garage et match)
+    public static bool IsLocked(BlockDefinition def)
+    {
+        if (def == null)
+            return false;
+        if (LockModules && Kind(def) == LoadoutKind.Module)
+            return true;
+        foreach (var f in LockedFamilies)
+        {
+            if (def.family == f)
+                return true;
+        }
+        foreach (var id in LockedBlockIds)
+        {
+            if (def.name == id)
+                return true;
+        }
+        return false;
+    }
+
+    // Compte dans la limite de types et donne un slot en match (bloc verrouille : non)
+    public static bool Counts(BlockDefinition def) => Kind(def) != LoadoutKind.None && !IsLocked(def);
 
     public static string KindLabel(LoadoutKind kind) => kind switch
     {

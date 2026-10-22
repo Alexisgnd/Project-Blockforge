@@ -9,6 +9,8 @@ using UnityEngine;
 //   prefab d'apercu 3D, lignes de stats, cout CPU et reserve).
 // - IInventory : pieces possedees (seules listees ; quantite
 //   illimitee une fois possedee, le CPU est la seule limite) ;
+//   une piece possedee peut etre verrouillee (locked) : affichee
+//   atenuee avec un cadenas, jamais selectionnable ;
 //   NotOwnedCount alimente le lien « N more parts in the Store ».
 // - IRobotBudget : CPU utilise / maximum par reserve du robot en
 //   cours (base, armes, cosmetiques).
@@ -76,6 +78,10 @@ public class PartDefinition
     public List<PartStat> stats = new();
     public int cpuCost;
     public CpuPool cpuPool;
+    [Tooltip("Piece visible mais indisponible (verrou Early Access) : tuile atenuee + cadenas, jamais selectionnee ni posee")]
+    public bool locked;
+    [Tooltip("Raison affichee dans la fiche detail d'une piece verrouillee ; vide = PickerTheme.lockedBody")]
+    public string lockedReason;
 
     public bool TryGetStat(string statId, out PartStat stat)
     {

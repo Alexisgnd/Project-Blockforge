@@ -88,6 +88,10 @@ public class GarageInventoryController : MonoBehaviour
             var card = Instantiate(cardTemplate, gridParent);
             card.gameObject.SetActive(true);
             card.Bind(def, OnCardClicked);
+            // Modules et arme healer verrouilles dans cette version (RobotLoadout.IsLocked) :
+            // carte visible, atenuee, cadenas + raison au survol, non cliquable
+            if (RobotLoadout.IsLocked(def))
+                card.SetLocked(RobotLoadout.LockedReason);
             cards.Add(card);
         }
 
@@ -108,8 +112,10 @@ public class GarageInventoryController : MonoBehaviour
     private void Start()
     {
         SelectCategory(-1);
-        if (cards.Count > 0)
-            SelectBlock(cards[0].Definition);
+        // Bloc initial de la pince : la premiere carte non verrouillee
+        var first = cards.Find(c => !RobotLoadout.IsLocked(c.Definition));
+        if (first != null)
+            SelectBlock(first.Definition);
         RefreshCapacity();
         SetOpenImmediate(false);
     }
@@ -243,6 +249,9 @@ public class GarageInventoryController : MonoBehaviour
 
     public void SelectBlock(BlockDefinition def)
     {
+        // Bloc verrouille (RobotLoadout.IsLocked) : jamais selectionne ni pris par la pince
+        if (def == null || RobotLoadout.IsLocked(def))
+            return;
         selected = def;
 
         foreach (var card in cards)

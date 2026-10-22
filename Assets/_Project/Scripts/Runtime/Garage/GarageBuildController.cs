@@ -257,7 +257,8 @@ public class GarageBuildController : MonoBehaviour
         bool onThruster = mounted && SupportIsThruster(placeCell - faceNormal);
         // Une tige ne porte que du chassis
         bool onRod = BlockMountRules.IsMounted(def) && SupportIsRod(placeCell - faceNormal);
-        bool valid = !onThruster && !onRod && CanPlace(def, placeCell, rotation) && CapacityAllows(def)
+        bool locked = RobotLoadout.IsLocked(def);
+        bool valid = !locked && !onThruster && !onRod && CanPlace(def, placeCell, rotation) && CapacityAllows(def)
                      && HasSupport(def, placeCell, rotation, false);
         ShowGhost(def, placeCell, rotation, valid);
 
@@ -308,7 +309,9 @@ public class GarageBuildController : MonoBehaviour
         }
         else if (!valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            if (onThruster)
+            if (locked)
+                Toast.Warning($"{def.blockName}: {RobotLoadout.LockedReason}");
+            else if (onThruster)
                 Toast.Warning(BlockMountRules.ThrusterRule);
             else if (onRod)
                 Toast.Warning(BlockMountRules.RodRule);
@@ -368,8 +371,23 @@ public class GarageBuildController : MonoBehaviour
     }
 
     // Blueprint charge avec trop de types (robot anterieur a la regle)
+    // ou avec des pieces verrouillees dans cette version (inertes en match)
     private void WarnLoadoutOverLimit()
     {
+        var lockedNames = new List<string>();
+        if (RobotSession.Blueprint != null && defsById != null)
+        {
+            foreach (var b in RobotSession.Blueprint.blocks)
+            {
+                if (b != null && !string.IsNullOrEmpty(b.blockId) && defsById.TryGetValue(b.blockId, out var d)
+                    && RobotLoadout.IsLocked(d) && !lockedNames.Contains(d.blockName))
+                    lockedNames.Add(d.blockName);
+            }
+        }
+        if (lockedNames.Count > 0)
+            Toast.Warning($"This robot carries parts locked in this version ({string.Join(", ", lockedNames)}). " +
+                          "They do nothing in a match: remove them to free CPU.");
+
         var loadout = RobotLoadout.Collect(RobotSession.Blueprint, defsById);
         if (loadout.Count > RobotLoadout.MaxTypes)
             Toast.Warning($"This robot has {loadout.Count} weapon and module types. Only {RobotLoadout.MaxTypes} " +

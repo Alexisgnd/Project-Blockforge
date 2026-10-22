@@ -38,6 +38,24 @@ public class InventoryItemCard : MonoBehaviour
         button.onClick.AddListener(() => onSelect?.Invoke(Definition));
     }
 
+    // Carte verrouillee : bouton desactive (opacity-disabled via DSElement), cadenas
+    // et raison au survol (DisabledReason du DS)
+    public void SetLocked(string reason)
+    {
+        button.interactable = false;
+        var why = button.GetComponent<DisabledReason>();
+        if (why == null)
+            why = button.gameObject.AddComponent<DisabledReason>();
+        why.Set(reason);
+        if (!TryGetComponent<DSElement>(out _))
+        {
+            // Sans DSElement : l'opacite disabled posee ici
+            if (!TryGetComponent<CanvasGroup>(out var group))
+                group = gameObject.AddComponent<CanvasGroup>();
+            group.alpha = BlockforgeTheme.OpacityDisabled;
+        }
+    }
+
     // PartCard : surface-selected + border-accent (porte par DSElement)
     public void SetSelected(bool selected)
     {

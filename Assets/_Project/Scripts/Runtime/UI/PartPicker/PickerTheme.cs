@@ -175,6 +175,10 @@ public class PickerTheme : ScriptableObject
     public string fullTitleFormat = "{0} is full";
     [Tooltip("{0} cout ; {1} unite ; {2} restant ; {3} maximum ; {4} piece a retirer")]
     public string fullBodyFormat = "Placing this needs {0} {1}; you have {2} of {3} left. Remove a {4} first.";
+    [Tooltip("Piece verrouillee (PartDefinition.locked) : titre de l'avertissement de la fiche detail")]
+    public string lockedTitle = "Locked";
+    [Tooltip("Raison par defaut quand la piece n'en donne pas (PartDefinition.lockedReason)")]
+    public string lockedBody = "Not available in this version yet.";
     public PickerPoolCopy[] pools =
     {
         new(CpuPool.Base, "CPU", "CPU", "part"),

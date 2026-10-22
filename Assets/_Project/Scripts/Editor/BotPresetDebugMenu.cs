@@ -148,6 +148,10 @@ public static class BotPresetDebugMenu
                 problems.Add($"{types.Count} types d'armes / modules (max {RobotLoadout.MaxTypes})");
             if (!types.Any(t => RobotLoadout.Kind(t) == LoadoutKind.Weapon))
                 problems.Add("aucune arme");
+            // Pieces verrouillees dans cette version (modules, arme healer) : inertes en match
+            var locked = items.Where(it => RobotLoadout.IsLocked(it.def)).Select(it => it.def.blockName).Distinct().ToList();
+            if (locked.Count > 0)
+                problems.Add("verrouille : " + string.Join(", ", locked));
 
             // Domaine coherent : un robot volant a un rotor, un robot au sol a des appuis
             bool rotor = items.Any(it => RobotSpeedModel.TryClassify(it.def, out var k) && k == LocomotionKind.Rotor);
