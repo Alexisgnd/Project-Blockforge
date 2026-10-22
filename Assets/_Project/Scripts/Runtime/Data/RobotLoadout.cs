@@ -4,7 +4,8 @@ using UnityEngine;
 // =========================================================
 // CHARGEMENT D'UN ROBOT : ARMES ET MODULES
 // Regle du builder : un robot embarque au plus MaxTypes (3)
-// types d'armes et de modules, toutes quantites confondues
+// types d'armes et de modules confondus (2 armes + 1 module,
+// 1 arme + 2 modules, 3 armes...), toutes quantites confondues
 // (8 Laser Wasp = un seul type). Un type = un bloc du catalogue
 // (blockId) : Laser Wasp et Laser Hornet sont deux types.
 // - Arme  : categorie Armes (lasers, plasma, rail, Tesla)
