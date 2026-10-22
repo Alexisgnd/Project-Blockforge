@@ -19,6 +19,8 @@ using UnityEngine.UI;
 //   dessous, flancs) ; le chassis reste droit. Ils doivent aussi
 //   toucher une piece deja posee : seul le chassis se pose seul
 //   sur le sol de la baie (ghost rouge sinon)
+// - Rien ne se pose sur un propulseur (BlockMountRules) : ghost
+//   rouge et toast au clic
 // - Une roue ou une patte montee sur le flanc du plancher
 //   descend sous lui : le robot entier est souleve (lift) pour
 //   qu'elle pose sur le sol au lieu de s'y encastrer
@@ -249,7 +251,13 @@ public class GarageBuildController : MonoBehaviour
         int face = def.orientToFace ? BlockFootprint.FaceIndex(faceNormal) : BlockFootprint.NaturalFace;
         int rotation = BlockFootprint.Compose(face, spinIndex);
 
-        bool valid = CanPlace(def, placeCell, rotation) && CapacityAllows(def)
+        // Support vise (bloc sous le curseur, ou piece contre laquelle le bloc
+        // s'accroche depuis le sol) : jamais un propulseur
+        bool mounted = hoverBlock != null || def.orientToFace;
+        bool onThruster = mounted && SupportIsThruster(placeCell - faceNormal);
+        // Une tige ne porte que du chassis
+        bool onRod = BlockMountRules.IsMounted(def) && SupportIsRod(placeCell - faceNormal);
+        bool valid = !onThruster && !onRod && CanPlace(def, placeCell, rotation) && CapacityAllows(def)
                      && HasSupport(def, placeCell, rotation, false);
         ShowGhost(def, placeCell, rotation, valid);
 
@@ -263,7 +271,9 @@ public class GarageBuildController : MonoBehaviour
             bool symmetric = false;
             placeMirror = valid && MirrorPlaceable(def, placeCell, rotation, out symmetric)
                           && (statsHud == null || totalCpu + 2 * def.costCpu <= statsHud.capacityMax)
-                          && HasSupport(def, mirrorCell, rotation, true);
+                          && HasSupport(def, mirrorCell, rotation, true)
+                          && !(mounted && SupportIsThruster(MirrorCell(placeCell - faceNormal)))
+                          && !(BlockMountRules.IsMounted(def) && SupportIsRod(MirrorCell(placeCell - faceNormal)));
             if (symmetric)
                 HideMirrorGhost();
             else
@@ -298,6 +308,10 @@ public class GarageBuildController : MonoBehaviour
         }
         else if (!valid && mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
+            if (onThruster)
+                Toast.Warning(BlockMountRules.ThrusterRule);
+            else if (onRod)
+                Toast.Warning(BlockMountRules.RodRule);
             PlaceRefused?.Invoke();
         }
     }
@@ -584,7 +598,8 @@ public class GarageBuildController : MonoBehaviour
 
     // Un bloc qui s'accroche a une face (tout sauf le chassis) doit toucher une
     // piece deja posee : une roue, un propulseur ou une arme ne tient pas en
-    // l'air au milieu de la baie. Le chassis, lui, se pose librement sur le sol :
+    // l'air au milieu de la baie. Une tige ne porte que du chassis. Un propulseur ne compte pas comme support :
+    // rien ne se pose dessus (ailes, gouvernails, armes, cubes). Le chassis, lui, se pose librement sur le sol :
     // c'est par lui que le robot commence.
     private bool HasSupport(BlockDefinition def, Vector3Int anchorCell, int rotation, bool mirrored)
     {
@@ -596,11 +611,27 @@ public class GarageBuildController : MonoBehaviour
         {
             foreach (var direction in Neighbours)
             {
-                if (occupied.ContainsKey(cell + direction))
+                // Un propulseur ne sert jamais de support (BlockMountRules)
+                if (occupied.TryGetValue(cell + direction, out var neighbour)
+                    && neighbour != null && BlockMountRules.CanSupport(neighbour.definition, def))
                     return true;
             }
         }
         return false;
+    }
+
+    // La case de support est-elle occupee par une tige ?
+    private bool SupportIsRod(Vector3Int supportCell)
+    {
+        return occupied.TryGetValue(supportCell, out var view) && view != null
+               && BlockMountRules.IsRod(view.definition);
+    }
+
+    // La case de support est-elle occupee par un propulseur ?
+    private bool SupportIsThruster(Vector3Int supportCell)
+    {
+        return occupied.TryGetValue(supportCell, out var view) && view != null
+               && BlockMountRules.IsThruster(view.definition);
     }
 
     // Toutes les cases de la boite d'empreinte (orientee, eventuellement en
