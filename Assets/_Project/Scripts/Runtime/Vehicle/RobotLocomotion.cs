@@ -42,6 +42,10 @@ using UnityEngine;
 // niveau, charge portee) — le meme modele donne la vitesse
 // affichee dans le garage et les menus. Elle est recalculee quand
 // un bloc porteur est detruit (le robot ralentit).
+// Reglages oct. 2026 (parties trop lentes) : vitesses x1,55 au
+// sol et x1,43 en l'air (RobotSpeedModel), virage 125 deg/s
+// (avant 95), montee des rotors 8,5 m/s (avant 6), inclinaison
+// des rotors 20 + 6 x niveau (avant 14 + 6), gouvernes plus fortes.
 // Saut (pattes d'insecte) : Espace au sol (RequestJump) ; il faut
 // la moitie des pattes au sol, recharge de JumpCooldown secondes,
 // impulsion reduite par la surcharge (LoadFactor).
@@ -97,7 +101,7 @@ public class RobotLocomotion : MonoBehaviour
     public float legSpeed = RobotSpeedModel.LegSpeed;
     public float hoverSpeed = RobotSpeedModel.HoverSpeed;
     public float rotorSpeed = RobotSpeedModel.RotorSpeed;
-    public float boostMultiplier = 1.5f;
+    public float boostMultiplier = 1.5f;   // multiplicateur : suit seul les nouvelles vitesses
 
     [Header("Saut (pattes d'insecte)")]
     [Tooltip("Vitesse verticale donnee au decollage (m/s) : ~3 m de haut a 7,5 m/s")]
@@ -105,12 +109,14 @@ public class RobotLocomotion : MonoBehaviour
     public float jumpCooldown = 1.1f;
 
     [Header("Conduite")]
-    public float turnRateDeg = 95f;
+    [Tooltip("Vitesse de lacet a plein braquage (deg/s) : 125 (avant 95), suit les vitesses relevees")]
+    public float turnRateDeg = 125f;
     [Tooltip("Abaissement du centre de masse, en part de la hauteur du robot")]
     public float centerOfMassDrop = 0.4f;
     [Tooltip("Hauteur de vol des lames de survol (m)")]
     public float hoverHeight = 1.4f;
-    public float rotorClimbSpeed = 6f;
+    [Tooltip("Vitesse de montee/descente des rotors au niveau 1 (m/s), x TierFactor")]
+    public float rotorClimbSpeed = 8.5f;
 
     // ---------- Entrees (RobotTestDriver) ----------
     [HideInInspector] public float throttle;   // -1..1 (Z / S)
@@ -265,7 +271,7 @@ public class RobotLocomotion : MonoBehaviour
             unit.radius = LargestOther(vb.extents, duct);
             float height = hoverHeight * cellSize + vb.extents.y;
             AddContact(unit, vb.center, height, height * 0.6f, onGround: false);
-            SetFamily(unit, hoverSpeed, RobotSpeedModel.HoverAccel, 0.18f, RobotSpeedModel.HoverFriction);
+            SetFamily(unit, hoverSpeed, RobotSpeedModel.HoverAccel, 0.23f, RobotSpeedModel.HoverFriction);
         }
         else if (family.Contains("rotor"))
         {
@@ -605,6 +611,15 @@ public class RobotLocomotion : MonoBehaviour
         }
     }
 
+    // Reserve de portance d'un robot a rotors intact (en g) ; elle baisse avec la
+    // part des rotors detruits
+    private const float MaxLiftG = 3f;
+    // Gite toleree au-dela de l'inclinaison commandee avant de couper la
+    // compensation de poussee (degres)
+    private const float UncommandedTiltDeg = 8f;
+    // Vitesse de pointe d'un robot qui n'a plus qu'un rotor sur beaucoup (part de la normale)
+    private const float DamagedSpeedFloor = 0.35f;
+
     private void ApplyRotors(float dt, Vector3 up, Vector3 forward, float yawRate)
     {
         var rotors = units.FindAll(u => u.kind == LocomotionKind.Rotor && !u.disabled);
@@ -617,23 +632,55 @@ public class RobotLocomotion : MonoBehaviour
         foreach (var rotor in rotors)
             tier = Mathf.Max(tier, rotor.tier);
         float k = TierFactor(tier);
+
+        // Part des rotors encore en etat : la reserve de portance et la vitesse de
+        // pointe baissent avec elle (un robot qui a perdu la moitie de ses helices
+        // se traine au lieu de filer).
+        int fitted = 0;
+        foreach (var u in units)
+        {
+            if (u.kind == LocomotionKind.Rotor)
+                fitted++;
+        }
+        float alive = rotors.Count / (float)Mathf.Max(1, fitted);
+
+        // Inclinaison commandee : Z/S inclinent vers l'avant/l'arriere, le reste
+        // reste a plat. 20 + 6 x niveau (avant 14 + 6) : a l'equilibre avec le
+        // freinage horizontal ci-dessous, un rotor N1 atteint ~21,7 m/s, au-dessus
+        // de sa vitesse de pointe (20). Bornee a 55 degres (stabilite).
+        Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up).normalized;
+        Vector3 flatRight = Vector3.Cross(Vector3.up, flatForward);
+        float tiltDeg = Mathf.Clamp(throttle * (20f + 6f * tier) * (boost ? 1.3f : 1f), -55f, 55f);
+
         // Vitesse verticale demandee : Espace monte, Ctrl descend, sinon altitude tenue
         float vy = Body.linearVelocity.y;
         float wanted = lift * rotorClimbSpeed * k;
         float accel = g + (wanted - vy) * 2.5f;
         float verticality = Mathf.Max(0.35f, Vector3.Dot(up, Vector3.up));
-        float total = Mathf.Clamp(Body.mass * accel / verticality, 0f, Body.mass * g * 2.5f);
+        // Compensation de l'inclinaison limitee a l'inclinaison commandee : un robot
+        // penche par ses degats ne pousse pas plus fort pour tenir son altitude
+        // (c'est ce surplus, dirige de travers, qui le lancait a toute vitesse).
+        float commandedVerticality = Mathf.Cos(Mathf.Min(Mathf.Abs(tiltDeg) + UncommandedTiltDeg, 70f) * Mathf.Deg2Rad);
+        float total = Mathf.Clamp(Body.mass * accel / Mathf.Max(verticality, commandedVerticality),
+                                  0f, Body.mass * g * MaxLiftG * alive);
+
+        // Poussee le long de l'axe des rotors, mais sa part horizontale est bornee a
+        // ce que l'inclinaison commandee produirait : la gite subie (rotors perdus
+        // d'un cote) fait pencher et descendre le robot, elle ne le propulse plus.
+        Vector3 thrustDir = up;
+        float vertical = Vector3.Dot(up, Vector3.up);
+        Vector3 sideways = up - Vector3.up * vertical;
+        float maxSideways = Mathf.Max(0f, vertical) * Mathf.Tan(Mathf.Min(Mathf.Abs(tiltDeg) + UncommandedTiltDeg, 70f) * Mathf.Deg2Rad);
+        if (sideways.magnitude > maxSideways)
+            thrustDir = Vector3.up * vertical + sideways.normalized * maxSideways;
         foreach (var rotor in rotors)
         {
             Vector3 pos = transform.TransformPoint(rotor.center);
-            Body.AddForceAtPosition(up * (total / rotors.Count), pos);
+            Body.AddForceAtPosition(thrustDir * (total / rotors.Count), pos);
             rotor.output = Mathf.Clamp01(total / (Body.mass * g * 1.5f));
         }
 
-        // Assiette : Z/S inclinent vers l'avant/l'arriere, le reste reste a plat
-        Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up).normalized;
-        Vector3 flatRight = Vector3.Cross(Vector3.up, flatForward);
-        Vector3 wantedUp = Quaternion.AngleAxis(throttle * (14f + 6f * tier) * (boost ? 1.3f : 1f), flatRight) * Vector3.up;
+        Vector3 wantedUp = Quaternion.AngleAxis(tiltDeg, flatRight) * Vector3.up;
         Vector3 error = Vector3.Cross(up, wantedUp);
         Vector3 ang = Body.angularVelocity;
         Vector3 tilt = error * 10f - Vector3.ProjectOnPlane(ang, up) * 3f;
@@ -644,13 +691,14 @@ public class RobotLocomotion : MonoBehaviour
         Body.AddTorque(up * (targetYaw - yawRate) * 4f, ForceMode.Acceleration);
         // Vitesse de pointe : celle des rotors, ou celle des propulseurs s'il y en a
         Vector3 horizontal = Vector3.ProjectOnPlane(Body.linearVelocity, Vector3.up);
-        float limit = Mathf.Max(rotorSpeed * k * LoadFactor, ThrusterLimit()) * (boost ? boostMultiplier : 1f);
+        float limit = Mathf.Max(rotorSpeed * k * LoadFactor * Mathf.Lerp(DamagedSpeedFloor, 1f, alive), ThrusterLimit())
+                      * (boost ? boostMultiplier : 1f);
         if (horizontal.magnitude > limit)
             Body.AddForce(-horizontal.normalized * (horizontal.magnitude - limit) * 2f, ForceMode.Acceleration);
-        Body.AddForce(-horizontal * (0.25f / k), ForceMode.Acceleration);
+        Body.AddForce(-horizontal * (0.22f / k), ForceMode.Acceleration);
     }
 
-    // Vitesse de pointe permise par les propulseurs (0 sans propulseur) : 30 m/s
+    // Vitesse de pointe permise par les propulseurs (0 sans propulseur) : 42 m/s
     // au niveau 1, + 30 % par niveau
     private float ThrusterLimit()
     {
@@ -688,11 +736,12 @@ public class RobotLocomotion : MonoBehaviour
         if (rudders.Count == 0)
             return;
         float vf = Vector3.Dot(v, forward);
-        float authority = Mathf.Clamp01(Mathf.Abs(vf) / 12f) * Mathf.Min(1f, rudders.Count * 0.5f);
-        Body.AddTorque(up * (steer * 2.5f * authority * Mathf.Sign(vf == 0f ? 1f : vf)), ForceMode.Acceleration);
+        // Pleine efficacite a 17 m/s (avant 12 : meme part de la vitesse de pointe)
+        float authority = Mathf.Clamp01(Mathf.Abs(vf) / 17f) * Mathf.Min(1f, rudders.Count * 0.5f);
+        Body.AddTorque(up * (steer * 3.25f * authority * Mathf.Sign(vf == 0f ? 1f : vf)), ForceMode.Acceleration);
         // Les gouvernes freinent la derive laterale (le robot suit son nez)
         Vector3 lateral = Vector3.Project(v, transform.right);
-        Body.AddForce(-lateral * 0.6f * authority, ForceMode.Acceleration);
+        Body.AddForce(-lateral * 0.85f * authority, ForceMode.Acceleration);
         foreach (var r in rudders)
             r.output = steer;
     }
