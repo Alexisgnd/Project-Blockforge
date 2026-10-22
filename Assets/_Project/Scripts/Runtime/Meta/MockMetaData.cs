@@ -141,7 +141,7 @@ namespace Blockforge.Meta
             players.Clear();
             void P(string n, Team t, int k, int d, int a, int dmg, int heal, int s, bool local = false) =>
                 players.Add(new PlayerSeed { name = n, team = t, isLocal = local, isBot = !local, kills = k, deaths = d, assists = a, damage = dmg, healing = heal, score = s });
-            P("freejam_chris", Team.Ally, 7, 2, 5, 18420, 0, 2180, true);
+            P("Pilot", Team.Ally, 7, 2, 5, 18420, 0, 2180, true); // remplace par SessionService.DisplayName
             P("Necro_ciclone", Team.Ally, 6, 3, 4, 15300, 1200, 1640);
             P("Refticus", Team.Ally, 5, 4, 6, 12900, 0, 1410);
             P("serz219", Team.Ally, 4, 5, 3, 9870, 2100, 1020);

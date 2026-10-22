@@ -103,7 +103,7 @@ public sealed class UIPreview : MonoBehaviour
                 var hub = kit.Rect(stage, "Hub");
                 UIKit.Stretch(hub);
                 var section = screen == Screen.Workshop ? HubSection.Workshop : screen == Screen.Store ? HubSection.Store : HubSection.TechTree;
-                var bar = TopBar.Build(kit, hub, section, "freejam_chris", MetaServices.Wallet.Credits);
+                var bar = TopBar.Build(kit, hub, section, SessionService.DisplayName, MetaServices.Wallet.Credits);
                 MetaServices.Wallet.CreditsChanged += c => { if (bar != null) bar.SetCredits(c); };
                 var host = HubScreenHost.Create(hub, bar, BlockforgeTheme.TopBar.Height);
                 bar.transform.SetAsLastSibling();

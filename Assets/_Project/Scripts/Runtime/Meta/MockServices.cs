@@ -69,8 +69,10 @@ namespace Blockforge.Meta
         {
             var players = new List<PlayerMatchStats>();
             int i = 0;
+            // Joueur local : toujours le vrai pseudo de la session (Steam, compte standard ou invite)
             foreach (var p in data.players)
-                players.Add(new PlayerMatchStats("p" + i++, p.name, p.team, p.isLocal, p.isBot, p.kills, p.deaths, p.assists, p.damage, p.healing, p.score));
+                players.Add(new PlayerMatchStats("p" + i++, p.isLocal ? SessionService.DisplayName : p.name, p.team, p.isLocal, p.isBot,
+                                                 p.kills, p.deaths, p.assists, p.damage, p.healing, p.score));
 
             int ally = data.allyScore, enemy = data.enemyScore;
             if (outcome == MatchOutcome.Defeat) (ally, enemy) = (Math.Min(ally, enemy), Math.Max(ally, enemy));

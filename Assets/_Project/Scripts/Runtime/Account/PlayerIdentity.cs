@@ -86,7 +86,7 @@ public class PlayerIdentity
         if (!string.IsNullOrEmpty(user.displayName)) return user.displayName;
         if (!string.IsNullOrEmpty(user.username)) return user.username;
         if (!string.IsNullOrEmpty(user.name)) return user.name;
-        if (!string.IsNullOrEmpty(user.email)) return user.email;
+        // Jamais l'email a l'ecran (capture, stream, killfeed)
         return "Pilot";
     }
 }

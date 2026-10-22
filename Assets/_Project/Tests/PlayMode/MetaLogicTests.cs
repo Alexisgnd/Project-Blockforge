@@ -106,7 +106,9 @@ namespace Blockforge.Tests
         {
             var result = Fresh().MatchResults.Build(MatchOutcome.Victory);
             var podium = MatchLogic.Podium(result.Players);
-            Assert.AreEqual("freejam_chris", podium[0].DisplayName);
+            // Joueur local du mock : le vrai pseudo de la session
+            Assert.IsTrue(podium[0].IsLocal);
+            Assert.AreEqual(SessionService.DisplayName, podium[0].DisplayName);
             Assert.AreEqual("Necro_ciclone", podium[1].DisplayName);
             Assert.AreEqual("EoS_Keegardhard", podium[2].DisplayName);
             Assert.AreEqual(Team.Enemy, podium[2].Team);
