@@ -8,16 +8,22 @@ using UnityEngine;
 // du reticule (RobotTestHUD, jauge en deux moities).
 // Un tir refuse (pas assez d'energie) previent le HUD
 // (Refused) pour un clignotement.
+// Reglage "parties nerveuses" : reserve 650, regen 80/s apres
+// 0,35 s sans tir (avant : 400, 40/s, 0,55 s). Tir continu :
+// ~15 s (N6) a ~27 s (N1) avant d'etre a sec, recharge complete
+// en ~8,5 s. Pas de regen pendant un tir continu (laser, plasma,
+// Tesla) : seuls les intervalles > regenDelay (rail, pauses des
+// bots) en profitent.
 // =========================================================
 
 public class RobotEnergy : MonoBehaviour
 {
     [Header("Reserve")]
-    public float max = 275f;
+    public float max = 650f;
     [Tooltip("Points par seconde une fois le delai passe")]
-    public float regenPerSecond = 26f;
+    public float regenPerSecond = 80f;
     [Tooltip("Secondes sans tir avant que l'energie remonte")]
-    public float regenDelay = 0.55f;
+    public float regenDelay = 0.35f;
 
     public float Current { get; private set; }
     public float Fraction => max > 0f ? Mathf.Clamp01(Current / max) : 0f;

@@ -7,8 +7,15 @@ using UnityEngine;
 // vitesse de pointe de chaque bloc de mouvement) et par les
 // menus (HUD du garage, accueil, ecran Build) : la vitesse
 // affichee est celle que le robot atteint vraiment en match.
-// - Vitesse de base par famille (m/s) : roues 16, chenilles 10,
-//   pattes 6, survol 14, rotors 14 ; propulseurs 30 (plafond)
+// - Vitesse de base par famille (m/s) : roues 25 (90 km/h),
+//   chenilles 15,5 (56 km/h), pattes 17 (les marcheurs courent :
+//   61 km/h), survol 21,5 (77 km/h), rotors 20 (72 km/h) ;
+//   propulseurs 42 (plafond, 151 km/h)
+//   (oct. 2026 : parties jugees trop lentes, sol x1,55 environ,
+//   air x1,43 ; acceleration et adherence relevees d'autant pour
+//   que le robot atteigne sa vitesse aussi vite qu'avant)
+// - Acceleration effective au sol = min(Accel, Friction x g) :
+//   roues 17,7, chenilles 15,5, pattes 18,2, survol 9,3 m/s^2
 // - Niveau du bloc (_N1.._N6) : +12 % par niveau au sol,
 //   +30 % pour les rotors et propulseurs (TierStep)
 // - Charge : chaque bloc porteur supporte une masse nominale
@@ -25,13 +32,15 @@ using UnityEngine;
 public static class RobotSpeedModel
 {
     // ---------- Reglages par famille ----------
-    public const float WheelSpeed = 16f, TrackSpeed = 10f, LegSpeed = 6f, HoverSpeed = 14f, RotorSpeed = 14f;
-    public const float WheelAccel = 14f, TrackAccel = 10f, LegAccel = 8f, HoverAccel = 9f;
-    public const float WheelFriction = 1.15f, TrackFriction = 1.3f, LegFriction = 1.2f, HoverFriction = 0.6f;
-    public const float ThrusterLimitBase = 30f, ThrusterAccelBase = 9f;
+    public const float WheelSpeed = 25f, TrackSpeed = 15.5f, LegSpeed = 17f, HoverSpeed = 21.5f, RotorSpeed = 20f;
+    public const float WheelAccel = 22f, TrackAccel = 15.5f, LegAccel = 18.5f, HoverAccel = 14f;
+    // Frottement (μ) : borne la traction ET l'adherence laterale (RobotLocomotion) ;
+    // releve avec la vitesse pour que le robot ne derape pas plus dans les virages
+    public const float WheelFriction = 1.8f, TrackFriction = 2f, LegFriction = 1.85f, HoverFriction = 0.95f;
+    public const float ThrusterLimitBase = 42f, ThrusterAccelBase = 13f;
 
     // Masse nominale portee par un bloc de niveau 1 (kg)
-    public const float WheelLoad = 1400f, TrackLoad = 2600f, LegLoad = 1100f, HoverLoad = 1000f, RotorLoad = 1500f;
+    public const float WheelLoad = 1400f, TrackLoad = 2600f, LegLoad = 1500f, HoverLoad = 1000f, RotorLoad = 1500f;
 
     public const float GroundTierStep = 0.12f;
     public const float MinLoadFactor = 0.3f;

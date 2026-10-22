@@ -15,6 +15,8 @@ using UnityEngine.SceneManagement;
 // ECHAP ouvre le menu de pause (MatchPauseMenu : reprendre,
 // options, retour au garage, rappel des touches) ; un clic
 // gauche reverrouille le curseur s'il est libre.
+// MatchGate.Frozen (compte a rebours du match contre les bots,
+// fin de match) : le robot ne recoit plus d'ordres.
 // La physique (suspensions, adherence, portance...) est dans
 // RobotLocomotion, les animations dans RobotPartAnimator.
 // =========================================================
@@ -63,6 +65,12 @@ public class RobotTestDriver : MonoBehaviour
         }
 
         // ECHAP : menu de pause (reprendre, options, retour au garage)
+        // Match termine (TdmMatch), en attente du verdict : plus de pause non plus
+        if (TdmMatch.Instance != null && TdmMatch.Instance.Phase == TdmPhase.Ended)
+        {
+            Send(0f, 0f, 0f, false);
+            return;
+        }
         if (kb.escapeKey.wasPressedThisFrame && !MatchPauseMenu.IsOpen)
         {
             MatchPauseMenu.Open(this);
@@ -72,6 +80,16 @@ public class RobotTestDriver : MonoBehaviour
         if (MatchPauseMenu.IsOpen)
         {
             Send(0f, 0f, 0f, false);
+            return;
+        }
+
+        // Compte a rebours avant le match (TdmMatch) : le robot attend, la camera reste libre
+        if (MatchGate.Frozen)
+        {
+            Send(0f, 0f, 0f, false);
+            var m = Mouse.current;
+            if (m != null && m.leftButton.wasPressedThisFrame && Cursor.lockState != CursorLockMode.Locked)
+                SetCursorLocked(true);
             return;
         }
 
