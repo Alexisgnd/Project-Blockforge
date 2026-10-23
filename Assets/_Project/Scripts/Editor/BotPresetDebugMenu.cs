@@ -302,7 +302,7 @@ public static class BotPresetDebugMenu
             sb.AppendLine($"{e.name,-14} {e.domain,-6} {e.h:0.0} m");
 
         int mask = ~((1 << RobotTestSpawner.RobotLayer) | (1 << 2));
-        var cols = Object.FindObjectsByType<Collider>(FindObjectsSortMode.None).Where(c => c.enabled && !c.isTrigger && ((1 << c.gameObject.layer) & mask) != 0).ToArray();
+        var cols = Object.FindObjectsByType<Collider>(FindObjectsInactive.Exclude).Where(c => c.enabled && !c.isTrigger && ((1 << c.gameObject.layer) & mask) != 0).ToArray();
         if (cols.Length == 0)
         {
             sb.AppendLine("Aucun collider de decor dans la scene ouverte : ouvrez Map_MARS.");
