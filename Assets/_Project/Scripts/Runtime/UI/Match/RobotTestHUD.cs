@@ -13,7 +13,11 @@ using UnityEngine.UI;
 //   haut ; warning sous 25 %, clignote en danger sur un tir refuse
 // - Sante en bas a gauche (HealthBar : pastille, pourcentage en
 //   readout-lg, "Robot health" en label, dix segments inclines ;
-//   success > 50 %, warning <= 50 %, danger-ink <= 25 %)
+//   success > 50 %, warning <= 50 %, danger-ink <= 25 %).
+//   Pastille : icone sante quand le robot est intact ou en cours
+//   de regeneration ; robot abime en attente de regeneration ->
+//   compte a rebours en secondes (RobotHealth.regenDelay depuis
+//   le dernier degat), meme couleur que l'icone
 // - Etat du robot en bas a droite : vitesse, masse, appuis au
 //   sol, et la heatmap des blocs vue de dessus (RobotHealth :
 //   vert / jaune / rouge, rouge sombre + croix rouge vif si
@@ -68,6 +72,8 @@ public class RobotTestHUD : MonoBehaviour
 
     // Sante
     private Image badge, badgeIcon;
+    private HudLabel regenCount;     // compte a rebours avant la regeneration (a la place de l'icone)
+    private int regenShown = -1;     // secondes affichees (-1 : icone)
     private HudLabel pct;
     private readonly List<Image> segments = new();
     // Etat
@@ -161,6 +167,7 @@ public class RobotTestHUD : MonoBehaviour
         pct.Set(percent + "%");
         pct.SetColor(percent <= 25 ? BlockforgeTheme.Hud.DangerInk : BlockforgeTheme.Hud.InkPrimary);
         badgeIcon.color = tone;
+        regenCount.SetColor(tone);
         int lit = Mathf.RoundToInt(ratio * segments.Count);
         for (int i = 0; i < segments.Count; i++)
             segments[i].color = i < lit ? tone : new Color(0f, 0f, 0f, 0.45f);
@@ -327,6 +334,10 @@ public class RobotTestHUD : MonoBehaviour
         Place(badge.rectTransform, new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(44f, 44f), new Vector2(0f, 0.5f));
         badgeIcon = NewImage(badge.rectTransform, "Icon", DSAssets.Icon("health"), BlockforgeTheme.Hud.Success);
         Place(badgeIcon.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(20f, 20f));
+        regenCount = Label(badge.rectTransform, "RegenCountdown", DSTextStyle.ReadoutMD, BlockforgeTheme.Hud.Success, "", TextAlignmentOptions.Center);
+        Place(regenCount.main.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44f, 44f));
+        AlignShadow(regenCount);
+        regenCount.main.enabled = regenCount.shadow.enabled = false;
 
         const float x = 8f + 44f + 12f;
         pct = Label(plate, "Percent", DSTextStyle.ReadoutLG, BlockforgeTheme.Hud.InkPrimary, "100%", TextAlignmentOptions.BottomLeft);
@@ -611,9 +622,32 @@ public class RobotTestHUD : MonoBehaviour
             ? $"{loco.GroundedContacts} / {loco.TotalContacts}"
             : (loco.HasRotors ? "Air" : "–"));
         UpdateEnergy();
+        UpdateRegenBadge();
         UpdateHeat();
         UpdateEnemy();
         UpdateDamageFX();
+    }
+
+    // Pastille de sante : icone (intact, ou regeneration en cours) ou secondes
+    // restantes avant la regeneration (robot abime, pas de degat depuis moins
+    // de regenDelay). Arrondi au-dessus : affiche 10 juste apres l'impact, 1 a la fin.
+    private void UpdateRegenBadge()
+    {
+        int left = -1;
+        if (health != null && !health.IsDead && health.Damaged && !health.Regenerating)
+        {
+            left = Mathf.CeilToInt(health.regenDelay - (Time.time - health.LastDamageTime));
+            if (left <= 0)
+                left = -1;
+        }
+        if (left == regenShown)
+            return;
+        regenShown = left;
+        bool counting = left > 0;
+        badgeIcon.enabled = !counting;
+        regenCount.main.enabled = regenCount.shadow.enabled = counting;
+        if (counting)
+            regenCount.Set(left.ToString());
     }
 
     private void UpdateEnergy()

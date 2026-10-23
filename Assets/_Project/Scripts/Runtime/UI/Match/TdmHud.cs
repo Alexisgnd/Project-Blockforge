@@ -20,6 +20,16 @@ using UnityEngine.UI;
 //   centre (team-ally a gauche, team-enemy a droite, toujours),
 //   compteur dans la barre, plaque centrale crane + objectif,
 //   chrono en mono dessous.
+//   - Derniere minute (TdmMatch.LastMinute) : le chrono clignote
+//     en danger-ink (allume la premiere moitie de chaque seconde) ;
+//     animations reduites : rouge fixe.
+//   - Equipe a un kill de la victoire (TdmMatch.OneKillFromWin) :
+//     sa barre et son compteur grossissent (x1,12, depuis le bord
+//     interieur : rien ne chevauche la plaque centrale, 220 ms
+//     ease-out), un halo a sa couleur pulse derriere la barre
+//     (1,25 Hz) et « 1 kill to win » s'affiche dessous ; les deux
+//     equipes peuvent l'etre en meme temps. Animations reduites :
+//     pas de mise a l'echelle, halo fixe, legende en fondu.
 // - NamePlate au-dessus de chaque robot visible : silhouette
 //   d'equipe, nom (13 px, ombre hud), distance en mono, ligne de
 //   vie de 2 px ; sans plaque ; echelle selon la distance (jamais
@@ -56,6 +66,15 @@ public class TdmHud : MonoBehaviour
     private readonly List<RosterRow> rows = new();
 
     // ---------- Score ----------
+    private const float ImminentScale = 1.12f, ImminentPulseHz = 1.25f, GlowOutset = 3f;
+    private sealed class ScoreSide
+    {
+        public RectTransform root;     // pivot au milieu du bord interieur : grossit vers l'exterieur
+        public HudPolygon glow;        // halo « imminent » derriere la barre
+        public CanvasGroup callout;    // « 1 kill to win »
+        public float imminent;         // 0..1, progression de l'effet
+    }
+    private ScoreSide allySide, enemySide;
     private RectTransform allyFill, enemyFill;
     private HudPolygon allyFillPoly, enemyFillPoly;
     private TextMeshProUGUI allyNum, enemyNum, targetNum, clock;
@@ -222,8 +241,9 @@ public class TdmHud : MonoBehaviour
         float barY = -(DmHeight - BarHeight) * 0.5f;
 
         // Allies : a gauche, remplissage depuis le bord exterieur gauche
-        var allyBar = kit.Polygon(bar, "Ally");
-        UIKit.Place(allyBar.rectTransform, UIKit.TopLeft, new Vector2(0f, barY), new Vector2(BarWidth, BarHeight));
+        allySide = BuildScoreSide(bar, true, barY);
+        var allyBar = kit.Polygon(allySide.root, "Ally");
+        UIKit.Stretch(allyBar.rectTransform);
         allyBar.cutTopLeft = BlockforgeTheme.HudChamfer;
         allyBar.SetSolid(P.SurfaceHud);
         allyFillPoly = kit.Polygon(allyBar.rectTransform, "Fill");
@@ -234,8 +254,9 @@ public class TdmHud : MonoBehaviour
         UIKit.Stretch(allyNum.rectTransform, 6f, 0f, 6f, 0f);
 
         // Ennemis : a droite, remplissage depuis le bord exterieur droit
-        var enemyBar = kit.Polygon(bar, "Enemy");
-        UIKit.Place(enemyBar.rectTransform, UIKit.TopRight, new Vector2(0f, barY), new Vector2(BarWidth, BarHeight));
+        enemySide = BuildScoreSide(bar, false, barY);
+        var enemyBar = kit.Polygon(enemySide.root, "Enemy");
+        UIKit.Stretch(enemyBar.rectTransform);
         enemyBar.cutTopRight = BlockforgeTheme.HudChamfer;
         enemyBar.SetSolid(P.SurfaceHud);
         enemyFillPoly = kit.Polygon(enemyBar.rectTransform, "Fill");
@@ -264,8 +285,72 @@ public class TdmHud : MonoBehaviour
         UIKit.Place(clock.rectTransform, UIKit.TopCenter, new Vector2(0f, -(DmHeight + 2f)), new Vector2(MidWidth + 20f, 16f));
     }
 
+    // Cote d'une equipe dans la ScoreBar : un conteneur a la place de la barre,
+    // pivot sur le bord interieur (le grossissement part vers l'exterieur), le
+    // halo dessous (cree en premier : dessine derriere), la legende sous la barre.
+    // La barre elle-meme est ajoutee ensuite par BuildScoreBar.
+    private ScoreSide BuildScoreSide(RectTransform bar, bool ally, float barY)
+    {
+        var P = kit.P;
+        Color team = ally ? P.TeamAlly : P.TeamEnemy;
+        var side = new ScoreSide { root = kit.Rect(bar, ally ? "AllySide" : "EnemySide") };
+        UIKit.Place(side.root, ally ? UIKit.TopLeft : UIKit.TopRight, ally ? UIKit.TopLeft : UIKit.TopRight,
+                    ally ? new Vector2(1f, 0.5f) : new Vector2(0f, 0.5f),
+                    new Vector2(ally ? BarWidth : -BarWidth, barY - BarHeight * 0.5f), new Vector2(BarWidth, BarHeight));
+
+        side.glow = kit.Polygon(side.root, "Imminent");
+        UIKit.Stretch(side.glow.rectTransform, -GlowOutset, -GlowOutset, -GlowOutset, -GlowOutset);
+        if (ally)
+            side.glow.cutTopLeft = BlockforgeTheme.HudChamfer + GlowOutset;
+        else
+            side.glow.cutTopRight = BlockforgeTheme.HudChamfer + GlowOutset;
+        side.glow.SetSolid(team);
+        side.glow.color = new Color(1f, 1f, 1f, 0f);
+
+        var label = HudText(side.root, "OneKillToWin", FontFamily.Sans, 10f, 700, team, "1 kill to win",
+                            ally ? TextAlignmentOptions.TopLeft : TextAlignmentOptions.TopRight, true, 0.12f);
+        UIKit.Place(label.rectTransform, ally ? new Vector2(0f, 0f) : new Vector2(1f, 0f), ally ? new Vector2(0f, 0f) : new Vector2(1f, 0f),
+                    ally ? new Vector2(0f, 1f) : new Vector2(1f, 1f), new Vector2(0f, -(GlowOutset + 2f)), new Vector2(BarWidth, 12f));
+        side.callout = kit.Group(label);
+        side.callout.alpha = 0f;
+        return side;
+    }
+
+    // Effet « a un kill de la victoire » d'une equipe
+    private static void UpdateImminent(ScoreSide side, bool on)
+    {
+        float duration = BlockforgeTheme.Duration(BlockforgeTheme.MotionScreen);
+        float goal = on ? 1f : 0f;
+        side.imminent = duration <= 0f ? goal : Mathf.MoveTowards(side.imminent, goal, Time.unscaledDeltaTime / duration);
+        float k = UIAnim.Ease(side.imminent);
+
+        bool reduce = BlockforgeTheme.ReduceMotion;
+        float scale = reduce ? 1f : Mathf.Lerp(1f, ImminentScale, k);
+        side.root.localScale = new Vector3(scale, scale, 1f);
+
+        float pulse = reduce ? 0.5f : 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f * ImminentPulseHz);
+        side.glow.color = new Color(1f, 1f, 1f, k * Mathf.Lerp(0.18f, 0.6f, pulse));
+        side.callout.alpha = k;
+    }
+
     private void UpdateScoreBar()
     {
+        bool live = match.Phase == TdmPhase.Live;
+        UpdateImminent(allySide, live && match.OneKillFromWin(match.LocalSide));
+        UpdateImminent(enemySide, live && match.OneKillFromWin(1 - match.LocalSide));
+
+        // Derniere minute : chrono rouge, allume la premiere moitie de chaque seconde
+        var P = kit.P;
+        if (match.LastMinute)
+        {
+            bool lit = BlockforgeTheme.ReduceMotion || Mathf.Repeat(match.TimeLeft, 1f) >= 0.5f;
+            clock.color = lit ? P.DangerInk : P.InkSecondary;
+        }
+        else
+        {
+            clock.color = P.InkSecondary;
+        }
+
         int ally = match.AllyScore, enemy = match.EnemyScore;
         if (ally != shownAlly || enemy != shownEnemy)
         {

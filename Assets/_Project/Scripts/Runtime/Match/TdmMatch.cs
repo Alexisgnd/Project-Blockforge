@@ -106,6 +106,13 @@ public class TdmMatch : MonoBehaviour
     public int AllyScore => SideScore(LocalSide);
     public int EnemyScore => SideScore(1 - LocalSide);
     public int LeadOf(int side) => SideScore(side) - SideScore(1 - side);
+
+    // Fin de match proche (lue par l'affichage et l'audio : chrono rouge, equipe
+    // a un kill de la victoire, musique de derniere action)
+    public const float LastMinuteSeconds = 60f;
+    public bool LastMinute => Phase == TdmPhase.Live && TimeLeft <= LastMinuteSeconds;
+    public bool OneKillFromWin(int side) => ScoreToWin > 1 && SideScore(side) == ScoreToWin - 1;
+    public bool FinalStretch => LastMinute || OneKillFromWin(0) || OneKillFromWin(1);
     public bool IsAlly(TdmParticipant p) => p != null && p.Side == LocalSide;
     public Team TeamOf(TdmParticipant p) => p.Side == LocalSide ? Team.Ally : Team.Enemy;
     public Vector3 EnemyBase(int side) => baseCenter[1 - Mathf.Clamp(side, 0, 1)];

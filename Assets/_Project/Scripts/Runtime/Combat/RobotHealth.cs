@@ -37,7 +37,8 @@ public class RobotHealth : MonoBehaviour
     [Header("Regles")]
     [Tooltip("Part des PV max sous laquelle le robot est detruit")]
     public float destroyFraction = 0.15f;
-    public float regenDelay = 6f;
+    [Tooltip("Secondes sans degats avant que la regeneration demarre (les 5 dernieres : bips d'attente, LocalRobotSfx)")]
+    public float regenDelay = 10f;
     [Tooltip("Part des PV max reparee par seconde")]
     public float regenPerSecond = 0.12f;
     [Tooltip("Degats minimaux par impact pour qu'un bloc soit atteint")]
