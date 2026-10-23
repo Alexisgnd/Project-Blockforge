@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f01c503f0066f742aa3ec21c74e8996, type: 3}
+  m_Name: SfxLibrary
+  m_EditorClassIdentifier: Blockforge.Runtime::SfxLibrary
+  masterVolume: 1
+  entries:
+  - id: 1
+    clip: {fileID: 8300000, guid: 8dd6950f95b7f6743abc4d01e25285d7, type: 3}
+    volume: 0.7
+    noOverlap: 0
+    minInterval: 0.5
+    pitchJitter: 0
+    loop: 0
+  - id: 2
+    clip: {fileID: 8300000, guid: 4c45dc66c261d3a47bd03443638e3484, type: 3}
+    volume: 0.76
+    noOverlap: 1
+    minInterval: 0
+    pitchJitter: 0
+    loop: 0
+  - id: 3
+    clip: {fileID: 8300000, guid: 1e676b622597f2b4ba54d6c54b9f763e, type: 3}
+    volume: 0.51
+    noOverlap: 1
+    minInterval: 0
+    pitchJitter: 0
+    loop: 0
+  - id: 4
+    clip: {fileID: 8300000, guid: ed7c913cdd2c63b42baeb537d3646348, type: 3}
+    volume: 1
+    noOverlap: 0
+    minInterval: 0.03
+    pitchJitter: 0.05
+    loop: 0
+  - id: 5
+    clip: {fileID: 8300000, guid: 80c9bd86fca40ce4eb1bf7da400fac18, type: 3}
+    volume: 1
+    noOverlap: 0
+    minInterval: 0.03
+    pitchJitter: 0.05
+    loop: 0
+  - id: 6
+    clip: {fileID: 8300000, guid: d036d98b821a02942bdb5dcdc1d9bb69, type: 3}
+    volume: 0.8
+    noOverlap: 1
+    minInterval: 0
+    pitchJitter: 0
+    loop: 1
+  - id: 7
+    clip: {fileID: 8300000, guid: 8f2d3119203c86840ab392e44a5f161a, type: 3}
+    volume: 0.77
+    noOverlap: 0
+    minInterval: 0.2
+    pitchJitter: 0
+    loop: 0
+  - id: 8
+    clip: {fileID: 8300000, guid: fdf0dbdc039bc2b4aa8699fe8568800e, type: 3}
+    volume: 0.9
+    noOverlap: 0
+    minInterval: 0.5
+    pitchJitter: 0
+    loop: 0
