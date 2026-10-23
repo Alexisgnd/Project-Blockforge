@@ -57,9 +57,12 @@ using UnityEngine.InputSystem;
 // additives (Blockforge/DustParticle), tout en espace monde.
 // Couleur des tirs : relative au joueur local (TeamRelation), jamais
 // fixee par l'equipe : ses tirs et ceux de ses allies en bleu, ceux
-// des ennemis en rouge (jetons BlockforgeTheme.Hud.TeamAlly /
-// TeamEnemy). RefreshTeamColors recolore, au tir, les materiaux et
-// particules de ce robot (instances qui lui sont propres).
+// des ennemis en rouge (teinte des jetons BlockforgeTheme.Hud
+// .TeamAlly / TeamEnemy a pleine saturation : TeamRelation
+// .ShotColor). RefreshTeamColors recolore, au tir, les materiaux et
+// particules de ce robot (instances qui lui sont propres). Peu de
+// blanc melange (15-30 %) : le bleu et le rouge doivent se lire de
+// loin ; bolts laser plus epais pour la meme raison.
 // =========================================================
 
 [RequireComponent(typeof(RobotLoadoutState), typeof(RobotEnergy), typeof(WeaponAimController))]
@@ -320,13 +323,13 @@ public class WeaponFireController : MonoBehaviour
         Destroy(go.GetComponent<Collider>());
         go.transform.position = muzzle + dir * 0.4f;
         go.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(90f, 0f, 0f); // la capsule est en Y
-        go.transform.localScale = new Vector3(0.09f, 0.55f, 0.09f);
+        go.transform.localScale = new Vector3(0.15f, 0.7f, 0.15f);   // epais : la couleur d'equipe se lit de loin
         var r = go.GetComponent<MeshRenderer>();
         r.sharedMaterial = beamMaterial;
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
         var bolt = go.AddComponent<WeaponProjectile>();
-        bolt.Launch(this, body, dir * stats.speed, stats, beamMaterial, trailTime: 0.06f, trailWidth: 0.12f, pulse: false, alignToVelocity: true);
+        bolt.Launch(this, body, dir * stats.speed, stats, beamMaterial, trailTime: 0.08f, trailWidth: 0.2f, pulse: false, alignToVelocity: true);
         MuzzleFX(muzzle, dir, LaserColor, 0.8f);
     }
 
@@ -967,7 +970,7 @@ public class WeaponFireController : MonoBehaviour
         hologramShader = holo;
         if (holo != null)
         {
-            beamMaterial = BeamMaterial(holo, "LaserBeam", LaserColor, 2.6f);
+            beamMaterial = BeamMaterial(holo, "LaserBeam", LaserColor, 3.2f);   // 2,6 avant : bleu et rouge satures sont moins lumineux que le cyan d'origine
             teslaBoltMaterial = BeamMaterial(holo, "TeslaBolt", TeslaColor, 4.5f);
             teslaBoltMaterial.SetFloat("_Flicker", 0.45f);
             railMaterial = BeamMaterial(holo, "RailBeam", RailColor, 3.2f);
@@ -1001,8 +1004,9 @@ public class WeaponFireController : MonoBehaviour
     // donc connue qu'au premier tir. Ne recolore que si la relation change. Materiaux et
     // systemes de particules sont des instances propres a ce robot : les autres tireurs
     // gardent leur couleur. Intensites inchangees (le shader hologramme multiplie _Color
-    // par _Intensity, HDR) ; les tons chauds (rail, coeur du plasma, etincelles, flash)
-    // melangent la couleur d'equipe a du blanc pour garder un coeur brulant lisible.
+    // par _Intensity, HDR) ; rail, coeur du plasma, etincelles et flash ne prennent qu'un
+    // peu de blanc (15-30 %, avant 35-60 % : les tirs viraient au blanc) : la couleur
+    // d'equipe domine partout.
     private void RefreshTeamColors()
     {
         var relation = TeamRelation.Of(gameObject);
@@ -1012,17 +1016,17 @@ public class WeaponFireController : MonoBehaviour
         Color c = TeamRelation.ShotColor(relation);
         shotColor = c;
         SetColor(beamMaterial, c);
-        SetColor(railMaterial, Color.Lerp(c, Color.white, 0.45f));
-        SetColor(plasmaMaterial, Color.Lerp(c, Color.white, 0.35f));
+        SetColor(railMaterial, Color.Lerp(c, Color.white, 0.2f));
+        SetColor(plasmaMaterial, Color.Lerp(c, Color.white, 0.15f));
         SetColor(plasmaHaloMaterial, c);
-        SetColor(plasmaArcMaterial, Color.Lerp(c, Color.white, 0.4f));
-        SetTint(sparks, Color.Lerp(c, Color.white, 0.55f));
+        SetColor(plasmaArcMaterial, Color.Lerp(c, Color.white, 0.2f));
+        SetTint(sparks, Color.Lerp(c, Color.white, 0.25f));
         SetTint(plasmaBurst, c);
-        SetTint(plasmaEmbers, Color.Lerp(c, Color.white, 0.45f));
-        SetTint(teslaArcs, Color.Lerp(c, Color.white, 0.2f));
-        SetColor(teslaBoltMaterial, Color.Lerp(c, Color.white, 0.35f));
-        SetTint(muzzleFlash, Color.Lerp(c, Color.white, 0.6f));
-        var smoke = Color.Lerp(new Color(0.26f, 0.26f, 0.3f), c, 0.15f);
+        SetTint(plasmaEmbers, Color.Lerp(c, Color.white, 0.2f));
+        SetTint(teslaArcs, c);
+        SetColor(teslaBoltMaterial, Color.Lerp(c, Color.white, 0.15f));
+        SetTint(muzzleFlash, Color.Lerp(c, Color.white, 0.3f));
+        var smoke = Color.Lerp(new Color(0.26f, 0.26f, 0.3f), c, 0.3f);
         smoke.a = 0.45f;   // fumee alpha (non additive) : seulement une nuance d'equipe
         SetTint(plasmaSmoke, smoke);
     }

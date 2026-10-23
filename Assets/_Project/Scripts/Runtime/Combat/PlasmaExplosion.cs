@@ -81,10 +81,10 @@ public class PlasmaExplosion : MonoBehaviour
         normal = n.sqrMagnitude < 1e-4f ? Vector3.up : n.normalized;
         arcTime = Mathf.Lerp(0.45f, 0.8f, power);
 
-        Color hot = Color.Lerp(color, Color.white, 0.6f);
+        Color hot = Color.Lerp(color, Color.white, 0.3f);   // 0,6 avant : l'explosion virait au blanc
         // Derivees de la couleur du tir (equipe) : arcs plus clairs, teinte au sol sombre
         // et saturee (meme rendu qu'avant pour le violet d'origine)
-        Color arcColor = Color.Lerp(color, Color.white, 0.3f);
+        Color arcColor = Color.Lerp(color, Color.white, 0.15f);
         Color.RGBToHSV(color, out float hue, out float sat, out _);
         tintColor = Color.HSVToRGB(hue, Mathf.Max(sat, 0.85f), 0.62f);
         coreMat = Holo(holo, "PlasmaCore", Color.white, 8f, 2f);

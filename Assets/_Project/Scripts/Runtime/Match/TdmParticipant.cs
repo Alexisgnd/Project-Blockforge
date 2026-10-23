@@ -116,8 +116,12 @@ public sealed class TdmCombatant : MonoBehaviour
 // - Hors match (Map_Test, CombatArena) ou robot sans participant :
 //   le robot pilote par le joueur (WeaponFireController.manual
 //   faux) est Ally, le reste Enemy
-// Couleurs : jetons du theme hud (BlockforgeTheme.Hud.TeamAlly /
-// TeamEnemy), les memes que le HUD.
+// Couleurs : teinte des jetons du theme hud (BlockforgeTheme.Hud
+// .TeamAlly / TeamEnemy, les memes que le HUD), poussee a pleine
+// saturation pour les tirs (23/10) : les jetons sont des tons
+// clairs penses pour du texte sur fond sombre ; en additif sur le
+// sol orange de Mars ils viraient au blanc / au saumon. Bleu et
+// rouge francs, la teinte reste celle du design system.
 // =========================================================
 
 public static class TeamRelation
@@ -134,6 +138,12 @@ public static class TeamRelation
         return fire != null && !fire.manual ? Blockforge.Meta.Team.Ally : Blockforge.Meta.Team.Enemy;
     }
 
-    public static Color ShotColor(Blockforge.Meta.Team relation) =>
-        relation == Blockforge.Meta.Team.Ally ? BlockforgeTheme.Hud.TeamAlly : BlockforgeTheme.Hud.TeamEnemy;
+    public const float ShotSaturation = 0.95f;
+
+    public static Color ShotColor(Blockforge.Meta.Team relation)
+    {
+        Color token = relation == Blockforge.Meta.Team.Ally ? BlockforgeTheme.Hud.TeamAlly : BlockforgeTheme.Hud.TeamEnemy;
+        Color.RGBToHSV(token, out float hue, out _, out _);
+        return Color.HSVToRGB(hue, ShotSaturation, 1f);
+    }
 }
