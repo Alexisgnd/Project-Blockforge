@@ -48,7 +48,9 @@ using UnityEngine;
 // des rotors 20 + 6 x niveau (avant 14 + 6), gouvernes plus fortes.
 // Saut (pattes d'insecte) : Espace au sol (RequestJump) ; il faut
 // la moitie des pattes au sol, recharge de JumpCooldown secondes,
-// impulsion reduite par la surcharge (LoadFactor).
+// impulsion reduite par la surcharge (LoadFactor, 70 % au pire).
+// 23/10 : saut plus haut, 10 m/s (~5,1 m a vide, ~2,5 m surcharge ;
+// avant 7,5 m/s : ~2,9 m et ~0,9 m).
 // =========================================================
 
 public enum LocomotionKind { Wheel, Track, Leg, Hover, Rotor, Thruster, Rudder }
@@ -104,8 +106,10 @@ public class RobotLocomotion : MonoBehaviour
     public float boostMultiplier = 1.5f;   // multiplicateur : suit seul les nouvelles vitesses
 
     [Header("Saut (pattes d'insecte)")]
-    [Tooltip("Vitesse verticale donnee au decollage (m/s) : ~3 m de haut a 7,5 m/s")]
-    public float jumpSpeed = 7.5f;
+    [Tooltip("Vitesse verticale donnee au decollage (m/s) : ~5,1 m de haut a 10 m/s (2,9 m a 7,5)")]
+    public float jumpSpeed = 10f;
+    [Tooltip("Part de l'impulsion gardee par un robot surcharge (LoadFactor minimal) : 0,7 -> ~2,5 m")]
+    [Range(0.3f, 1f)] public float overloadedJumpFactor = 0.7f;
     public float jumpCooldown = 1.1f;
 
     [Header("Conduite")]
@@ -407,7 +411,7 @@ public class RobotLocomotion : MonoBehaviour
         // Decollage le long de la normale du robot, redresse vers le haut ; la vitesse
         // horizontale est gardee (sauter en courant porte loin)
         Vector3 up = Vector3.Slerp(transform.up, Vector3.up, 0.6f).normalized;
-        float wanted = jumpSpeed * Mathf.Lerp(0.55f, 1f, Mathf.InverseLerp(RobotSpeedModel.MinLoadFactor, 1f, LoadFactor));
+        float wanted = jumpSpeed * Mathf.Lerp(overloadedJumpFactor, 1f, Mathf.InverseLerp(RobotSpeedModel.MinLoadFactor, 1f, LoadFactor));
         float along = Vector3.Dot(Body.linearVelocity, up);
         if (along < wanted)
             Body.AddForce(up * (wanted - Mathf.Max(0f, along)), ForceMode.VelocityChange);
