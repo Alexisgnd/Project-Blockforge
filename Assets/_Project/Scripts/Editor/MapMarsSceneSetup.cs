@@ -10,17 +10,26 @@ using UnityEngine.SceneManagement;
 // =========================================================
 // SETUP DE LA SCENE MAP_MARS
 // Menu : Blockforge > Setup Map MARS Scene
-// - Map v6 (21/10/2026, « v3_3 » : ponts sans garde-corps ; sinon
-//   comme la v5 « v3_2 » / Mars Map TDM v4 : bases en
-//   plateau a 3 sorties, routes de 13-14 m, vallees a rampes,
-//   5 ponts par equipe, buttes et eclats rocheux) : GLB
-//   Map_Mars_v6.glb (export Three.js de Map_Mars_TDM, memes
-//   marqueurs de spawn) importe par glTFast ; remplace la v4, la
-//   v3, la v2 et l'ancien Map_Mars.fbx, conserves dans le projet
-//   mais plus instancies
+// - Map v7 (23/10/2026, « Map_Mars_TDM_v3 » de Claude Design) :
+//   terrain ondule (+/-10 m et +/-4 m, dunes ~8 m, centre a dunes
+//   +/-7 m et buttes ~6 m, pentes visees < 10 degres), routes de
+//   13-14 m aplanies a 60 %, vallees ~30 % plus larges, 22 m de
+//   profondeur (28 avant), parois plus douces, rampes laterales a
+//   8-9 degres ; PLUS DE PONTS (les 5 par equipe, garde-corps et
+//   rampes supprimes : la crevasse est comblee en pente douce ~8
+//   degres sur ~150 m de chaque cote, passage direct au sol) ; butte
+//   (60, -430) supprimee, buttes -20 %, eclats -22 %, petits eclats
+//   supprimes, rochers retires au centre, sur la plaine et au fond
+//   des vallees. Memes noeuds et marqueurs que la v6 (Markers,
+//   Marker_Spawn_A/B_01..06, Marker_Center, Rocks, Structures,
+//   Map_Mars_Surround). GLB Map_Mars_v7.glb importe par glTFast ;
+//   remplace la v6 (« v3_3 », ponts sans garde-corps), la v5, la
+//   v4, la v3, la v2 et l'ancien Map_Mars.fbx, conserves dans le
+//   projet mais plus instancies
 // - Si la nouvelle version est deposee a la racine du projet
-//   (Map_Mars_TDM_v3_3.glb, v3_2 ou Map_Mars_TDM.glb), elle est deplacee
-//   et renommee en Art/Models/Map_Mars_v6.glb puis importee, et
+//   (Map_Mars_TDM_v3.glb ou Map_Mars_TDM.glb ; un fichier trop gros
+//   arrive en morceaux par MapIncomingAssembler), elle est deplacee
+//   et renommee en Art/Models/Map_Mars_v7.glb puis importee, et
 //   la scene est mise a jour toute seule (verification toutes les
 //   3 s hors Play mode) ; deposee directement sous ce nom dans
 //   Art/Models, son import declenche aussi le setup
@@ -32,7 +41,7 @@ using UnityEngine.SceneManagement;
 //   Map_Mars_v2 ou v3), instancie le GLB a l'identite (Y-up,
 //   metres : pas de rotation -90 comme pour le FBX)
 // - MeshCollider sur chaque maillage solide (terrain, rochers,
-//   ponts, plateformes de spawn) ; sans collision : le decor
+//   plateformes de spawn) ; sans collision : le decor
 //   exterieur Map_Mars_Surround (4 x 5,2 km, hors zone de
 //   jeu) et les marqueurs Markers (noeuds vides)
 // - Materiaux : ceux embarques dans le GLB (MAT_Mars_Sand...),
@@ -46,21 +55,23 @@ using UnityEngine.SceneManagement;
 public static class MapMarsSceneSetup
 {
     private const string ScenePath = BlockforgeScenes.MapMars;
-    public const string ModelPath = "Assets/_Project/Art/Models/Map_Mars_v6.glb";
+    public const string ModelPath = "Assets/_Project/Art/Models/Map_Mars_v7.glb";
     // Versions precedentes, conservees pour reference (plus instanciees)
     public const string LegacyFbxPath = "Assets/_Project/Art/Models/Map_Mars.fbx";
     public const string LegacyV2Path = "Assets/_Project/Art/Models/Map_Mars_v2.glb";
     public const string LegacyV3Path = "Assets/_Project/Art/Models/Map_Mars_v3.glb";
     public const string LegacyV4Path = "Assets/_Project/Art/Models/Map_Mars_v4.glb";
     public const string LegacyV5Path = "Assets/_Project/Art/Models/Map_Mars_v5.glb";
+    public const string LegacyV6Path = "Assets/_Project/Art/Models/Map_Mars_v6.glb";
     // Nouvelle version telle que deposee a la racine du projet (premier nom trouve)
-    private static readonly string[] IncomingModelPaths = { "Map_Mars_TDM_v3_3.glb", "Map_Mars_TDM_v3_2.glb", "Map_Mars_TDM.glb" };
-    public const string MapObjectName = "Map_Mars_v6";
-    // v8 : GLB Map_Mars_v6 (v3_3 : ponts sans garde-corps) sans prefixe CW_
-    private const string AutoRunMarker = "Library/BlockforgeMapMarsSetup-v8.done";
+    // (les anciens noms v3_3 / v3_2 sont retires : ils reimporteraient une vieille map en v7)
+    private static readonly string[] IncomingModelPaths = { "Map_Mars_TDM_v3.glb", "Map_Mars_TDM.glb" };
+    public const string MapObjectName = "Map_Mars_v7";
+    // v9 : GLB Map_Mars_v7 (sans ponts, terrain ondule) sans prefixe CW_
+    private const string AutoRunMarker = "Library/BlockforgeMapMarsSetup-v9.done";
 
     // Instances des versions precedentes de la map a retirer
-    private static readonly string[] PreviousMapNames = { "Map_Mars", "Map_Mars_v2", "Map_Mars_v3", "Map_Mars_v4", "Map_Mars_v5", MapObjectName, "Map_Mars_TDM", "CW_Map_Mars_TDM" };
+    private static readonly string[] PreviousMapNames = { "Map_Mars", "Map_Mars_v2", "Map_Mars_v3", "Map_Mars_v4", "Map_Mars_v5", "Map_Mars_v6", MapObjectName, "Map_Mars_TDM", "CW_Map_Mars_TDM" };
 
     private static double nextIncomingPoll;
 
@@ -180,12 +191,13 @@ public static class MapMarsSceneSetup
         var legacyV3 = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyV3Path);
         var legacyV4 = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyV4Path);
         var legacyV5 = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyV5Path);
+        var legacyV6 = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyV6Path);
         int removed = 0;
         foreach (var root in scene.GetRootGameObjects())
         {
             var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(root);
             bool isPreviousMap = System.Array.IndexOf(PreviousMapNames, root.name) >= 0
-                                 || (source != null && (source == model || source == legacyFbx || source == legacyV2 || source == legacyV3 || source == legacyV4 || source == legacyV5));
+                                 || (source != null && (source == model || source == legacyFbx || source == legacyV2 || source == legacyV3 || source == legacyV4 || source == legacyV5 || source == legacyV6));
             if (!isPreviousMap)
                 continue;
 
@@ -210,7 +222,7 @@ public static class MapMarsSceneSetup
     }
 
     // Deplace la version deposee a la racine du projet vers Art/Models sous
-    // son nom definitif. Ne remplace jamais un Map_Mars_v6.glb deja present.
+    // son nom definitif. Ne remplace jamais un Map_Mars_v7.glb deja present.
     private static void ImportIncomingModel()
     {
         string incoming = IncomingModelPath();
