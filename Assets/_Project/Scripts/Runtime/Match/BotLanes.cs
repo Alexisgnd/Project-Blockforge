@@ -16,15 +16,18 @@ using UnityEngine.AI;
 // - Center : l'axe base -> Marker_Center -> base adverse ;
 // - FlankLeft / FlankRight : flanc profond (ecart x FlankFactor),
 //   qui pousse plus loin chez l'adversaire ;
-// - Sniper : deux ou trois points hauts de sa moitie de carte
-//   (bots a rail seulement, MaxSnipers par equipe) ;
+// - Sniper : deux ou trois points de tir de sa moitie de carte
+//   (bots a rail seulement, MaxSnipers par equipe). Plus de points
+//   hauts depuis le 23/10 : pas de pathfinding en hauteur, ils
+//   restent sur le sol relie aux bases (MatchNavMesh, zone
+//   principale) et sont choisis bien repartis ;
 // - Marauder : volants, boucle qui passe d'un couloir a l'autre.
 // Repere propre a chaque equipe (axe de sa base vers la base
 // adverse) : avec la symetrie a 180 degres de la carte, la
 // "gauche" de A croise la "droite" de B, d'ou trois fronts.
 // Repartition equilibree dans chaque equipe (penalite par bot
 // deja sur le role), teintee par le style (prudent : centre /
-// hauteur ; agressif, opportuniste : flancs).
+// tireur ; agressif, opportuniste : flancs).
 // Les points sont recalcules une fois le NavMesh pret (avant,
 // ils sont seulement poses sur le sol). Un point hors carte ou
 // hors NavMesh est rapproche de l'axe jusqu'a en trouver un.
@@ -42,7 +45,7 @@ public static class BotLanes
     public const float LaneWidthMin = 90f, LaneWidthMax = 300f;
     public const float FlankFactor = 1.6f;           // flanc profond : ecart lateral x ce facteur
     public const float SnapRadius = 30f;             // un point de couloir est ramene sur le NavMesh dans ce rayon
-    public const int MaxSnipers = 1;                 // tireurs en hauteur par equipe
+    public const int MaxSnipers = 1;                 // tireurs par equipe
     public const float SameRolePenalty = 2f;         // score retire par bot deja sur ce role (equilibre)
     public const float RerollKeepPenalty = 1f;       // au re-tirage, garder le meme role coute ce score
     public const float RoleRandomness = 1.2f;        // part de hasard dans le choix du role
@@ -203,7 +206,7 @@ public static class BotLanes
         BotRole.Right => "droite",
         BotRole.FlankLeft => "flanc gauche",
         BotRole.FlankRight => "flanc droit",
-        BotRole.Sniper => "tireur en hauteur",
+        BotRole.Sniper => "tireur",
         _ => "maraudeur",
     };
 
@@ -335,8 +338,10 @@ public static class BotLanes
         return spine;
     }
 
-    // Points hauts de sa moitie de carte (de 30 a 48 % du trajet), atteignables depuis la
-    // base quand le NavMesh est pret, ecartes d'au moins 60 m entre eux
+    // Points de tir de sa moitie de carte (de 30 a 48 % du trajet), sur la zone principale du
+    // NavMesh (le sol relie aux bases : jamais une colline ni un plateau) quand il est pret,
+    // atteignables depuis la base, ecartes d'au moins 60 m entre eux. Plus de tri par
+    // hauteur : pas de pathfinding en hauteur.
     private static void SniperPoints(TdmMatch match, int side, Vector3 a, Vector3 b, Vector3 c, Vector3 right, float width, List<Vector3> result)
     {
         var candidates = new List<Vector3>();
@@ -352,7 +357,7 @@ public static class BotLanes
                 p.y = hit.point.y;
                 if (MatchNavMesh.Ready)
                 {
-                    // Sur le NavMesh tout pres : un piton inaccessible ne compte pas
+                    // Sur la zone principale tout pres : colline, plateau, piton ne comptent pas
                     if (!MatchNavMesh.Snap(p, 6f, out var s))
                         continue;
                     p = s;
@@ -360,7 +365,6 @@ public static class BotLanes
                 candidates.Add(p);
             }
         }
-        candidates.Sort((x, y) => y.y.CompareTo(x.y));   // du plus haut au plus bas
 
         Vector3 from = a;
         foreach (var p in match.Participants)

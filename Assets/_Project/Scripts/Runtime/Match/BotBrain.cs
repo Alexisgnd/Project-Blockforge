@@ -15,7 +15,7 @@ using UnityEngine.AI;
 // 2. choisit un mode :
 //    - Retreat : sa vie passe sous RetreatAt -> il decroche
 //      vers ses allies / sa base le temps de se regenerer
-//      (RobotHealth repare apres 6 s sans degats), en tirant
+//      (RobotHealth repare apres 10 s sans degats), en tirant
 //      encore s'il voit quelqu'un ;
 //    - Hunt : une cible tres abimee a portee de chasse -> il
 //      fonce l'achever ;
@@ -120,6 +120,25 @@ using UnityEngine.AI;
 // deja MaxAlliesPerPoint allies sur place : un bot qui n'est pas
 // au contact repart quelques secondes vers un point de son
 // couloir loin de l'amas (et y boude les cibles).
+// Collines (robots au sol, definitif) : aucun pathfinding en
+// hauteur. Les chemins sont COMPLETS, sur la zone principale des
+// maillages surs (le sol relie aux bases par des pentes de 25
+// degres au plus, MatchNavMesh) : jamais vers une colline, un
+// plateau, ni une cible separee de lui par une colline. Sans
+// chemin, le bot ne roule PLUS en ligne droite vers sa
+// destination : il reste sur place (il vise et tire toujours) ;
+// hors combat, au bout de NoPathWander il passe au point suivant
+// de son couloir et part vers un point libre accessible.
+// Les chemins partent d'un point qui n'est jamais au-dessus du
+// robot. Sans chemin d'ou il
+// est (pousse hors du maillage), le bot redescend d'abord au point
+// sur le plus proche. En roulant, un sol devant (3 et 6 m apres
+// son nez) plus raide que HillSlope (30 degres) et qui monte le
+// fait ralentir et braquer vers le cote le plus bas ; au bout de
+// HillGiveUp il refait son chemin et, si le prochain coin est
+// encore en haut de la pente, il redescend au maillage sur. Les
+// pattes ne s'arretent que devant ce qu'elles ne sautent pas
+// (LegJumpClear, 4,5 m). Exception : la sortie de crevasse (maillages raides).
 // Rien ne bouge tant que MatchGate.Frozen (compte a rebours,
 // fin de match). Journal : [Bot] dans la console.
 // =========================================================
@@ -165,6 +184,16 @@ public class BotBrain : MonoBehaviour
 
     // Deblocage
     private float stuckTime, unstickUntil, unstickSteer;
+    // Collines : pente infranchissable devant (robots au sol)
+    private const float HillSlope = 30f;            // sol plus raide (deg) qui monte : on n'y va pas
+    private const float HillGiveUp = 1.2f;          // s face a la pente avant de refaire le chemin
+    private static readonly float[] HillProbes = { 3f, 6f };   // m devant le nez
+    private float hillTime, lastHillLog = -100f;
+    // Marche que des pattes franchissent en sautant (m) : saut a 10 m/s, ~5 m de haut a vide
+    private const float LegJumpClear = 4.5f;
+    // Sans chemin (destination inaccessible) : depuis quand, et quand on renonce
+    private const float NoPathWander = 3f;
+    private float noPathSince = -1f, lastNoPathLog = -100f;
     private int unstickCount;
     private float unstickWindowStart;
     private Vector3 lastLiftAt;
@@ -440,6 +469,52 @@ public class BotBrain : MonoBehaviour
         }
         if (Time.time >= escapeUntil)
             PickDestination();
+        if (!flier)
+            GiveUpUnreachable();
+    }
+
+    // Destination sans chemin complet depuis NoPathWander (colline, plateau, cible derriere
+    // une colline) : en combat a vue, le bot tient sa position et tire ; sinon il passe au
+    // point suivant de son couloir et part vers un point libre accessible a moins de 45 m.
+    private void GiveUpUnreachable()
+    {
+        if (!MatchNavMesh.Ready || !hasDestination || corners.Count > 0 || noPathSince < 0f
+            || Time.time - noPathSince < NoPathWander || Time.time < escapeUntil)
+            return;
+        if (mode == Mode.Engage && target != null && targetVisible)
+            return;
+        noPathSince = Time.time;
+        if (mode == Mode.Advance)
+        {
+            var pts = BotLanes.Points(match, self.Side, role);
+            if (pts != null && pts.Count > 1)
+            {
+                laneIndex = NextLaneIndex(pts.Count);
+                laneArrivedAt = -1f;
+                lanePointSince = Time.time;
+            }
+        }
+        Vector3 me = transform.position;
+        string what = "reste sur place";
+        for (int i = 0; i < 4; i++)
+        {
+            if (!MatchNavMesh.RandomPointNear(me, 45f, out var p, Wide))
+                continue;
+            destination = p;
+            hasDestination = true;
+            Repath();
+            if (corners.Count > 0)
+            {
+                escapeUntil = Time.time + 6f;
+                what = $"part vers un point libre a {Vector3.Distance(me, p):0} m";
+                break;
+            }
+        }
+        if (Time.time - lastNoPathLog > 10f)
+        {
+            lastNoPathLog = Time.time;
+            Debug.Log($"[Bot] {self.Name} ({self.RobotName}) : destination inaccessible (colline / hauteur), {what}.");
+        }
     }
 
     // =========================================================
@@ -522,7 +597,7 @@ public class BotBrain : MonoBehaviour
             int complete = 0;
             foreach (var c in candidates)   // du plus proche au plus loin (rayons croissants)
             {
-                if (!MatchNavMesh.TryCompletePath(me, c, navPath, out float len, Wide))
+                if (!MatchNavMesh.TryCompletePath(me, c, navPath, out float len, Wide, allowSteep: true))
                     continue;
                 if (len < best)
                 {
@@ -941,10 +1016,96 @@ public class BotBrain : MonoBehaviour
         pathGoal = destination;
         corners.Clear();
         corner = 0;
-        if (MatchNavMesh.TryPath(transform.position, destination, navPath, Wide))
+        // Maillages raides seulement pour sortir d'une crevasse
+        Vector3 me = transform.position;
+        if (MatchNavMesh.TryPath(me, destination, navPath, Wide, allowSteep: inPit))
         {
             corners.AddRange(navPath.corners);
             corner = corners.Count > 1 ? 1 : 0;
+            noPathSince = -1f;
+            return;
+        }
+        if (MatchNavMesh.Ready && noPathSince < 0f)
+            noPathSince = Time.time;
+        if (!inPit && MatchNavMesh.Ready && MatchNavMesh.SnapReachable(me, out var back, Wide)
+                 && (back - me).sqrMagnitude > 4f)
+        {
+            // Pas de chemin d'ici (hors maillage, pousse dans une pente) : on revient
+            // d'abord sur le maillage sur, sans monter
+            corners.Add(me);
+            corners.Add(back);
+            corner = 1;
+        }
+    }
+
+    // Pente infranchissable devant : sol a HillProbes devant le nez (plus la demi-largeur)
+    // plus raide que HillSlope ET plus haut que le robot (un pas de 0,6 m ; LegJumpClear pour des
+    // pattes, qui sautent). La normale du sol evite de prendre un tablier de pont pour une
+    // pente. lowerSide : -1 a gauche, +1 a droite (cote le plus bas, pour braquer).
+    private bool HillAhead(Vector3 heading, out float lowerSide)
+    {
+        lowerSide = 0f;
+        Vector3 me = transform.position;
+        float here = GroundBelow(me);
+        float minNormalY = Mathf.Cos(HillSlope * Mathf.Deg2Rad);
+        float step = loco.CanJump ? LegJumpClear : 0.6f;
+        bool steep = false;
+        foreach (float d in HillProbes)
+        {
+            Vector3 p = me + heading * (HalfWidth + d);
+            if (Physics.Raycast(new Vector3(p.x, here + 10f, p.z), Vector3.down, out var hit, 30f, TerrainMask, QueryTriggerInteraction.Ignore)
+                && hit.normal.y < minNormalY && hit.point.y > here + step)
+            {
+                steep = true;
+                break;
+            }
+        }
+        if (!steep)
+            return false;
+        float reach = HalfWidth + 5f;
+        float left = GroundBelow(me + Quaternion.Euler(0f, -50f, 0f) * heading * reach);
+        float right = GroundBelow(me + Quaternion.Euler(0f, 50f, 0f) * heading * reach);
+        lowerSide = left < right ? -1f : 1f;
+        return true;
+    }
+
+    // Face a la pente depuis HillGiveUp : nouveau chemin (depart jamais au-dessus du robot) ;
+    // si son prochain coin est encore en haut de la pente, ou sans chemin, retour au point
+    // sur le plus proche en contrebas, sinon marche arriere
+    private void AvoidHill()
+    {
+        Vector3 me = transform.position;
+        Repath();
+        bool uphill = corners.Count == 0;
+        if (!uphill)
+        {
+            Vector3 next = corners[Mathf.Clamp(corner, 0, corners.Count - 1)];
+            float flat = Mathf.Max(1f, new Vector2(next.x - me.x, next.z - me.z).magnitude);
+            uphill = (next.y - GroundBelow(me)) / flat > Mathf.Tan(HillSlope * Mathf.Deg2Rad);
+        }
+        string what;
+        if (!uphill)
+            what = "nouveau chemin";
+        else if (MatchNavMesh.SnapReachable(me, out var back, Wide))
+        {
+            destination = back;
+            hasDestination = true;
+            Repath();
+            escapeUntil = Time.time + 3f;
+            what = $"redescend au maillage a {Vector3.Distance(me, back):0} m";
+        }
+        else
+        {
+            unstickUntil = Time.time + 1.2f;
+            unstickThrottle = -0.8f;
+            unstickSteer = Random.value < 0.5f ? -1f : 1f;
+            unstickBoost = false;
+            what = "marche arriere";
+        }
+        if (Time.time - lastHillLog > 8f)
+        {
+            lastHillLog = Time.time;
+            Debug.Log($"[Bot] {self.Name} ({self.RobotName}) devant une pente trop raide a ({me.x:0}, {me.y:0}, {me.z:0}) : {what}.");
         }
     }
 
@@ -996,7 +1157,7 @@ public class BotBrain : MonoBehaviour
         }
     }
 
-    // Une arme a rail dans ses slots (candidat au role de tireur en hauteur)
+    // Une arme a rail dans ses slots (candidat au role de tireur)
     private bool HasRail()
     {
         if (loadout == null)
@@ -1010,7 +1171,7 @@ public class BotBrain : MonoBehaviour
     }
 
     // Point de patrouille courant de son couloir ; passe au suivant une fois atteint (apres
-    // une courte pause, longue pour le tireur en hauteur) ou au bout de LanePointTimeout
+    // une courte pause, longue pour le tireur) ou au bout de LanePointTimeout
     private Vector3 LaneGoal()
     {
         var pts = BotLanes.Points(match, self.Side, role);
@@ -1636,12 +1797,33 @@ public class BotBrain : MonoBehaviour
                 throttle *= Mathf.Lerp(1f, 0.3f, k);
         }
 
+        // Pente trop raide devant (hors crevasse) : on ralentit, on braque vers le bas, et on
+        // refait le chemin si ca dure
+        if (!inPit && throttle > 0.2f)
+        {
+            if (HillAhead(Flat(transform.forward), out float lowerSide))
+            {
+                hillTime += Time.deltaTime;
+                throttle = Mathf.Min(throttle, 0.3f);
+                steer = Mathf.Clamp(steer + lowerSide * 0.9f, -1f, 1f);
+                if (hillTime > HillGiveUp)
+                {
+                    hillTime = 0f;
+                    AvoidHill();
+                }
+            }
+            else
+            {
+                hillTime = Mathf.Max(0f, hillTime - Time.deltaTime);
+            }
+        }
+
         // Pattes : saut devant une marche ou un obstacle, en remontee de crevasse, ou pour
         // esquiver quand on vient d'etre touche
         if (loco.CanJump && throttle > 0.3f)
         {
             float here = GroundHeight(me), ahead = GroundHeight(me + Flat(transform.forward) * 4f);
-            if (ahead > here + 0.6f && ahead < here + 4f)
+            if (ahead > here + 0.6f && ahead < here + LegJumpClear)
                 Jump("marche");
             else if (inPit && Mathf.Abs(Vector3.SignedAngle(Flat(transform.forward), to, Vector3.up)) < 35f && Time.time - loco.LastJumpTime > 1.5f)
                 Jump("crevasse");
@@ -1679,25 +1861,43 @@ public class BotBrain : MonoBehaviour
         Vector3 fwd = Flat(transform.forward);
         Vector3 travel = dist > 0.5f ? to / dist : fwd;
 
-        // Relief sur la route : point le plus haut du sol devant (dans l'axe du trajet et
-        // a +/- 25 degres), plus loin quand on va vite ; la cible d'altitude le survole
-        float look = Mathf.Clamp(12f + loco.Speed * 1.5f, 12f, 65f);
-        // Sol mesure depuis sa propre altitude (+2 m) : sous un pont, c'est le sol qu'on voit,
-        // pas le tablier (qui le faisait monter dans le dessous du pont)
-        float terrain = GroundBelow(me);
-        float nearRise = terrain;   // relief des 15 premiers metres
+        // Relief sur la route (23/10, carte v7 sans ponts : sol mesure d'en haut). Avant :
+        // 6 points a 12-65 m, le volant voyait les buttes trop tard (un rotor monte a
+        // ~8,5 m/s : 40 m de butte = ~5 s de montee) et ratait les pitons entre deux
+        // mesures ; il finissait pose dessus. Maintenant :
+        // - portee 25 m + 3 s de vol (jusqu'a 110 m), 12 pas ;
+        // - a chaque pas : l'axe, deux lignes paralleles a +/- (demi-envergure + 2 m)
+        //   (les ailes passent aussi) et l'eventail a +/- 25 degres (virages) ;
+        // - altitude de croisiere : point le plus haut + FlyHeight ;
+        // - elan : altitude qu'il faudrait avoir DES MAINTENANT pour passer chaque point a
+        //   temps, a 75 % de sa vitesse de montee ; s'il est en dessous, il ralentit (jusqu'a
+        //   l'arret) le temps de monter, au lieu de foncer dans la pente.
+        float speed = loco.Speed;
+        float climbRate = Mathf.Max(3f, loco.rotorClimbSpeed * 0.75f);
+        float look = Mathf.Clamp(25f + speed * 3f, 25f, 110f);
+        float body = loco.RobotHeight + 2f;   // le dessous du robot doit passer, pas seulement son pivot
+        float terrain = GroundHeight(me);
+        float nearRise = terrain;   // relief des 15 premiers metres (plus l'envergure)
+        float needNow = float.MinValue;
+        var side = Vector3.Cross(Vector3.up, travel);
+        float span = HalfWidth + 2f;
         var left = Quaternion.AngleAxis(-25f, Vector3.up) * travel;
         var right = Quaternion.AngleAxis(25f, Vector3.up) * travel;
-        for (int i = 1; i <= 6; i++)
+        const int Steps = 12;
+        for (int i = 0; i <= Steps; i++)
         {
-            float d = look * i / 6f;
-            float h = Mathf.Max(GroundBelow(me + travel * d),
-                                Mathf.Max(GroundBelow(me + left * (d * 0.8f)), GroundBelow(me + right * (d * 0.8f))));
+            float d = look * i / Steps;
+            Vector3 c = me + travel * d;
+            float h = Mathf.Max(GroundHeight(c), Mathf.Max(GroundHeight(c + side * span), GroundHeight(c - side * span)));
+            if (i > 0)
+                h = Mathf.Max(h, Mathf.Max(GroundHeight(me + left * (d * 0.8f)), GroundHeight(me + right * (d * 0.8f))));
             terrain = Mathf.Max(terrain, h);
-            if (d <= 15f)
+            if (d <= 15f + span)
                 nearRise = Mathf.Max(nearRise, h);
+            float reachIn = d / Mathf.Max(speed, 4f);
+            needNow = Mathf.Max(needNow, h + body - reachIn * climbRate);
         }
-        float wanted = terrain + persona.FlyHeight + (self.Id % 3) * 4f;   // altitudes etagees : pas deux volants a la meme hauteur
+        float wanted = terrain + Mathf.Max(persona.FlyHeight, body + 4f) + (self.Id % 3) * 4f;   // altitudes etagees : pas deux volants a la meme hauteur
 
         // Cible trop a la verticale pour les tourelles (tangage -20 degres) : on descend vers elle
         if (mode == Mode.Engage && target != null && targetVisible)
@@ -1705,16 +1905,18 @@ public class BotBrain : MonoBehaviour
             Vector3 dt = target.Position - me;
             float horizontal = new Vector2(dt.x, dt.z).magnitude;
             float maxAltitude = target.Position.y + horizontal * Mathf.Tan(15f * Mathf.Deg2Rad);
-            wanted = Mathf.Max(terrain + 4f, Mathf.Min(wanted, maxAltitude));
+            // Jamais plus bas que sa propre hauteur + 4 m au-dessus du relief (avant : 4 m
+            // en tout, un grand volant posait ses ailes sur la butte en visant en contrebas)
+            wanted = Mathf.Max(terrain + body + 4f, Mathf.Min(wanted, maxAltitude));
         }
 
         // Plafond (tablier de pont, arche) : on reste 3 m dessous
         if (Physics.Raycast(me, Vector3.up, out var ceiling, 40f, TerrainMask, QueryTriggerInteraction.Ignore))
             wanted = Mathf.Min(wanted, ceiling.point.y - 3f);
 
-        // Paroi devant (flanc de colline, falaise, pont) : on monte au-dessus de son sommet
+        // Paroi devant (flanc de colline, falaise) : on monte au-dessus de son sommet
         float clearance = Mathf.Max(1.2f, loco.RobotHeight * 0.6f);
-        bool wall = Physics.SphereCast(me, clearance, travel, out var wallHit, Mathf.Min(look, 20f), TerrainMask, QueryTriggerInteraction.Ignore);
+        bool wall = Physics.SphereCast(me, clearance, travel, out var wallHit, Mathf.Min(look, 40f), TerrainMask, QueryTriggerInteraction.Ignore);
         if (wall)
             wanted = Mathf.Max(wanted, GroundHeight(wallHit.point + travel * 2f) + persona.FlyHeight * 0.6f, me.y + 6f);
 
@@ -1770,6 +1972,10 @@ public class BotBrain : MonoBehaviour
             throttle = Mathf.Min(throttle, 0.1f);
         else if (climb > 6f)
             throttle *= 0.5f;
+        // Elan : trop bas pour passer a temps le relief devant -> on ralentit d'autant
+        // (15 m de retard ou plus : sur place) le temps de monter
+        if (needNow > me.y)
+            throttle *= Mathf.Clamp01(1f - (needNow - me.y) / 15f);
         loco.throttle = throttle;
         loco.boost = false;
         // Le bot veut avancer : s'il n'y arrive pas (meme en montant), deblocage
@@ -1778,8 +1984,13 @@ public class BotBrain : MonoBehaviour
 
     private Vector3 NextWaypoint(Vector3 me)
     {
-        if (flier || corners.Count == 0)
+        if (flier)
             return destination;
+        // Robot au sol sans chemin : plus de ligne droite vers la destination (elle
+        // l'envoyait dans la colline) ; il reste sur place. Ligne droite seulement tant
+        // que le NavMesh n'est pas pret (debut du match).
+        if (corners.Count == 0)
+            return MatchNavMesh.Ready ? me : destination;
         while (corner < corners.Count - 1)
         {
             Vector3 d = corners[corner] - me;
