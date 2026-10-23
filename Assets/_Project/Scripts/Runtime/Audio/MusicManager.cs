@@ -10,17 +10,25 @@ using UnityEngine.SceneManagement;
 //   MusicLibrary (scene non listee : la musique continue).
 // - Changement de musique = fondu enchaine : l'ancienne baisse
 //   pendant que la nouvelle monte (courbe a puissance
-//   constante, pas de creux de volume au milieu).
+//   constante, pas de creux de volume au milieu). Duree :
+//   MusicLibrary.crossfadeDuration, ou celle passee a Play.
+// - Un morceau lance demarre a TrackEntry.startSeconds (Mars
+//   Protocol : 1:25), puis boucle normalement depuis le debut.
 // - Quand une musique sortante ne s'entend plus : arret,
 //   remise au debut, clip retire. Si on la redemande avant
 //   qu'elle soit muette, elle remonte la ou elle en est.
 // - Meme musique redemandee (ex. Boot -> MainMenu) : rien ne
 //   change, elle continue sans redemarrer.
+// - Jingles (PlayStinger) : un clip joue une fois par-dessus la
+//   musique, au volume de la musique (apparition du robot,
+//   transition vers la derniere action).
 // - Fondus en temps reel (insensibles a timeScale 0 du menu
 //   pause), pas de saut apres le gel d'un chargement de scene.
 // - Boot et MainMenu n'ont pas d'AudioListener : le manager
 //   en porte un de secours, actif seulement quand la scene
 //   n'en a aucun.
+// - Match par equipes : MatchMusic (sur le meme objet) pilote
+//   la musique de la carte, la derniere action et les jingles.
 // Lancement explicite : MusicManager.PlayTrack(MusicTrack.X).
 // =========================================================
 
@@ -51,6 +59,8 @@ public class MusicManager : MonoBehaviour
                 if (!v.Free)
                     ApplyVolume(v);
             }
+            if (stingerSource != null && stingerSource.isPlaying)
+                stingerSource.volume = stingerVolume * masterVolume;
         }
     }
 
@@ -62,6 +72,7 @@ public class MusicManager : MonoBehaviour
         public float trackVolume;
         public float gain;      // 0..1, position dans le fondu
         public float target;    // 1 = monte, 0 = descend puis s'arrete
+        public float fade = 1f; // duree du fondu en cours (s)
         public bool Free => track == MusicTrack.None;
     }
 
@@ -70,6 +81,8 @@ public class MusicManager : MonoBehaviour
     private float masterVolume = 1f;
     private GameObject fallbackListener;
     private float listenerCheckTimer;
+    private AudioSource stingerSource;
+    private float stingerVolume;
 
     // ---------- Creation automatique ----------
 
@@ -117,6 +130,16 @@ public class MusicManager : MonoBehaviour
         fallbackListener.AddComponent<AudioListener>();
         fallbackListener.SetActive(false);
 
+        stingerSource = gameObject.AddComponent<AudioSource>();
+        stingerSource.playOnAwake = false;
+        stingerSource.loop = false;
+        stingerSource.spatialBlend = 0f;
+        stingerSource.priority = 0;
+        stingerSource.ignoreListenerPause = true;
+        stingerSource.bypassReverbZones = true;
+
+        gameObject.AddComponent<MatchMusic>();
+
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -152,18 +175,23 @@ public class MusicManager : MonoBehaviour
 
     // ---------- Lecture ----------
 
-    public void Play(MusicTrack track)
+    // fadeSeconds < 0 : MusicLibrary.crossfadeDuration
+    public void Play(MusicTrack track, float fadeSeconds = -1f)
     {
         if (library == null || track == CurrentTrack)
             return;
 
+        float fade = Mathf.Max(0.05f, fadeSeconds < 0f ? library.crossfadeDuration : fadeSeconds);
         CurrentTrack = track;
 
         // Tout ce qui n'est pas la nouvelle musique part en fondu de sortie
         foreach (var v in voices)
         {
             if (v.track != track)
+            {
                 v.target = 0f;
+                v.fade = fade;
+            }
         }
 
         if (track == MusicTrack.None)
@@ -184,17 +212,42 @@ public class MusicManager : MonoBehaviour
             voice.track = track;
             voice.gain = 0f;
             voice.source.clip = entry.clip;
-            voice.source.Play();            // toujours depuis le debut
+            voice.source.Play();
+            // Depart decale (apres Play : fonctionne aussi pour un clip en streaming) ;
+            // la boucle repart du debut
+            if (entry.startSeconds > 0f && entry.startSeconds < entry.clip.length - 0.5f)
+                voice.source.time = entry.startSeconds;
         }
 
         voice.trackVolume = entry.volume;
         voice.target = 1f;
+        voice.fade = fade;
         ApplyVolume(voice);
     }
 
     public void Stop()
     {
         Play(MusicTrack.None);
+    }
+
+    // Jingle joue une fois par-dessus la musique (un seul a la fois : le
+    // suivant coupe le precedent). Rend sa duree en secondes (0 : rien joue).
+    public float PlayStinger(MusicTrack track)
+    {
+        if (library == null || track == MusicTrack.None)
+            return 0f;
+        var entry = library.Find(track);
+        if (entry == null || entry.clip == null)
+        {
+            Debug.LogWarning($"[Music] Pas de clip pour le jingle '{track}' dans MusicLibrary.");
+            return 0f;
+        }
+        stingerVolume = entry.volume;
+        stingerSource.Stop();
+        stingerSource.clip = entry.clip;
+        stingerSource.volume = stingerVolume * masterVolume;
+        stingerSource.Play();
+        return entry.clip.length;
     }
 
     private Voice CreateVoice()
@@ -218,14 +271,14 @@ public class MusicManager : MonoBehaviour
         if (library == null)
             return;
 
-        float step = Mathf.Min(Time.unscaledDeltaTime, MaxFadeDeltaTime) / library.crossfadeDuration;
+        float dt = Mathf.Min(Time.unscaledDeltaTime, MaxFadeDeltaTime);
 
         foreach (var v in voices)
         {
             if (v.Free)
                 continue;
 
-            v.gain = Mathf.MoveTowards(v.gain, v.target, step);
+            v.gain = Mathf.MoveTowards(v.gain, v.target, dt / v.fade);
             ApplyVolume(v);
 
             // Ne s'entend plus : arret, retour au debut, plus jouee

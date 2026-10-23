@@ -22,6 +22,8 @@ public class MusicLibrary : ScriptableObject
         public AudioClip clip;
         [Tooltip("Volume propre au morceau (equilibre les morceaux entre eux)")]
         [Range(0f, 1f)] public float volume = 0.5f;
+        [Tooltip("Position de depart (s) quand le morceau est lance ; la boucle repart ensuite du tout debut")]
+        [Min(0f)] public float startSeconds;
     }
 
     [Serializable]

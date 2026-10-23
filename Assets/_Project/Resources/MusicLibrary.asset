@@ -18,15 +18,35 @@ MonoBehaviour:
   - track: 1
     clip: {fileID: 8300000, guid: cc77d95deaf74d64ea00703d6d1d343d, type: 3}
     volume: 0.5
+    startSeconds: 0
   - track: 2
     clip: {fileID: 8300000, guid: 53953de8419f45d47b52d782c523a420, type: 3}
     volume: 0.43
+    startSeconds: 0
   - track: 3
     clip: {fileID: 8300000, guid: 13abf423cebb9f043861284380b8c007, type: 3}
     volume: 0.43
+    startSeconds: 0
   - track: 4
     clip: {fileID: 8300000, guid: 9d174c11b416c06409450fe2999a37f3, type: 3}
     volume: 0.42
+    startSeconds: 0
+  - track: 5
+    clip: {fileID: 8300000, guid: d73d7ee99f279194c979b0df684842ef, type: 3}
+    volume: 0.44
+    startSeconds: 0
+  - track: 6
+    clip: {fileID: 8300000, guid: 158b0a5fc788cbc4ead7b3a7b1ed76b9, type: 3}
+    volume: 0.48
+    startSeconds: 85
+  - track: 7
+    clip: {fileID: 8300000, guid: f140bd12123705745adb295bfe111c27, type: 3}
+    volume: 0.56
+    startSeconds: 0
+  - track: 8
+    clip: {fileID: 8300000, guid: 348060306c8669440aa645aad5ae649d, type: 3}
+    volume: 0.36
+    startSeconds: 0
   scenes:
   - sceneName: Boot
     track: 1
@@ -37,4 +57,6 @@ MonoBehaviour:
   - sceneName: Map_Test
     track: 4
   - sceneName: Map_MARS
-    track: 3
+    track: 5
+  - sceneName: Map_MARS_Spectate
+    track: 5
